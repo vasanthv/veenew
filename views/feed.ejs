@@ -15,7 +15,7 @@
         <div class="flex">
           <div class="flex-1">
             <strong>
-              <a href="<%= post.remoteUser.actorUrl %>" target="_blank" rel="noopener">
+              <a href="<%= post.remoteUser.url || post.remoteUser.actorUrl %>" target="_blank" rel="noopener">
                 <%= post.remoteUser.name || post.remoteUser.handle %>
               </a>
             </strong>

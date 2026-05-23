@@ -130,7 +130,7 @@ router.get("/feed", async (req, res, next) => {
 				.sort("-createdOn")
 				.skip(skip)
 				.limit(limit)
-				.populate("remoteUser", "handle name iconUrl actorUrl")
+				.populate("remoteUser", "handle name iconUrl actorUrl url")
 				.lean()
 				.exec(),
 			RemotePosts.countDocuments(query),

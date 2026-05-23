@@ -80,8 +80,11 @@ const upsertRemoteUserFromActor = async (actor) => {
 		// ignore
 	}
 
+	const profileUrl = actor.url?.href || actor.urls?.[0]?.href || actorUrl;
+
 	const fields = {
 		actorUrl,
+		url: profileUrl,
 		username,
 		domain: host,
 		handle,

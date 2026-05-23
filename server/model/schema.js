@@ -64,6 +64,7 @@ const postSchema = new Schema({
 
 const remoteUserSchema = new Schema({
 	actorUrl: { type: String, index: true, unique: true, required: true },
+	url: String,
 	username: String,
 	domain: String,
 	handle: { type: String, index: true },
