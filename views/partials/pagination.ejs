@@ -1,0 +1,14 @@
+<% if (typeof totalPages !== "undefined" && totalPages > 1) { %>
+<div class="spacer"></div>
+<section class="center">
+  <% if (prevPage) { %>
+  <a href="?<%= new URLSearchParams({...queryParams, page: prevPage}).toString() %>">&larr; Prev</a>
+  &nbsp;
+  <% } %>
+  <span>Page <%= page %> of <%= totalPages %></span>
+  <% if (nextPage) { %>
+  &nbsp;
+  <a href="?<%= new URLSearchParams({...queryParams, page: nextPage}).toString() %>">Next &rarr;</a>
+  <% } %>
+</section>
+<% } %>

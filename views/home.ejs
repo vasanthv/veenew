@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Home"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Home"}); -%>
+
+    <section class="flex">
+      <div class="flex-1">
+        <a href="<%=userBaseUrl%>" target="_blank">view your blog</a>
+      </div>
+      <a href="/new">+ new post</a>
+    </section>
+
+    <%- include('partials/posts', {showEdit: true}); -%>
+    <%- include('partials/pagination'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

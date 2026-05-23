@@ -1,0 +1,85 @@
+{
+	"name": "veenew",
+	"version": "1.1.0",
+	"description": "A minimal microblogging website with Markdown support. No ads, no likes, no follows - just a clean space to write and share your thoughts.",
+	"keywords": [
+		"microblogging",
+		"calm social"
+	],
+	"homepage": "https://github.com/vasanthv/veenew#readme",
+	"bugs": {
+		"url": "https://github.com/vasanthv/veenew/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/vasanthv/veenew.git"
+	},
+	"license": "UNLICENSED",
+	"author": "Vasanth.V <vasanth@veenew.com>",
+	"main": "init.js",
+	"scripts": {
+		"lint": "eslint",
+		"start": "node init.js",
+		"api-dev": "DISABLE_CSRF=true node init.js",
+		"test": "npm run lint"
+	},
+	"dependencies": {
+		"@aws-sdk/client-ses": "^3.556.0",
+		"@fedify/express": "^2.2.3",
+		"@fedify/fedify": "^2.2.3",
+		"axios": "^1.8.2",
+		"bcryptjs": "^2.4.3",
+		"body-parser": "^1.20.2",
+		"connect-mongo": "^5.1.0",
+		"cookie-parser": "^1.4.7",
+		"dayjs": "^1.11.19",
+		"dompurify": "^3.0.9",
+		"ejs": "^3.1.10",
+		"express": "^4.21.2",
+		"express-rate-limit": "^7.2.0",
+		"express-session": "^1.18.0",
+		"feed": "^5.1.0",
+		"geoip-lite": "^1.4.10",
+		"html-to-text": "^9.0.5",
+		"jsdom": "^24.0.0",
+		"marked": "^17.0.1",
+		"mongoose": "^8.3.2",
+		"morgan": "^1.10.1",
+		"mustache": "^4.2.0",
+		"randomstring": "^1.3.1",
+		"slugify": "^1.6.6",
+		"stripe": "^16.12.0",
+		"uuid": "^9.0.1",
+		"vue": "^3.4.25"
+	},
+	"devDependencies": {
+		"@eslint/eslintrc": "^3.1.0",
+		"@eslint/js": "^9.14.0",
+		"eslint": "^9.13.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-jest": "^28.11.0",
+		"globals": "^15.12.0",
+		"jest": "^29.7.0",
+		"prettier": "3.4.2"
+	},
+	"jest": {
+		"transform": {}
+	},
+	"prettier": {
+		"printWidth": 120,
+		"singleQuote": false,
+		"trailingComma": "es5",
+		"tabWidth": 2,
+		"useTabs": true,
+		"overrides": [
+			{
+				"files": [
+					"*.ejs"
+				],
+				"options": {
+					"parser": "html"
+				}
+			}
+		]
+	}
+}

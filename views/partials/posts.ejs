@@ -1,0 +1,29 @@
+<% if(typeof tags !== "undefined") { %>
+<% if(tags.length > 0) { %>
+<section>
+  <h3>Tagged: <%=tags.join(",")%></h3>
+</section>
+<% } %>
+<% } %>
+<section>
+  <% if(posts.length <= 0) { %>
+  <div class="empty">No posts to show.</div>
+  <% } else { %>
+  <% for (var i = 0; i < posts.length; i++) { %>
+  <article class="<% if(typeof showEdit !== "undefined") { %>maxh<% } %>">
+    <div class="content"><%- posts[i].html %></div>
+    <div class="small">
+      <a href="<% if(typeof userBaseUrl !== "undefined") { %><%= userBaseUrl %><% } %>post/<%= posts[i]._id %>">
+        <time datetime="<%= posts[i].createdOn.toISOString() %>"><%= dayjs(posts[i].createdOn).fromNow() %></time>
+      </a>
+      <% if(typeof showEdit !== "undefined") { %>
+      &middot;
+      <a href="/edit/<%= posts[i]._id %>">
+        edit post
+      </a>
+      <% } %>
+    </div>
+  </article>
+  <% } %>
+  <% } %>
+</section>

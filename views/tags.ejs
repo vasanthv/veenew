@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: `${profile.name ?? profile.username} / Tags`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
+
+    <section>
+      <% if(groupedTags.length <= 0) { %>
+      <div class="empty">No tags to show.</div>
+      <% } else { %>
+      <% for (var i = 0; i < groupedTags.length; i++) { %>
+      <div class="tag">
+        <a href="/?tag=<%=groupedTags[i]._id%>">#<%=groupedTags[i]._id%></a> <span class="small">(<%=groupedTags[i].count%>)</span>
+      </div>
+      <% } %>
+      <% } %>
+    </section>
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>

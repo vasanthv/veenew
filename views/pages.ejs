@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Pages"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Pages"}); -%>
+
+    <section class="flex">
+      <div class="flex-1"></div>
+      <a href="/pages/new">+ new page</a>
+    </section>
+
+    <%- include('partials/pages'); -%>
+    <%- include('partials/pagination'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

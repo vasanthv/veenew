@@ -1,0 +1,55 @@
+<!doctype html>
+
+<html lang="en">
+<%
+  const isPage = typeof contentType !== "undefined" && contentType === "page";
+  const entityName = isPage ? "page" : "post";
+%>
+<%- include('partials/html-head', {title: `${typeof post !== "undefined" ? "Edit" : "New"} ${entityName}`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: `${typeof post !== "undefined" ? "Edit" : "New"} ${entityName}`}); -%>
+
+    <section id="postbox">
+      <form @submit.prevent="<%- typeof post !== "undefined" ? (isPage ? `updatePage('${post._id}')` : `updatePost('${post._id}')`) : (isPage ? 'createPage' : 'createPost') %>">
+        <% if (isPage) { %>
+        <input type="text" v-model="post.slug" placeholder="slug (example: about-us)" />
+        <div class="spacer"></div>
+        <% } %>
+        <textarea v-model="post.text" placeholder="start writing.." <% if(typeof post === "undefined") { %>@keyup="onPostChange" <% } %>></textarea>
+        <div class="spacer"></div>
+        <div class="flex">
+          <div class="flex-1">
+            <% if(typeof post !== "undefined") { %>
+            <a href="javascript:void(0)" v-on:click="<%- isPage ? `deletePage('${post._id}')` : `deletePost('${post._id}')` %>" class="red">delete <%= entityName %></a>
+            <% } %>
+          </div>
+          <button type="submit"><%- typeof post !== "undefined" ? "update" : entityName %></button>
+        </div>
+      </form>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+  <% if(typeof post !== "undefined") { %>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.post = {
+        text: "<%- JSON.stringify(post.text).slice(1, -1) %>",
+        slug: "<%- JSON.stringify(post.slug || '').slice(1, -1) %>"
+      }
+    }
+  </script>
+  <% }else { %>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.post = {
+        text: window.localStorage.<%= isPage ? "newPage" : "newPost" %> ?? "",
+        slug: ""
+      }
+    }
+  </script>
+  <% } %>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: profile.name ?? profile.username}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
+
+    <% if(typeof profile.bio !== "undefined") { %>
+    <% if(profile.bio !== "") { %>
+    <section class="bio"><%- profile.bioHTML %></section>
+    <% } %>
+    <% } %>
+
+    <%- include('partials/posts'); -%>
+    <%- include('partials/pagination'); -%>
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>

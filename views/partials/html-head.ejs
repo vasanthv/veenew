@@ -1,0 +1,56 @@
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Cache-control" content="public" />
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+
+  <!-- Icons & Theme-->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+
+  <!-- Site scripts & styles -->
+  <link href="/style.css?v=<%= appVersion %>" rel="stylesheet" />
+
+  <% if(typeof profile !=="undefined" ) { %>
+  <%# Profile header tags start here %>
+  <% if(typeof profile.iconUrl !=="undefined" ) { %>
+  <link rel="icon" href="<%=profile.iconUrl%>" type="image/png" />
+  <% }else{ %>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <% } %>
+
+  <link rel="alternate" type="application/rss+xml" title="<%=profile.name ?? profile.username %>" href="/feed/rss" />
+  <link rel="alternate" type="application/json" title="<%=profile.name ?? profile.username %>" href="/feed/json" />
+
+  <% if(typeof customStyleTag !== "undefined" ) { %>
+  <%-customStyleTag%>
+  <% } %>
+
+  <title><%= title ?? "" %></title>
+
+  <% if(typeof profile.customScriptUrl !=="undefined" ) { %>
+  <script defer src="<%= profile.customScriptUrl %>"></script>
+  <% } %>
+
+  <% } else { %>
+  <%# Default header tags start here %>
+  <meta name="description" content="A minimal microblogging website with Markdown support. No ads, no likes, no follows - just a clean space to write and share your thoughts.">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <title><%= title ? `${title} - ` : "" %>Veenew</title>
+
+  <% if(typeof csrfToken !=="undefined" ) { %>
+  <meta name="csrf-token" content="<%= csrfToken %>" />
+  <% } %>
+
+  <script defer src="/vue.global.prod.js"></script>
+  <script defer src="/axios.min.js"></script>
+  <script defer src="/script.js?v=<%= appVersion %>"></script>
+
+  <% if(analytics) { %><script defer src="<%= analytics %>"></script><% } %>
+  <% } %>
+</head>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: `${profile.name ?? profile.username} / ${title}`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
+
+    <article>
+      <div class="content"><%- page.html %></div>
+    </article>
+
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>
