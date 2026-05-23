@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Timeline"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Timeline"}); -%>
+
+    <section>
+      <%- include('partials/timeline-nav'); -%>
+
+      <div class="field">
+        <label for="follow-handle">Follow someone (user@instance)</label>
+        <div class="flex">
+          <input type="text" id="follow-handle" placeholder="e.g. alice@mastodon.social" v-model="followHandle" class="flex-1" />
+          <button v-on:click="followRemote" :disabled="isLoading">follow</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section>
+      <% if (posts.length === 0) { %>
+      <div class="empty">Nothing here yet. Follow someone to see their posts.</div>
+      <% } else { %>
+      <% posts.forEach((post) => { %>
+      <article>
+        <div>
+          <strong>
+            <a href="<%= post.remoteUser.url || post.remoteUser.actorUrl %>" target="_blank" rel="noopener">
+              <%= post.remoteUser.name || post.remoteUser.handle %>
+            </a>
+          </strong>
+          <small>@<%= post.remoteUser.handle %></small>
+        </div>
+        <div class="content"><%- post.content %></div>
+        <% if (Array.isArray(post.imageUrls) && post.imageUrls.length > 0) { %>
+        <div class="content">
+          <% post.imageUrls.forEach((src) => { %>
+          <a href="<%= src %>" target="_blank" rel="noopener"><img src="<%= src %>" alt="" loading="lazy" /></a>
+          <% }); %>
+        </div>
+        <% } %>
+
+        <small>
+          <a href="<%= post.url %>" target="_blank" rel="noopener">
+            <time datetime="<%= new Date(post.createdOn).toISOString() %>"><%= dayjs(post.createdOn).fromNow() %></time>
+          </a>
+        </small>
+
+      </article>
+      <% }); %>
+      <% } %>
+    </section>
+
+    <%- include('partials/pagination'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

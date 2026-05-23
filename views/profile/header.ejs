@@ -1,10 +1,12 @@
 <header>
   <nav>
     <% if (Array.isArray(profile.menu) && profile.menu.length > 0) { %>
-    <% profile.menu.forEach((item, index) => { %>
-    <% const isExternal = /^https?:\/\//i.test(item.link); %>
-    <a href="<%= item.link %>" <%= isExternal ? 'target="_blank" rel="noopener noreferrer"' : "" %>><%= item.name %></a><% if (index < profile.menu.length - 1) { %> <span class="separator">·</span> <% } %>
-    <% }); %>
+    <ul>
+      <% profile.menu.forEach((item, index) => { %>
+      <% const isExternal = /^https?:\/\//i.test(item.link); %>
+      <li><a href="<%= item.link %>" <%= isExternal ? 'target="_blank" rel="noopener noreferrer"' : "" %>><%= item.name %></a></li>
+      <% }); %>
+    </ul>
     <% } %>
   </nav>
   <h1 class="page-title"><%= title  %></h1>

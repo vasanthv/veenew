@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Followers"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Followers"}); -%>
+
+    <section>
+      <%- include('partials/timeline-nav'); -%>
+    </section>
+    <section>
+      <% if (followers.length === 0) { %>
+      <div class="empty">You do not have any followers yet.</div>
+      <% } else { %>
+      <% followers.forEach((f) => { %>
+      <article>
+        <div>
+          <strong>
+            <a href="<%= f.url || f.actorUrl %>" target="_blank" rel="noopener">
+              <%= f.name || f.handle %>
+            </a>
+          </strong>
+          <small>@<%= f.handle %></small>
+        </div>
+        <% if (f.summary) { %>
+        <div><%- f.summary %></div>
+        <% } %>
+
+        <small>
+          <% if (f.accepted) { %>
+          <a href="javascript:void(0)" class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</a>
+          <% } else { %>
+          <a href="javascript:void(0)" v-on:click="followHandle = '<%= f.handle %>'; followRemote()">follow</a>
+          <% } %>
+        </small>
+      </article>
+      <% }); %>
+      <% } %>
+    </section>
+
+    <%- include('partials/pagination'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

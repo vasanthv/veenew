@@ -5,7 +5,10 @@
 <body>
   <div id="app" class="wrap">
     <%- include('partials/header', {title:"Sign up"}); -%>
-    <section class="mini-wrap">
+    <section>
+      <p>Test server signup blocked!</p>
+    </section>
+    <!-- <section class="mini-wrap">
       <form @submit.prevent="signUp">
         <div class="field">
           <label for="username">Username</label>
@@ -21,14 +24,14 @@
           <input type="password" id="password" placeholder="enter a password" v-model="newAccount.password" @keyup.enter="signUp" />
         </div>
 
-        <div class="small">By proceeding, you confirm your acceptance of our <a href="/terms" class="bold" target="_blank">terms</a>.</div>
+        <small>By proceeding, you confirm your acceptance of our <a href="/terms" target="_blank"><strong>terms</strong></a>.</small>
         <div class="spacer"></div>
 
         <button type="submit">sign up</button>
       </form>
       <div class="spacer"></div>
-      <div class="small">Already got an account? <a href="/login" class="bold">Log in</a></div>
-    </section>
+      <small>Already got an account? <a href="/login"><strong>Log in</strong></a></small>
+    </section> -->
     <%- include('partials/footer'); -%>
   </div>
 

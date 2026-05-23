@@ -8,7 +8,7 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
 
   <!-- Site scripts & styles -->
-  <link href="/style.css?v=<%= appVersion %>" rel="stylesheet" />
+  <link href="/common.css?v=<%= appVersion %>" rel="stylesheet" />
 
   <% if(typeof profile !=="undefined" ) { %>
   <%# Profile header tags start here %>
@@ -35,11 +35,13 @@
 
   <% } else { %>
   <%# Default header tags start here %>
-  <meta name="description" content="A minimal microblogging website with Markdown support. No ads, no likes, no follows - just a clean space to write and share your thoughts.">
+  <meta name="description" content="A minimal microblogging website built on open standards. No ads, no likes, no comments - just a clean space to write and share your thoughts.">
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <link href="/style.css?v=<%= appVersion %>" rel="stylesheet" />
 
   <title><%= title ? `${title} - ` : "" %>Veenew</title>
 

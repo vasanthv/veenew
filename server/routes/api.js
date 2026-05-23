@@ -4,8 +4,6 @@ const bodyParser = require("body-parser");
 const apiHandler = require("../controllers");
 const { rateLimit, isUserAuthed } = require("../middlewares");
 
-router.post("/stripe/webhook", bodyParser.raw({ type: "application/json" }), apiHandler.stripeWebhook);
-
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: false }));
 

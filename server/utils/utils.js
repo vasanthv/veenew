@@ -295,6 +295,19 @@ const getUserBaseUrl = (user) => {
 };
 
 /**
+ * Builds a user's Fediverse handle.
+ * Uses the app root domain (without port) in the handle suffix.
+ * @param {object} user - User object containing username
+ * @returns {string} Handle in the format "@username@domain"
+ * @throws {Error} If user or username is invalid
+ */
+const getFediverseHandle = (user) => {
+	if (!user?.username) return httpError(400, "Invalid user");
+	const handleSuffix = config.DOMAIN.split(":")[0];
+	return `@${user.username}@${handleSuffix}`;
+};
+
+/**
  * Formats a date as: "wed aug 12 2012 02:09PM".
  * Uses the supplied IANA timezone if provided.
  * @param {Date|string|number} dateValue - Date value to format
@@ -363,6 +376,7 @@ module.exports = {
 	markdownToHtml,
 	getTitle,
 	getUserBaseUrl,
+	getFediverseHandle,
 	formatPostDate,
 	getCustomStyleTag,
 	httpError,
