@@ -207,6 +207,12 @@ const federation = createFederation({ kv: new MemoryKvStore() });
 
 federation
 	.setActorDispatcher("/users/{identifier}", async (ctx, identifier) => {
+		// The actor only exists on its own subdomain. Reject cross-tenant lookups
+		// like vasanth.veenew.com/users/bob (or root-domain veenew.com/users/<u>),
+		// so we don't accidentally publish duplicate actor ids on the wrong host.
+		const expectedHost = `${identifier}.${config.DOMAIN}`.toLowerCase();
+		if (ctx.url.host.toLowerCase() !== expectedHost) return null;
+
 		const user = await Users.findOne({ username: identifier }).lean().exec();
 		if (!user) return null;
 		const keys = await ctx.getActorKeyPairs(identifier);
@@ -476,8 +482,7 @@ const ingestRemoteOutbox = async (ctx, remoteUser, limit = PAGE_SIZE) => {
 };
 
 const followRemoteUser = async (localUser, handleOrUrl) => {
-	const baseRequestUrl = new URL(config.URL);
-	const ctx = federation.createContext(baseRequestUrl, undefined);
+	const ctx = federation.createContext(userBlogUrl(localUser.username), undefined);
 	const remoteActor = await ctx.lookupObject(handleOrUrl);
 	if (!remoteActor?.id) throw new Error("Could not resolve remote actor");
 
@@ -509,8 +514,7 @@ const followRemoteUser = async (localUser, handleOrUrl) => {
 };
 
 const unfollowRemoteUser = async (localUser, remoteUserId) => {
-	const baseRequestUrl = new URL(config.URL);
-	const ctx = federation.createContext(baseRequestUrl, undefined);
+	const ctx = federation.createContext(userBlogUrl(localUser.username), undefined);
 	const remote = await RemoteUsers.findById(remoteUserId).lean().exec();
 	if (!remote) throw new Error("Remote user not found");
 
@@ -548,8 +552,7 @@ const unfollowRemoteUser = async (localUser, remoteUserId) => {
 };
 
 const broadcastPostActivity = async (localUser, activityBuilder) => {
-	const baseRequestUrl = new URL(config.URL);
-	const ctx = federation.createContext(baseRequestUrl, undefined);
+	const ctx = federation.createContext(userBlogUrl(localUser.username), undefined);
 	const activity = activityBuilder(ctx, localUser.username);
 	try {
 		await ctx.sendActivity({ identifier: localUser.username }, "followers", activity);
