@@ -1,16 +1,16 @@
 <nav>
   <a href="/">Home</a>
   <% if(typeof user !== "undefined") { %>
-  <span class="separator">&middot;</span>
+  <span class="separator"></span>
   <a href="/pages">Pages</a>
-  <span class="separator">&middot;</span>
+  <span class="separator"></span>
   <a href="/timeline">Timeline</a>
-  <span class="separator">&middot;</span>
+  <span class="separator"></span>
   <a href="/settings">Settings</a>
   <% } else { %>
-  <span class="separator">&middot;</span>
+  <span class="separator"></span>
   <a href="/login">Log in</a>
-  <span class="separator">&middot;</span>
+  <span class="separator"></span>
   <a href="/signup">Sign up</a>
   <% }  %>
 </nav>
