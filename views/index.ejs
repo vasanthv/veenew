@@ -4,10 +4,13 @@
 
 <body>
   <div id="app" class="wrap">
-    <%- include('partials/header', {title: "Veenew - Your corner of the web"}); -%>
+    <header>
+      <%- include('partials/nav'); -%>
+      <h1 class="page-title"><em>Veenew</em> - <span style="font-weight: normal;">Your corner of the web</span></h1>
+    </header>
 
     <section>
-      <p>Veenew is a simple microblogging platform at its core, but flexible enough for blogs, essays, journals, personal website, and everything in between.</p>
+      <p>Veenew (pronounced as venue) is a simple microblogging platform at its core, but flexible enough for blogs, essays, journals, personal website, and everything in between.</p>
       <p>Built on open standards with ActivityPub & RSS support, so your blog connects seamlessly with the Fediverse. It brings the freedom of traditional blogging to microblogging - a clean space to write, share, and connect on your terms. No follows, no likes, just your thoughts.</p>
 
       <a href="/signup"><button>get started for free</button></a>
