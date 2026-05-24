@@ -159,7 +159,7 @@ router.get("/timeline", async (req, res, next) => {
 				.sort("-createdOn")
 				.skip(skip)
 				.limit(limit)
-				.populate("remoteUser", "handle name iconUrl actorUrl url")
+				.populate("remoteUser", "handle name iconUrl actorUrl")
 				.lean()
 				.exec(),
 			RemotePosts.countDocuments(query),
