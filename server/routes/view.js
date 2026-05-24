@@ -126,6 +126,7 @@ router.get("/followers", async (req, res, next) => {
 			accepted: followStateByRemoteId.get(String(f._id)) || false,
 		}));
 
+		console.log(followers);
 		res.render("followers", {
 			user: req.user,
 			csrfToken: req.csrfToken,
