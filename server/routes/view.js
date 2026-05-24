@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
 const { Users, Posts, RemotePosts } = require("../model").getInstance();
-const { getPagedPosts, getUserBaseUrl, getPagedUserRelations } = require("../utils");
+const { getPagedPosts, getUserBaseUrl, getPagedUserRelations, getFediverseHandle } = require("../utils");
 const config = require("../../config");
 
 const staticViews = ["/terms", "/privacy"];
@@ -94,8 +94,7 @@ router.get("/followings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
 		const pagination = await getPagedUserRelations(req, req.user._id, "follows");
-		const handleSuffix = config.DOMAIN.split(":")[0];
-		const myHandle = `@${req.user.username}@${handleSuffix}`;
+		const myHandle = getFediverseHandle(req.user);
 
 		res.render("followings", {
 			user: req.user,
@@ -118,8 +117,7 @@ router.get("/followers", async (req, res, next) => {
 		if (!req.user) return res.redirect("/login");
 		const pagination = await getPagedUserRelations(req, req.user._id, "followers");
 		const followDoc = await Users.findById(req.user._id).select("follows").lean().exec();
-		const handleSuffix = config.DOMAIN.split(":")[0];
-		const myHandle = `@${req.user.username}@${handleSuffix}`;
+		const myHandle = getFediverseHandle(req.user);
 		const followStateByRemoteId = new Map(
 			(followDoc?.follows || []).map((f) => [String(f.remoteUser), Boolean(f.accepted)])
 		);
@@ -149,8 +147,7 @@ router.get("/timeline", async (req, res, next) => {
 		if (!req.user) return res.redirect("/login");
 		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
 		const followingIds = (userDoc?.follows || []).map((f) => f.remoteUser);
-		const handleSuffix = config.DOMAIN.split(":")[0];
-		const myHandle = `@${req.user.username}@${handleSuffix}`;
+		const myHandle = getFediverseHandle(req.user);
 
 		const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 		const limit = config.PAGE_LIMIT;
