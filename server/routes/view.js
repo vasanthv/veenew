@@ -94,10 +94,13 @@ router.get("/followings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
 		const pagination = await getPagedUserRelations(req, req.user._id, "follows");
+		const handleSuffix = config.DOMAIN.split(":")[0];
+		const myHandle = `@${req.user.username}@${handleSuffix}`;
 
 		res.render("followings", {
 			user: req.user,
 			csrfToken: req.csrfToken,
+			myHandle,
 			follows: pagination.items,
 			page: pagination.page,
 			totalPages: pagination.totalPages,
@@ -115,6 +118,8 @@ router.get("/followers", async (req, res, next) => {
 		if (!req.user) return res.redirect("/login");
 		const pagination = await getPagedUserRelations(req, req.user._id, "followers");
 		const followDoc = await Users.findById(req.user._id).select("follows").lean().exec();
+		const handleSuffix = config.DOMAIN.split(":")[0];
+		const myHandle = `@${req.user.username}@${handleSuffix}`;
 		const followStateByRemoteId = new Map(
 			(followDoc?.follows || []).map((f) => [String(f.remoteUser), Boolean(f.accepted)])
 		);
@@ -126,6 +131,7 @@ router.get("/followers", async (req, res, next) => {
 		res.render("followers", {
 			user: req.user,
 			csrfToken: req.csrfToken,
+			myHandle,
 			followers,
 			page: pagination.page,
 			totalPages: pagination.totalPages,
@@ -138,7 +144,7 @@ router.get("/followers", async (req, res, next) => {
 	}
 });
 
-router.get("/timeliine", async (req, res, next) => {
+router.get("/timeline", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
 		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
@@ -161,7 +167,7 @@ router.get("/timeliine", async (req, res, next) => {
 			RemotePosts.countDocuments(query),
 		]);
 		const totalPages = Math.max(1, Math.ceil(totalPosts / limit));
-		res.render("timeliine", {
+		res.render("timeline", {
 			user: req.user,
 			csrfToken: req.csrfToken,
 			myHandle,

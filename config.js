@@ -8,7 +8,7 @@ module.exports = {
 	PORT: process.env.PORT || 3000,
 	PAGE_LIMIT: 50,
 	URL: IS_PROD ? `https://${DOMAIN}/` : `http://${DOMAIN}/`,
-	MONGODB_URI: process.env.MONGODB_URI || "mongodb://localhost:27017/veenew-dev",
+	MONGODB_URI: process.env.MONGODB_URI || "mongodb://localhost:27017/veeblog-dev",
 	DISABLE_CSRF: process.env.DISABLE_CSRF,
 	CSRF_COOKIE: "csrf_cookie",
 	CSRF_TOKEN_EXPIRY: 60 * 30, // 30 mins

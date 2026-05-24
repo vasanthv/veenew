@@ -7,21 +7,33 @@
     <%- include('partials/header', {title: "Followings"}); -%>
 
     <section>
+      <nav>
+        <span>Your fediverse handle: <code><%= myHandle %></code></span>
+        <span class="separator">&middot;</span>
+        <a href="/followings">Followings</a>
+        <span class="separator">&middot;</span>
+        <a href="/followers">Followers</a>
+      </nav>
+    </section>
+
+    <section>
       <% if (follows.length === 0) { %>
       <div class="empty">You are not following anyone yet.</div>
       <% } else { %>
       <% follows.forEach((f) => { %>
       <article>
         <div>
-          <a href="<%= f.url || f.actorUrl %>" target="_blank" rel="noopener"><strong><%= f.name || f.handle %></strong></a>
+          <strong>
+            <a href="<%= f.url || f.actorUrl %>" target="_blank" rel="noopener">
+              <%= f.name || f.handle %>
+            </a>
+          </strong>
           <span class="small">@<%= f.handle %></span>
         </div>
         <% if (f.summary) { %>
         <div class="small"><%- f.summary %></div>
         <% } %>
         <div class="small">
-          <span><%= f.accepted ? "accepted" : "pending" %> &middot; <%= dayjs(f.since).fromNow() %></span>
-          &middot;
           <a href="javascript:void(0)" class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</a>
         </div>
       </article>
