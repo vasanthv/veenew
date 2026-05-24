@@ -115,30 +115,30 @@
     </section>
 
     <div class="spacer"></div>
-    <hr />
-
-    <div class="spacer"></div>
-    <div class="spacer"></div>
-    <a href="logout" class="red"><strong>Log out of your account</strong></a>
     <div class="spacer"></div>
     <div class="spacer"></div>
 
+    <section>
+      <details>
+        <summary>Log out</summary>
+        <p><a href="logout" class="red"><strong>Log out of your account</strong></a></p>
+      </details>
+      <details>
+        <summary>Account deletion</summary>
+        <p>Deleting your account will permanently remove all your data and messages after 7 days. If you change your mind, just log back in within those 7 days to cancel the deletion.</p>
 
-    <details>
-      <summary>Account deletion</summary>
-      <p>Deleting your account will permanently remove all your data and messages after 7 days. If you change your mind, just log back in within those 7 days to cancel the deletion.</p>
+        <p><a href="/export" target="_blank">Download your data</a>, before proceeding further.</p>
 
-      <p><a href="/export" target="_blank">Download your data</a>, before proceeding further.</p>
+        <div v-if="!deleteConfirm">
+          <button class="red" v-on:click="deleteConfirm = true">delete account</button>
+        </div>
 
-      <div v-if="!deleteConfirm">
-        <button class="red" v-on:click="deleteConfirm = true">delete account</button>
-      </div>
-
-      <div v-if="deleteConfirm">
-        <p><strong>Are you sure?</strong></p>
-        <button class="red" v-on:click="deleteAccount">confirm & delete</button>
-      </div>
-    </details>
+        <div v-if="deleteConfirm">
+          <p><strong>Are you sure?</strong></p>
+          <button class="red" v-on:click="deleteAccount">confirm & delete</button>
+        </div>
+      </details>
+    </section>
     <hr />
     <div class="spacer"></div>
     <%- include('partials/footer'); -%>
