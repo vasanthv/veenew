@@ -10,12 +10,12 @@
       <article>
         <div class="content"><%- post.html %></div>
         <div class="spacer"></div>
-        <div class="small light">
+        <small>
           Posted on
           <time title="<%= post.createdOn.toISOString() %>">
             <%= postDate %>
           </time>
-        </div>
+        </small>
       </article>
     </section>
     <%- include('profile/footer'); -%>
