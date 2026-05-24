@@ -22,7 +22,7 @@
         <div class="small">
           <span><%= f.accepted ? "accepted" : "pending" %> &middot; <%= dayjs(f.since).fromNow() %></span>
           &middot;
-          <button class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</button>
+          <a href="javascript:void(0)" class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</a>
         </div>
       </article>
       <% }); %>
