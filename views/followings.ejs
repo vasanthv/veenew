@@ -22,14 +22,12 @@
               <%= f.name || f.handle %>
             </a>
           </strong>
-          <span class="small">@<%= f.handle %></span>
+          <small>@<%= f.handle %></small>
         </div>
         <% if (f.summary) { %>
-        <div class="small"><%- f.summary %></div>
+        <div><%- f.summary %></div>
         <% } %>
-        <div class="small">
-          <a href="javascript:void(0)" class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</a>
-        </div>
+        <small><a href="javascript:void(0)" class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</a></small>
       </article>
       <% }); %>
       <% } %>

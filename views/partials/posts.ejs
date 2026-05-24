@@ -12,7 +12,7 @@
   <% for (var i = 0; i < posts.length; i++) { %>
   <article class="<% if(typeof showEdit !== "undefined") { %>maxh<% } %>">
     <div class="content"><%- posts[i].html %></div>
-    <div class="small">
+    <small>
       <a href="<% if(typeof userBaseUrl !== "undefined") { %><%= userBaseUrl %><% } %>post/<%= posts[i]._id %>">
         <time datetime="<%= posts[i].createdOn.toISOString() %>"><%= dayjs(posts[i].createdOn).fromNow() %></time>
       </a>
@@ -22,7 +22,7 @@
         edit post
       </a>
       <% } %>
-    </div>
+    </small>
   </article>
   <% } %>
   <% } %>

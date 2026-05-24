@@ -238,15 +238,6 @@ article .feed-link {
 	width: 100%;
 	max-width: 480px;
 }
-.small {
-	font-size: 0.8rem;
-}
-.bold {
-	font-weight: 700;
-}
-.light {
-	opacity: 0.8;
-}
 .flex {
 	display: flex;
 	align-items: center;
@@ -260,10 +251,6 @@ article .feed-link {
 }
 .center {
 	text-align: center;
-}
-.error {
-	color: var(--red);
-	font-weight: bold;
 }
 .page-title {
 	font-size: 2rem;
@@ -284,10 +271,6 @@ article .feed-link {
 }
 .empty {
 	margin: 6vh auto;
-}
-.bio {
-	padding: 0px 0px 1rem;
-	border-bottom: 1px solid var(--grey);
 }
 #toast {
 	background-color: var(--text);

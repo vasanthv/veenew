@@ -31,7 +31,7 @@
               <%= post.remoteUser.name || post.remoteUser.handle %>
             </a>
           </strong>
-          <span class="small">@<%= post.remoteUser.handle %></span>
+          <small>@<%= post.remoteUser.handle %></small>
         </div>
         <div class="content"><%- post.content %></div>
         <% if (Array.isArray(post.imageUrls) && post.imageUrls.length > 0) { %>
@@ -41,11 +41,13 @@
           <% }); %>
         </div>
         <% } %>
-        <div class="small">
+
+        <small>
           <a href="<%= post.url %>" target="_blank" rel="noopener">
             <time datetime="<%= new Date(post.createdOn).toISOString() %>"><%= dayjs(post.createdOn).fromNow() %></time>
           </a>
-        </div>
+        </small>
+
       </article>
       <% }); %>
       <% } %>

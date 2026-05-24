@@ -24,7 +24,7 @@
           <tr>
             <td>
               <a href="<%= f.url || f.actorUrl %>" target="_blank" rel="noopener"><%= f.name || f.handle %></a>
-              <div class="small">@<%= f.handle %></div>
+              <div><small>@<%= f.handle %></small></div>
             </td>
             <td class="small"><%= f.accepted ? "accepted" : "pending" %></td>
             <td class="small"><%= dayjs(f.since).fromNow() %></td>
