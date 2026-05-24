@@ -107,19 +107,19 @@ router.get("/follows", async (req, res, next) => {
 			})
 			.filter(Boolean)
 			.sort((a, b) => new Date(b.since) - new Date(a.since));
-		const handleSuffix = config.DOMAIN.split(":")[0];
-		const myHandle = `@${req.user.username}@${handleSuffix}`;
-		res.render("follows", { user: req.user, csrfToken: req.csrfToken, follows, myHandle });
+		res.render("follows", { user: req.user, csrfToken: req.csrfToken, follows });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/feed", async (req, res, next) => {
+router.get("/timeliine", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
 		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
 		const followingIds = (userDoc?.follows || []).map((f) => f.remoteUser);
+		const handleSuffix = config.DOMAIN.split(":")[0];
+		const myHandle = `@${req.user.username}@${handleSuffix}`;
 
 		const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 		const limit = config.PAGE_LIMIT;
@@ -136,8 +136,10 @@ router.get("/feed", async (req, res, next) => {
 			RemotePosts.countDocuments(query),
 		]);
 		const totalPages = Math.max(1, Math.ceil(totalPosts / limit));
-		res.render("feed", {
+		res.render("timeliine", {
 			user: req.user,
+			csrfToken: req.csrfToken,
+			myHandle,
 			posts,
 			page,
 			totalPages,

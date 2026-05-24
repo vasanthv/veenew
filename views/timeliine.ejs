@@ -1,14 +1,25 @@
 <!doctype html>
 <html lang="en">
-<%- include('partials/html-head', {title: "Feed"}); -%>
+<%- include('partials/html-head', {title: "Timeliine"}); -%>
 
 <body>
   <div id="app" class="wrap">
-    <%- include('partials/header', {title: "Feed"}); -%>
+    <%- include('partials/header', {title: "Timeliine"}); -%>
+
+    <section>
+      <p class="small">Your fediverse handle: <code><%= myHandle %></code></p>
+      <div class="field">
+        <label for="follow-handle">Follow someone (user@instance)</label>
+        <div class="flex">
+          <input type="text" id="follow-handle" placeholder="e.g. alice@mastodon.social" v-model="followHandle" class="flex-1" />
+          <button v-on:click="followRemote" :disabled="isLoading">follow</button>
+        </div>
+      </div>
+    </section>
 
     <section>
       <% if (posts.length === 0) { %>
-      <div class="empty">Nothing here yet. <a href="/follows">Follow someone</a> to see their posts.</div>
+      <div class="empty">Nothing here yet. Follow someone to see their posts.</div>
       <% } else { %>
       <% posts.forEach((post) => { %>
       <article>
