@@ -34,5 +34,4 @@ module.exports = {
 	// Analytics should be enabled only for the production env
 	ANALYTICS_URL: IS_PROD ? process.env.ANALYTICS_URL : null,
 	STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-	STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
 };
