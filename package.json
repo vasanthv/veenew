@@ -1,10 +1,13 @@
 {
 	"name": "veenew",
-	"version": "1.1.0",
-	"description": "A minimal microblogging website with Markdown support. No ads, no likes, no follows - just a clean space to write and share your thoughts.",
+	"version": "0.1.0",
+	"description": "A minimal microblogging website built on open standards",
 	"keywords": [
 		"microblogging",
-		"calm social"
+		"naked blogging",
+		"calm social",
+		"ActivityPub",
+		"rss"
 	],
 	"homepage": "https://github.com/vasanthv/veenew#readme",
 	"bugs": {
