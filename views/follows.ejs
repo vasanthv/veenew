@@ -7,17 +7,6 @@
     <%- include('partials/header', {title: "Follows"}); -%>
 
     <section>
-      <p class="small">Your fediverse handle: <code><%= myHandle %></code></p>
-      <div class="field">
-        <label for="follow-handle">Follow someone (user@instance)</label>
-        <div class="flex">
-          <input type="text" id="follow-handle" placeholder="e.g. alice@mastodon.social" v-model="followHandle" class="flex-1" />
-          <button v-on:click="followRemote" :disabled="isLoading">follow</button>
-        </div>
-      </div>
-    </section>
-
-    <section>
       <% if (follows.length === 0) { %>
       <div class="empty">You are not following anyone yet.</div>
       <% } else { %>
