@@ -35,14 +35,21 @@ header {
 }
 nav {
 	margin-bottom: 0.5rem;
+}
+nav ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	column-gap: 0.5rem;
-	row-gap: 0.25rem;
 }
-nav .separator::after {
+nav ul li::after {
 	content: "·";
+	margin: 0px 0.5rem;
+}
+nav ul li:last-child:after {
+	content: "";
 }
 section {
 	margin: 1rem 0px;
@@ -51,7 +58,7 @@ footer {
 	text-align: center;
 	padding: 2rem 1rem;
 }
-footer nav {
+footer nav ul {
 	justify-content: center;
 }
 blockquote {
