@@ -23,9 +23,9 @@
           <span>follows you &middot; <%= dayjs(f.since).fromNow() %></span>
           &middot;
           <% if (f.accepted) { %>
-          <button class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</button>
+          <a href="javascript:void(0)" class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</a>
           <% } else { %>
-          <button v-on:click="followHandle = '<%= f.handle %>'; followRemote()">follow</button>
+          <a href="javascript:void(0)" v-on:click="followHandle = '<%= f.handle %>'; followRemote()">follow</a>
           <% } %>
         </div>
       </article>
