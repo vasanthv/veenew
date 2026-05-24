@@ -41,8 +41,8 @@ nav {
 	column-gap: 0.5rem;
 	row-gap: 0.25rem;
 }
-nav .separator {
-	margin: 0px;
+nav .separator::after {
+	content: "·";
 }
 section {
 	margin: 1rem 0px;
@@ -50,6 +50,9 @@ section {
 footer {
 	text-align: center;
 	padding: 2rem 1rem;
+}
+footer nav {
+	justify-content: center;
 }
 blockquote {
 	border: none;

@@ -7,13 +7,7 @@
     <%- include('partials/header', {title: "Followers"}); -%>
 
     <section>
-      <nav>
-        <span>Your fediverse handle: <code><%= myHandle %></code></span>
-        <span class="separator">&middot;</span>
-        <a href="/followings">Followings</a>
-        <span class="separator">&middot;</span>
-        <a href="/followers">Followers</a>
-      </nav>
+      <%- include('partials/timeline-nav'); -%>
     </section>
     <section>
       <% if (followers.length === 0) { %>
