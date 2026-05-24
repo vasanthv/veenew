@@ -1,13 +1,20 @@
 <!doctype html>
 <html lang="en">
-<%- include('partials/html-head', {title: "Timeliine"}); -%>
+<%- include('partials/html-head', {title: "Timeline"}); -%>
 
 <body>
   <div id="app" class="wrap">
-    <%- include('partials/header', {title: "Timeliine"}); -%>
+    <%- include('partials/header', {title: "Timeline"}); -%>
 
     <section>
-      <p class="small">Your fediverse handle: <code><%= myHandle %></code></p>
+      <nav>
+        <span>Your fediverse handle: <code><%= myHandle %></code></span>
+        <span class="separator">&middot;</span>
+        <a href="/followings">Followings</a>
+        <span class="separator">&middot;</span>
+        <a href="/followers">Followers</a>
+      </nav>
+
       <div class="field">
         <label for="follow-handle">Follow someone (user@instance)</label>
         <div class="flex">
@@ -17,21 +24,20 @@
       </div>
     </section>
 
+
     <section>
       <% if (posts.length === 0) { %>
       <div class="empty">Nothing here yet. Follow someone to see their posts.</div>
       <% } else { %>
       <% posts.forEach((post) => { %>
       <article>
-        <div class="flex">
-          <div class="flex-1">
-            <strong>
-              <a href="<%= post.remoteUser.actorUrl %>" target="_blank" rel="noopener">
-                <%= post.remoteUser.name || post.remoteUser.handle %>
-              </a>
-            </strong>
-            <span class="small">@<%= post.remoteUser.handle %></span>
-          </div>
+        <div>
+          <strong>
+            <a href="<%= post.remoteUser.url || post.remoteUser.actorUrl %>" target="_blank" rel="noopener">
+              <%= post.remoteUser.name || post.remoteUser.handle %>
+            </a>
+          </strong>
+          <span class="small">@<%= post.remoteUser.handle %></span>
         </div>
         <div class="content"><%- post.content %></div>
         <% if (Array.isArray(post.imageUrls) && post.imageUrls.length > 0) { %>

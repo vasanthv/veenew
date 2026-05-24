@@ -33,7 +33,7 @@ header {
 	padding: 1rem 0px;
 	margin-bottom: 1rem;
 }
-header nav {
+nav {
 	margin-bottom: 0.5rem;
 	display: flex;
 	flex-wrap: wrap;
@@ -41,7 +41,7 @@ header nav {
 	column-gap: 0.5rem;
 	row-gap: 0.25rem;
 }
-header nav .separator {
+nav .separator {
 	margin: 0px;
 }
 section {
