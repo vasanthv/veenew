@@ -183,7 +183,11 @@ router.get("/timeline", async (req, res, next) => {
 router.get("/settings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
-		res.render("settings", { user: req.user, csrfToken: req.csrfToken });
+		res.render("settings", {
+			user: req.user,
+			userDomain: `${req.user.username}.${config.DOMAIN}`,
+			csrfToken: req.csrfToken,
+		});
 	} catch (error) {
 		next(error);
 	}

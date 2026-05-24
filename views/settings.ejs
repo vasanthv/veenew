@@ -91,7 +91,7 @@
           <input type="text" id="domain" placeholder="enter a custom domain" v-model="myAccount.domain" :disabled="myAccount.isFreeUser" />
           <div class="help">
             Example: blog.example.com<br>
-            To use a custom domain, create a CNAME record that points to <%=user.username%>.veenew.com.
+            To use a custom domain, create a CNAME record that points to <em><%=userDomain%></em>
           </div>
         </div>
         <div class="field">
