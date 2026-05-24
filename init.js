@@ -41,7 +41,6 @@ app.use(webfingerRoutes);
 // that, otherwise it discards `url` and shows the actor id instead.
 const federationMiddleware = integrateFederation(federation, () => undefined);
 app.use((req, res, next) => {
-	if (!req.userDomain) return next();
 	if (!isFederationPath(req)) return next();
 	const rawHost = req.headers.host;
 	if (rawHost) Object.defineProperty(req, "host", { value: rawHost, configurable: true });
