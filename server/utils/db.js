@@ -1,7 +1,7 @@
 const { httpError } = require("./utils");
 const config = require("../../config");
 
-const { Users, Items, Channels, Posts, RemoteUsers } = require("../model").getInstance();
+const { Users, Items, Channels, Posts } = require("../model").getInstance();
 
 /**
  * Checks if a username is available for registration or update.
@@ -102,94 +102,10 @@ const getPagedUsers = async (req, query, sortBy = "-createdOn") => {
 	};
 };
 
-/**
- * Builds consistent pagination metadata for list pages.
- * @param {Object} req - Express request object
- * @param {number} totalItems - Total number of items
- * @returns {{page: number, totalPages: number, prevPage: number, nextPage: number, queryParams: Object, limit: number, skip: number}}
- */
-const getPaginationMeta = (req, totalItems) => {
-	const requestedPage = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
-	const limit = config.PAGE_LIMIT;
-	const totalPages = Math.max(1, Math.ceil(totalItems / limit));
-	const page = Math.min(requestedPage, totalPages);
-	const skip = (page - 1) * limit;
-	return {
-		page,
-		totalPages,
-		prevPage: page > 1 ? page - 1 : 0,
-		nextPage: page < totalPages ? page + 1 : 0,
-		queryParams: req.query,
-		limit,
-		skip,
-	};
-};
-
-/**
- * Retrieves paginated follow/follower relations from a user document at DB level.
- * @param {Object} req - Express request object with query params
- * @param {ObjectId} userId - User id to query
- * @param {"follows"|"followers"} relationField - Array field on Users model
- * @returns {Promise<{items: Object[], page: number, totalPages: number, prevPage: number, nextPage: number, queryParams: Object}>}
- */
-const getPagedUserRelations = async (req, userId, relationField) => {
-	const validFields = ["follows", "followers"];
-	if (!validFields.includes(relationField)) return httpError(500, "Invalid relation field");
-
-	const [countRow] = await Users.aggregate([
-		{ $match: { _id: userId } },
-		{ $project: { count: { $size: { $ifNull: [`$${relationField}`, []] } } } },
-	]).exec();
-	const totalItems = countRow?.count || 0;
-	const pagination = getPaginationMeta(req, totalItems);
-	const remoteUsersCollection = RemoteUsers.collection.name;
-
-	const rows = await Users.aggregate([
-		{ $match: { _id: userId } },
-		{ $project: { relation: `$${relationField}` } },
-		{ $unwind: "$relation" },
-		{ $sort: { "relation.since": -1 } },
-		{ $skip: pagination.skip },
-		{ $limit: pagination.limit },
-		{
-			$lookup: {
-				from: remoteUsersCollection,
-				localField: "relation.remoteUser",
-				foreignField: "_id",
-				as: "remoteUser",
-			},
-		},
-		{ $unwind: "$remoteUser" },
-		{
-			$project: {
-				_id: "$remoteUser._id",
-				actorUrl: "$remoteUser.actorUrl",
-				url: "$remoteUser.url",
-				handle: "$remoteUser.handle",
-				name: "$remoteUser.name",
-				iconUrl: "$remoteUser.iconUrl",
-				summary: "$remoteUser.summary",
-				since: "$relation.since",
-				accepted: "$relation.accepted",
-			},
-		},
-	]).exec();
-
-	return {
-		items: rows,
-		page: pagination.page,
-		totalPages: pagination.totalPages,
-		prevPage: pagination.prevPage,
-		nextPage: pagination.nextPage,
-		queryParams: pagination.queryParams,
-	};
-};
-
 module.exports = {
 	isNewUsername,
 	isNewEmail,
 	getUserByUsername,
 	getPagedPosts,
 	getPagedUsers,
-	getPagedUserRelations,
 };

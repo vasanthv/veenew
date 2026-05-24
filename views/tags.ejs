@@ -12,7 +12,7 @@
       <% } else { %>
       <% for (var i = 0; i < groupedTags.length; i++) { %>
       <div class="tag">
-        <a href="/?tag=<%=groupedTags[i]._id%>">#<%=groupedTags[i]._id%></a><small>(<%=groupedTags[i].count%>)</small>
+        <a href="/?tag=<%=groupedTags[i]._id%>">#<%=groupedTags[i]._id%></a> <span class="small">(<%=groupedTags[i].count%>)</span>
       </div>
       <% } %>
       <% } %>

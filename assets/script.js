@@ -173,16 +173,17 @@ const App = Vue.createApp({
 				.post("/api/follows", { handle })
 				.then((response) => {
 					this.setToast(response.data.message, "success");
-					setTimeout(() => redirect("/timeline"), 1000);
+					redirect("/follows");
 				})
 				.finally(() => {
 					this.isLoading = false;
 				});
 		},
 		unfollowRemote(id) {
-			if (!confirm("Are you sure you want to unfollow this user?")) return;
+			if (!confirm("Unfollow this user?")) return;
 			axios.delete(`/api/follows/${id}`).then((response) => {
 				this.setToast(response.data.message, "success");
+				redirect("/follows");
 			});
 		},
 		timeAgo(dateString) {

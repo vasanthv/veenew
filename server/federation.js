@@ -564,11 +564,6 @@ const broadcastPostUpdate = (localUser, post) =>
 const broadcastPostDelete = (localUser, postId) =>
 	broadcastPostActivity(localUser, (ctx, identifier) => buildDeleteActivity(ctx, identifier, postId));
 
-const isFederationPath = (req) => {
-	const p = req.path;
-	return p.startsWith("/users/") || p === "/inbox" || p.startsWith("/nodeinfo");
-};
-
 module.exports = {
 	federation,
 	followRemoteUser,
@@ -576,5 +571,4 @@ module.exports = {
 	broadcastPostCreate,
 	broadcastPostUpdate,
 	broadcastPostDelete,
-	isFederationPath,
 };

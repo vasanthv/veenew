@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
-const { Users, Posts, RemotePosts } = require("../model").getInstance();
-const { getPagedPosts, getUserBaseUrl, getPagedUserRelations, getFediverseHandle } = require("../utils");
+const { Users, Posts, RemoteUsers, RemotePosts } = require("../model").getInstance();
+const { getPagedPosts, getUserBaseUrl } = require("../utils");
 const config = require("../../config");
 
 const staticViews = ["/terms", "/privacy"];
@@ -90,65 +90,36 @@ router.get("/pages/edit/:id", async (req, res, next) => {
 	}
 });
 
-router.get("/followings", async (req, res, next) => {
+router.get("/follows", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
-		const pagination = await getPagedUserRelations(req, req.user._id, "follows");
-		const myHandle = getFediverseHandle(req.user);
-
-		res.render("followings", {
-			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
-			follows: pagination.items,
-			page: pagination.page,
-			totalPages: pagination.totalPages,
-			prevPage: pagination.prevPage,
-			nextPage: pagination.nextPage,
-			queryParams: pagination.queryParams,
-		});
+		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
+		const followEntries = userDoc?.follows || [];
+		const remoteUsers = await RemoteUsers.find({ _id: { $in: followEntries.map((f) => f.remoteUser) } })
+			.lean()
+			.exec();
+		const byId = new Map(remoteUsers.map((r) => [String(r._id), r]));
+		const follows = followEntries
+			.map((f) => {
+				const r = byId.get(String(f.remoteUser));
+				if (!r) return null;
+				return { ...r, since: f.since, accepted: f.accepted };
+			})
+			.filter(Boolean)
+			.sort((a, b) => new Date(b.since) - new Date(a.since));
+		const handleSuffix = config.DOMAIN.split(":")[0];
+		const myHandle = `@${req.user.username}@${handleSuffix}`;
+		res.render("follows", { user: req.user, csrfToken: req.csrfToken, follows, myHandle });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/followers", async (req, res, next) => {
-	try {
-		if (!req.user) return res.redirect("/login");
-		const pagination = await getPagedUserRelations(req, req.user._id, "followers");
-		const followDoc = await Users.findById(req.user._id).select("follows").lean().exec();
-		const myHandle = getFediverseHandle(req.user);
-		const followStateByRemoteId = new Map(
-			(followDoc?.follows || []).map((f) => [String(f.remoteUser), Boolean(f.accepted)])
-		);
-		const followers = pagination.items.map((f) => ({
-			...f,
-			accepted: followStateByRemoteId.get(String(f._id)) || false,
-		}));
-
-		console.log(followers);
-		res.render("followers", {
-			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
-			followers,
-			page: pagination.page,
-			totalPages: pagination.totalPages,
-			prevPage: pagination.prevPage,
-			nextPage: pagination.nextPage,
-			queryParams: pagination.queryParams,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/timeline", async (req, res, next) => {
+router.get("/feed", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
 		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
 		const followingIds = (userDoc?.follows || []).map((f) => f.remoteUser);
-		const myHandle = getFediverseHandle(req.user);
 
 		const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 		const limit = config.PAGE_LIMIT;
@@ -165,10 +136,8 @@ router.get("/timeline", async (req, res, next) => {
 			RemotePosts.countDocuments(query),
 		]);
 		const totalPages = Math.max(1, Math.ceil(totalPosts / limit));
-		res.render("timeline", {
+		res.render("feed", {
 			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
 			posts,
 			page,
 			totalPages,
@@ -184,11 +153,7 @@ router.get("/timeline", async (req, res, next) => {
 router.get("/settings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
-		res.render("settings", {
-			user: req.user,
-			userDomain: `${req.user.username}.${config.DOMAIN}`,
-			csrfToken: req.csrfToken,
-		});
+		res.render("settings", { user: req.user, csrfToken: req.csrfToken });
 	} catch (error) {
 		next(error);
 	}

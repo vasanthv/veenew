@@ -8,7 +8,7 @@ module.exports = {
 	PORT: process.env.PORT || 3000,
 	PAGE_LIMIT: 50,
 	URL: IS_PROD ? `https://${DOMAIN}/` : `http://${DOMAIN}/`,
-	MONGODB_URI: process.env.MONGODB_URI || "mongodb://localhost:27017/veeblog-dev",
+	MONGODB_URI: process.env.MONGODB_URI || "mongodb://localhost:27017/veenew-dev",
 	DISABLE_CSRF: process.env.DISABLE_CSRF,
 	CSRF_COOKIE: "csrf_cookie",
 	CSRF_TOKEN_EXPIRY: 60 * 30, // 30 mins
@@ -34,4 +34,5 @@ module.exports = {
 	// Analytics should be enabled only for the production env
 	ANALYTICS_URL: IS_PROD ? process.env.ANALYTICS_URL : null,
 	STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+	STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
 };

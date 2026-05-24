@@ -47,30 +47,30 @@
 
       <details>
         <summary>Navigation</summary>
-        <p>Add links to the top navigation for your internal pages and posts, or any external websites.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Link</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in myAccount.menu" :key="index">
-              <td>
-                <input type="text" placeholder="Menu name" v-model="item.name" />
-              </td>
-              <td>
-                <input type="text" placeholder="/path or URL" v-model="item.link" />
-              </td>
-              <td>
-                <button type="button" class="red" v-on:click="removeMenuItem(index)">remove</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
         <div class="field">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Link</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in myAccount.menu" :key="index">
+                <td>
+                  <input type="text" placeholder="Menu name" v-model="item.name" />
+                </td>
+                <td>
+                  <input type="text" placeholder="/path or URL" v-model="item.link" />
+                </td>
+                <td>
+                  <button type="button" class="red" v-on:click="removeMenuItem(index)">remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="spacer"></div>
           <button type="button" class="ghost" v-on:click="addMenuItem">add field</button>
         </div>
       </details>
@@ -89,10 +89,7 @@
         <div class="field">
           <label for="domain">Custom domain</label>
           <input type="text" id="domain" placeholder="enter a custom domain" v-model="myAccount.domain" :disabled="myAccount.isFreeUser" />
-          <div class="help">
-            Example: blog.example.com<br>
-            To use a custom domain, create a CNAME record that points to <em><%=userDomain%></em>
-          </div>
+          <div class="help">Eg: example.com or subdomain.example.com</div>
         </div>
         <div class="field">
           <label for="scriptUrl">Custom Script URL</label>
@@ -115,30 +112,30 @@
     </section>
 
     <div class="spacer"></div>
+    <hr />
+
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <a href="logout" class="red bold">Log out of your account</a>
     <div class="spacer"></div>
     <div class="spacer"></div>
 
-    <section>
-      <details>
-        <summary>Log out</summary>
-        <p><a href="logout" class="red"><strong>Log out of your account</strong></a></p>
-      </details>
-      <details>
-        <summary>Account deletion</summary>
-        <p>Deleting your account will permanently remove all your data and messages after 7 days. If you change your mind, just log back in within those 7 days to cancel the deletion.</p>
 
-        <p><a href="/export" target="_blank">Download your data</a>, before proceeding further.</p>
+    <details>
+      <summary>Account deletion</summary>
+      <p>Deleting your account will permanently remove all your data and messages after 7 days. If you change your mind, just log back in within those 7 days to cancel the deletion.</p>
 
-        <div v-if="!deleteConfirm">
-          <button class="red" v-on:click="deleteConfirm = true">delete account</button>
-        </div>
+      <p><a href="/export" target="_blank">Download your data</a>, before proceeding further.</p>
 
-        <div v-if="deleteConfirm">
-          <p><strong>Are you sure?</strong></p>
-          <button class="red" v-on:click="deleteAccount">confirm & delete</button>
-        </div>
-      </details>
-    </section>
+      <div v-if="!deleteConfirm">
+        <button class="red" v-on:click="deleteConfirm = true">delete account</button>
+      </div>
+
+      <div v-if="deleteConfirm">
+        <p class="bold">Are you sure?</p>
+        <button class="red" v-on:click="deleteAccount">confirm & delete</button>
+      </div>
+    </details>
     <hr />
     <div class="spacer"></div>
     <%- include('partials/footer'); -%>

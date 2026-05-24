@@ -10,8 +10,7 @@ const config = require("./config");
 const apiRoutes = require("./server/routes/api");
 const viewRoutes = require("./server/routes/view");
 const profileRoutes = require("./server/routes/profile");
-const webfingerRoutes = require("./server/routes/webfinger");
-const { federation, isFederationPath } = require("./server/federation");
+const { federation } = require("./server/federation");
 const mw = require("./server/middlewares");
 
 const app = express();
@@ -29,16 +28,23 @@ app.use(express.static(path.join(__dirname, "node_modules/vue/dist/")));
 app.use(express.static(path.join(__dirname, "assets")));
 app.use(express.static(path.join(__dirname, "assets/icons")));
 
-app.use(morgan("dev")); // for dev logging
-
 app.use(mw.attachUserDomainToRequest);
+app.use((req, res, next) => {
+	if (req.userDomain) return profileRoutes(req, res, next);
+	return next();
+});
 
-app.use(webfingerRoutes);
-
-// ActivityPub endpoints (actor, inbox, outbox, followers, following) are only
-// served on a user's subdomain so that the actor id host matches the human
-// profile URL host — Mastodon's same-origin check on the `url` field requires
-// that, otherwise it discards `url` and shows the actor id instead.
+// Federation (ActivityPub) is only served on the root domain. Subdomain
+// requests have already been handled by profileRoutes above.
+// Express 4 strips the port from req.host; @fedify/express uses req.host to
+// reconstruct the request URL, so we override it with the raw Host header.
+// Fedify also consumes the request body stream for any non-GET request, so we
+// must only invoke it for paths it actually owns to avoid breaking body parsing
+// in downstream routers.
+const isFederationPath = (req) => {
+	const p = req.path;
+	return p.startsWith("/.well-known/") || p.startsWith("/users/") || p === "/inbox" || p.startsWith("/nodeinfo");
+};
 const federationMiddleware = integrateFederation(federation, () => undefined);
 app.use((req, res, next) => {
 	if (!isFederationPath(req)) return next();
@@ -47,10 +53,7 @@ app.use((req, res, next) => {
 	return federationMiddleware(req, res, next);
 });
 
-app.use((req, res, next) => {
-	if (req.userDomain) return profileRoutes(req, res, next);
-	return next();
-});
+app.use(morgan("dev")); // for dev logging
 
 // Attach cookie middleware
 app.use(cookieParser());
