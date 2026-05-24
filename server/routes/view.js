@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
-const { Users, Posts, RemoteUsers, RemotePosts } = require("../model").getInstance();
-const { getPagedPosts, getUserBaseUrl } = require("../utils");
+const { Users, Posts, RemotePosts } = require("../model").getInstance();
+const { getPagedPosts, getUserBaseUrl, getPagedUserRelations } = require("../utils");
 const config = require("../../config");
 
 const staticViews = ["/terms", "/privacy"];
@@ -90,24 +90,49 @@ router.get("/pages/edit/:id", async (req, res, next) => {
 	}
 });
 
-router.get("/follows", async (req, res, next) => {
+router.get("/followings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
-		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
-		const followEntries = userDoc?.follows || [];
-		const remoteUsers = await RemoteUsers.find({ _id: { $in: followEntries.map((f) => f.remoteUser) } })
-			.lean()
-			.exec();
-		const byId = new Map(remoteUsers.map((r) => [String(r._id), r]));
-		const follows = followEntries
-			.map((f) => {
-				const r = byId.get(String(f.remoteUser));
-				if (!r) return null;
-				return { ...r, since: f.since, accepted: f.accepted };
-			})
-			.filter(Boolean)
-			.sort((a, b) => new Date(b.since) - new Date(a.since));
-		res.render("follows", { user: req.user, csrfToken: req.csrfToken, follows });
+		const pagination = await getPagedUserRelations(req, req.user._id, "follows");
+
+		res.render("followings", {
+			user: req.user,
+			csrfToken: req.csrfToken,
+			follows: pagination.items,
+			page: pagination.page,
+			totalPages: pagination.totalPages,
+			prevPage: pagination.prevPage,
+			nextPage: pagination.nextPage,
+			queryParams: pagination.queryParams,
+		});
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.get("/followers", async (req, res, next) => {
+	try {
+		if (!req.user) return res.redirect("/login");
+		const pagination = await getPagedUserRelations(req, req.user._id, "followers");
+		const followDoc = await Users.findById(req.user._id).select("follows").lean().exec();
+		const followStateByRemoteId = new Map(
+			(followDoc?.follows || []).map((f) => [String(f.remoteUser), Boolean(f.accepted)])
+		);
+		const followers = pagination.items.map((f) => ({
+			...f,
+			accepted: followStateByRemoteId.get(String(f._id)) || false,
+		}));
+
+		res.render("followers", {
+			user: req.user,
+			csrfToken: req.csrfToken,
+			followers,
+			page: pagination.page,
+			totalPages: pagination.totalPages,
+			prevPage: pagination.prevPage,
+			nextPage: pagination.nextPage,
+			queryParams: pagination.queryParams,
+		});
 	} catch (error) {
 		next(error);
 	}

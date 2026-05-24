@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Followings"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Followings"}); -%>
+
+    <section>
+      <% if (follows.length === 0) { %>
+      <div class="empty">You are not following anyone yet.</div>
+      <% } else { %>
+      <% follows.forEach((f) => { %>
+      <article>
+        <div>
+          <a href="<%= f.url || f.actorUrl %>" target="_blank" rel="noopener"><strong><%= f.name || f.handle %></strong></a>
+          <span class="small">@<%= f.handle %></span>
+        </div>
+        <% if (f.summary) { %>
+        <div class="small"><%- f.summary %></div>
+        <% } %>
+        <div class="small">
+          <span><%= f.accepted ? "accepted" : "pending" %> &middot; <%= dayjs(f.since).fromNow() %></span>
+          &middot;
+          <button class="red" v-on:click="unfollowRemote('<%= f._id %>')">unfollow</button>
+        </div>
+      </article>
+      <% }); %>
+      <% } %>
+    </section>
+
+    <%- include('partials/pagination'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>
