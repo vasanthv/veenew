@@ -34,15 +34,6 @@ app.use((req, res, next) => {
 	return next();
 });
 
-// redirect the fediverse actor url to the user subdomain
-app.get("/users/:username", (req, res, next) => {
-	const username = String(req.params.username || "")
-		.toLowerCase()
-		.trim();
-	if (!/^([a-zA-Z0-9]){3,18}$/.test(username)) return next();
-	res.redirect(301, `http${config.IS_PROD ? "s" : ""}://${username}.${config.DOMAIN}/`);
-});
-
 // Federation (ActivityPub) is only served on the root domain. Subdomain
 // requests have already been handled by profileRoutes above.
 // Express 4 strips the port from req.host; @fedify/express uses req.host to
