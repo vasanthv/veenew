@@ -35,6 +35,19 @@ router.get(["/login", "/signup"], (req, res, next) => {
 	}
 });
 
+// redirect the fediverse actor url to the user subdomain
+router.get("/users/:username", (req, res, next) => {
+	try {
+		const username = String(req.params.username || "")
+			.toLowerCase()
+			.trim();
+		if (!/^([a-zA-Z0-9]){3,18}$/.test(username)) return next();
+		res.redirect(301, `http${config.IS_PROD ? "s" : ""}://${username}.${config.DOMAIN}/`);
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.get("/new", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
