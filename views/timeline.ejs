@@ -8,16 +8,7 @@
 
     <section>
       <%- include('partials/timeline-nav'); -%>
-
-      <div class="field">
-        <label for="follow-handle">Follow someone (user@instance)</label>
-        <div class="flex">
-          <input type="text" id="follow-handle" placeholder="e.g. alice@mastodon.social" v-model="followHandle" class="flex-1" />
-          <button v-on:click="followRemote" :disabled="isLoading">follow</button>
-        </div>
-      </div>
     </section>
-
 
     <section>
       <% if (posts.length === 0) { %>

@@ -131,7 +131,6 @@ button {
 	cursor: pointer;
 	text-decoration: none;
 	margin: 0px;
-	font-weight: bold;
 }
 button.small {
 	padding: 0.25rem 0.5rem;
@@ -228,6 +227,7 @@ hr {
 	border: none;
 	height: 1px;
 	background-color: var(--grey);
+	margin: 0;
 }
 .wrap {
 	width: 100%;

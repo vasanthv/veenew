@@ -10,7 +10,7 @@
   <div class="empty">No posts to show.</div>
   <% } else { %>
   <% for (var i = 0; i < posts.length; i++) { %>
-  <article class="<% if(typeof showEdit !== "undefined") { %>maxh<% } %>">
+  <article id="post-<%= posts[i]._id %>" class="<% if(typeof showEdit !== "undefined") { %>maxh<% } %>">
     <div class="content"><%- posts[i].html %></div>
     <small>
       <a href="<% if(typeof userBaseUrl !== "undefined") { %><%= userBaseUrl %><% } %>post/<%= posts[i]._id %>">

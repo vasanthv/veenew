@@ -28,6 +28,8 @@ module.exports = {
 		"test",
 		"status",
 		"analytics",
+		"cabin",
+		"ee",
 	],
 	TITLE_MAX_LENGTH: 320,
 	FEED_ITEMS_CACHE_TTL_MS: 60 * 60,

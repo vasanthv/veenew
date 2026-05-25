@@ -2,12 +2,12 @@
 <html lang="en">
 <%- include('partials/html-head', {title: `${post.user.name ?? post.user.username} / ${title}`}); -%>
 
-<body>
+<body id="body-post-<%= post._id %>">
   <div id="app" class="wrap">
     <%- include('profile/header', {title: post.user.name ?? post.user.username}); -%>
 
     <section>
-      <article>
+      <article id="post-<%= post._id %>">
         <div class="content"><%- post.html %></div>
         <div class="spacer"></div>
         <small>

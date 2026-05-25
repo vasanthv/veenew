@@ -155,6 +155,20 @@ router.get("/followers", async (req, res, next) => {
 	}
 });
 
+router.get("/follow", async (req, res, next) => {
+	try {
+		if (!req.user) return res.redirect("/login");
+		const myHandle = getFediverseHandle(req.user);
+		res.render("follow", {
+			user: req.user,
+			csrfToken: req.csrfToken,
+			myHandle,
+		});
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.get("/timeline", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
