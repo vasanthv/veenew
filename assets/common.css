@@ -90,7 +90,7 @@ textarea {
 	font-size: 1rem;
 	width: 100%;
 	padding: 0.5rem 1rem;
-	border-radius: 0rem;
+	border-radius: 0.25rem;
 	box-sizing: border-box;
 	height: 2.5rem;
 	outline: none;
@@ -123,7 +123,7 @@ button {
 	color: var(--background);
 	border: 0.2rem solid var(--text);
 	box-sizing: border-box;
-	border-radius: 0rem;
+	border-radius: 0.25rem;
 	font-family: inherit;
 	font-size: 1rem;
 	line-height: 1;
@@ -228,6 +228,9 @@ hr {
 	height: 1px;
 	background-color: var(--grey);
 	margin: 0;
+}
+hr.bold {
+	height: 0.25rem;
 }
 .wrap {
 	width: 100%;

@@ -114,20 +114,30 @@ const App = Vue.createApp({
 			window.localStorage.setItem(key, this.post.text);
 		},
 		createPost() {
+			if (this.isLoading) return;
 			if (!this.post.text.trim()) return this.setToast("Text cannot be empty");
 			const text = this.post.text.trim();
-			axios.post("/api/posts", { text }).then((response) => {
-				window.localStorage.removeItem("newPost");
-				this.setToast(response.data.message, "success");
-				redirect("/");
-			});
+			this.isLoading = true;
+			axios
+				.post("/api/posts", { text })
+				.then((response) => {
+					window.localStorage.removeItem("newPost");
+					this.setToast(response.data.message, "success");
+					redirect("/");
+				})
+				.finally(() => (this.isLoading = false));
 		},
 		updatePost(id) {
+			if (this.isLoading) return;
 			if (!this.post.text.trim()) return this.setToast("Text cannot be empty");
 			const text = this.post.text.trim();
-			axios.put("/api/posts/" + id, { text }).then((response) => {
-				this.setToast(response.data.message, "success");
-			});
+			this.isLoading = true;
+			axios
+				.put("/api/posts/" + id, { text })
+				.then((response) => {
+					this.setToast(response.data.message, "success");
+				})
+				.finally(() => (this.isLoading = false));
 		},
 		deletePost(id) {
 			if (confirm("Are you sure you want to delete this post? There is no undo")) {
@@ -138,24 +148,34 @@ const App = Vue.createApp({
 			}
 		},
 		createPage() {
+			if (this.isLoading) return;
 			if (!this.post.text.trim()) return this.setToast("Text cannot be empty");
 			if (!this.post.slug.trim()) return this.setToast("Slug cannot be empty");
 			const text = this.post.text.trim();
 			const slug = this.post.slug.trim();
-			axios.post("/api/pages", { text, slug }).then((response) => {
-				window.localStorage.removeItem("newPage");
-				this.setToast(response.data.message, "success");
-				redirect("/pages");
-			});
+			this.isLoading = true;
+			axios
+				.post("/api/pages", { text, slug })
+				.then((response) => {
+					window.localStorage.removeItem("newPage");
+					this.setToast(response.data.message, "success");
+					redirect("/pages");
+				})
+				.finally(() => (this.isLoading = false));
 		},
 		updatePage(id) {
+			if (this.isLoading) return;
 			if (!this.post.text.trim()) return this.setToast("Text cannot be empty");
 			if (!this.post.slug.trim()) return this.setToast("Slug cannot be empty");
 			const text = this.post.text.trim();
 			const slug = this.post.slug.trim();
-			axios.put("/api/pages/" + id, { text, slug }).then((response) => {
-				this.setToast(response.data.message, "success");
-			});
+			this.isLoading = true;
+			axios
+				.put("/api/pages/" + id, { text, slug })
+				.then((response) => {
+					this.setToast(response.data.message, "success");
+				})
+				.finally(() => (this.isLoading = false));
 		},
 		deletePage(id) {
 			if (confirm("Are you sure you want to delete this page? There is no undo")) {
@@ -166,6 +186,7 @@ const App = Vue.createApp({
 			}
 		},
 		followRemote() {
+			if (this.isLoading) return;
 			const handle = (this.followHandle || "").trim();
 			if (!handle) return this.setToast("Enter a handle like user@instance");
 			this.isLoading = true;

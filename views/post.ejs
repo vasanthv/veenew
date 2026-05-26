@@ -25,7 +25,7 @@
             <a href="javascript:void(0)" v-on:click="<%- isPage ? `deletePage('${post._id}')` : `deletePost('${post._id}')` %>" class="red">delete <%= entityName %></a>
             <% } %>
           </div>
-          <button type="submit"><%- typeof post !== "undefined" ? "update" : entityName %></button>
+          <button type="submit" :disabled="isLoading"><%- typeof post !== "undefined" ? "update" : entityName %></button>
         </div>
       </form>
     </section>

@@ -44,3 +44,60 @@
 #pricing h2 {
 	text-align: center;
 }
+#loader {
+	position: relative;
+}
+#loader > div {
+	position: absolute;
+	z-index: 100;
+	background-color: var(--text);
+	color: var(--background);
+	padding: 0rem 0.5rem;
+	font-size: 1rem;
+	bottom: 1.75rem;
+	right: 0px;
+}
+#loader .emoji {
+	font-size: 1.5rem;
+}
+
+#loader .emoji::before {
+	content: "😀";
+	animation: faces 2s infinite steps(1);
+}
+
+@keyframes faces {
+	0% {
+		content: "😀";
+	}
+	10% {
+		content: "😃";
+	}
+	20% {
+		content: "😄";
+	}
+	30% {
+		content: "😁";
+	}
+	40% {
+		content: "😆";
+	}
+	50% {
+		content: "😅";
+	}
+	60% {
+		content: "😂";
+	}
+	70% {
+		content: "🤣";
+	}
+	80% {
+		content: "😎";
+	}
+	90% {
+		content: "🥳";
+	}
+	100% {
+		content: "😀";
+	}
+}

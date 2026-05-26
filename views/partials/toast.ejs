@@ -1,3 +1,9 @@
+<div id="loader" v-cloak v-if="isLoading">
+  <div class="flex">
+    <span class="emoji"></span>
+    <span class="flex-1">Please wait...</span>
+  </div>
+</div>
 <section id="toast" v-bind:class="toast.type" v-on:click="toast.message = ''" v-if="toast.message" v-cloak>
   {{toast.message}}
 </section>
