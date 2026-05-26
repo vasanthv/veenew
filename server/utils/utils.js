@@ -8,6 +8,7 @@ const marked = require("./marked");
 
 const config = require("../../config");
 const PASSWORD_BCRYPT_ROUNDS = 12;
+const BLOCKED_PAGE_SLUGS = new Set(["blog", "post", "tags", "feed"]);
 
 // String sanitizer initialization
 const { window } = new JSDOM("");
@@ -162,12 +163,17 @@ const getValidPost = (text) => {
  * @returns {string} Normalized slug
  */
 const getValidSlug = (slug) => {
-	const value = getValidString(slug, 1, 120, "Slug").toLowerCase();
+	const trimmedSlug = typeof slug === "string" ? slug.trim() : "";
+	if (!trimmedSlug) return "";
+	const value = getValidString(trimmedSlug, 1, 120, "Slug").toLowerCase();
 	if (!/^[a-z0-9-]+$/.test(value)) {
 		return httpError(400, "Slug can only contain lowercase letters, numbers, and hyphens");
 	}
 	if (value.startsWith("-") || value.endsWith("-")) {
 		return httpError(400, "Slug cannot start or end with a hyphen");
+	}
+	if (BLOCKED_PAGE_SLUGS.has(value)) {
+		return httpError(400, "Slug is reserved");
 	}
 	return value;
 };

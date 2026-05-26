@@ -150,7 +150,6 @@ const App = Vue.createApp({
 		createPage() {
 			if (this.isLoading) return;
 			if (!this.post.text.trim()) return this.setToast("Text cannot be empty");
-			if (!this.post.slug.trim()) return this.setToast("Slug cannot be empty");
 			const text = this.post.text.trim();
 			const slug = this.post.slug.trim();
 			this.isLoading = true;
@@ -166,7 +165,6 @@ const App = Vue.createApp({
 		updatePage(id) {
 			if (this.isLoading) return;
 			if (!this.post.text.trim()) return this.setToast("Text cannot be empty");
-			if (!this.post.slug.trim()) return this.setToast("Slug cannot be empty");
 			const text = this.post.text.trim();
 			const slug = this.post.slug.trim();
 			this.isLoading = true;

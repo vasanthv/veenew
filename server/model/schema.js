@@ -57,7 +57,7 @@ const postSchema = new Schema({
 	type: { type: String, enum: ["post", "page"], default: "post", index: true },
 	text: String,
 	html: String,
-	slug: { type: String, default: "" },
+	slug: { type: String, default: "", index: true },
 	hashtags: [{ type: String, index: true }],
 	createdOn: { type: Date, default: Date.now },
 	updatedOn: Date,

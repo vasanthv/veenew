@@ -15,6 +15,13 @@ const {
 } = require("../utils");
 const config = require("../../config");
 
+const renderPage = (res, page) => {
+	return res.render("page", {
+		page,
+		title: getTitle(page.text),
+	});
+};
+
 router.use(express.urlencoded({ extended: false }));
 router.use(attachDayjsToLocals);
 router.use(attachTagsFromQuery);
@@ -35,6 +42,14 @@ router.use(async (req, res, next) => {
 router.get("/", async (req, res, next) => {
 	try {
 		const profileUser = req.profileUser;
+		const homePage = await Posts.findOne({
+			user: profileUser._id,
+			type: "page",
+			slug: "",
+		})
+			.select("text html slug")
+			.lean();
+		if (homePage) return renderPage(res, homePage);
 
 		const query = { user: profileUser._id, type: "post" };
 		if (req.tags?.length > 0) query.hashtags = { $all: req.tags };
@@ -51,6 +66,24 @@ router.get("/", async (req, res, next) => {
 	}
 });
 
+router.get("/blog", async (req, res, next) => {
+	try {
+		const profileUser = req.profileUser;
+
+		const query = { user: profileUser._id, type: "post" };
+		if (req.tags?.length > 0) query.hashtags = { $all: req.tags };
+
+		const pagination = await getPagedPosts(req, query);
+
+		res.render("profile", {
+			tags: req.tags,
+			url: config.URL,
+			...pagination,
+		});
+	} catch (error) {
+		next(error);
+	}
+});
 router.get("/post/:id", setUserTimezone, async (req, res, next) => {
 	try {
 		const handle = req.profileUser.username;
@@ -144,10 +177,7 @@ router.get("/:slug", async (req, res, next) => {
 
 		if (!page) return res.status(404).render("404");
 
-		return res.render("page", {
-			page,
-			title: getTitle(page.text),
-		});
+		return renderPage(res, page);
 	} catch (error) {
 		next(error);
 	}
