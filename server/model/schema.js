@@ -15,6 +15,7 @@ const userSchema = new Schema({
 	usertype: { type: String, enum: ["free", "paid"], default: "free", required: true },
 	updatedOn: Date,
 	lastLoginOn: Date,
+	lastPostedOn: Date,
 	name: String,
 	iconUrl: String,
 	bio: String,

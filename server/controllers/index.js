@@ -267,6 +267,9 @@ const createPost = async (req, res, next) => {
 			broadcastPostCreate(req.user, post.toObject ? post.toObject() : post).catch((err) =>
 				console.error("Federation broadcast (create) failed:", err.message)
 			);
+			Users.updateOne({ _id: req.user._id }, { $set: { lastPostedOn: post.createdOn } }).catch((err) =>
+				console.error(err)
+			);
 		}
 	} catch (error) {
 		next(error);

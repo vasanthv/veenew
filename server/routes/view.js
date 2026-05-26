@@ -1,11 +1,37 @@
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
 const { Users, Posts, RemotePosts } = require("../model").getInstance();
-const { getPagedPosts, getUserBaseUrl, getPagedUserRelations, getFediverseHandle } = require("../utils");
+const { getPagedPosts, getPagedUsers, getUserBaseUrl, getPagedUserRelations, getFediverseHandle } = require("../utils");
 const config = require("../../config");
 
 const staticViews = ["/terms", "/privacy"];
 router.get(staticViews, (req, res) => res.render(req.path.substring(1), { user: req.user }));
+
+router.get("/directory", async (req, res, next) => {
+	try {
+		const pagination = await getPagedUsers(
+			req,
+			{ deletionDate: { $exists: false } },
+			{ lastPostedOn: -1, createdOn: -1 }
+		);
+		const users = pagination.users.map((user) => ({
+			...user,
+			baseUrl: getUserBaseUrl(user),
+		}));
+
+		res.render("directory", {
+			user: req.user,
+			users,
+			page: pagination.page,
+			totalPages: pagination.totalPages,
+			prevPage: pagination.prevPage,
+			nextPage: pagination.nextPage,
+			queryParams: pagination.queryParams,
+		});
+	} catch (error) {
+		next(error);
+	}
+});
 
 router.use(attachDayjsToLocals);
 router.use(attachTagsFromQuery);

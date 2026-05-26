@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Directory"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Directory"}); -%>
+
+    <section>
+      <% if (users.length === 0) { %>
+      <div class="empty">No users found.</div>
+      <% } else { %>
+      <% users.forEach((profileUser) => { %>
+      <article>
+        <div>
+          <strong>
+            <a href="<%= profileUser.baseUrl %>" target="_blank" rel="noopener">
+              <%= profileUser.name || profileUser.username %>
+            </a>
+          </strong>
+          <small>@<%= profileUser.username %></small>
+        </div>
+        <% if (profileUser.bioHTML) { %>
+        <div><%- profileUser.bioHTML %></div>
+        <% } %>
+      </article>
+      <% }); %>
+      <% } %>
+    </section>
+
+    <%- include('partials/pagination'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

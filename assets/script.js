@@ -175,15 +175,17 @@ const App = Vue.createApp({
 					this.setToast(response.data.message, "success");
 					setTimeout(() => redirect("/timeline"), 1000);
 				})
-				.finally(() => {
-					this.isLoading = false;
-				});
+				.finally(() => (this.isLoading = false));
 		},
 		unfollowRemote(id) {
 			if (!confirm("Are you sure you want to unfollow this user?")) return;
-			axios.delete(`/api/follows/${id}`).then((response) => {
-				this.setToast(response.data.message, "success");
-			});
+			this.isLoading = true;
+			axios
+				.delete(`/api/follows/${id}`)
+				.then((response) => {
+					this.setToast(response.data.message, "success");
+				})
+				.finally(() => (this.isLoading = false));
 		},
 		timeAgo(dateString) {
 			const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
