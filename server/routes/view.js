@@ -11,7 +11,10 @@ router.get("/directory", async (req, res, next) => {
 	try {
 		const pagination = await getPagedUsers(
 			req,
-			{ deletionDate: { $exists: false } },
+			{
+				deletionDate: { $exists: false },
+				$or: [{ hideFromDirectory: { $exists: false } }, { hideFromDirectory: false }],
+			},
 			{ lastPostedOn: -1, createdOn: -1 }
 		);
 		const users = pagination.users.map((user) => ({

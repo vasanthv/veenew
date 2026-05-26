@@ -16,6 +16,7 @@ const userSchema = new Schema({
 	updatedOn: Date,
 	lastLoginOn: Date,
 	lastPostedOn: Date,
+	hideFromDirectory: Boolean,
 	name: String,
 	iconUrl: String,
 	bio: String,
