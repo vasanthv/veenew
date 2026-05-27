@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<%- include('partials/html-head', {title: `${profile.name ?? profile.username} / ${title}`}); -%>
+<%- include('partials/html-head', {title: page.slug ? `${profile.name ?? profile.username} / ${title}` : `${profile.name ?? profile.username}`}); -%>
 
 <body id="body-page-<%= page._id %>">
   <div id="app" class="wrap">
