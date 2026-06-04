@@ -30,7 +30,7 @@ module.exports = {
 		"status",
 		"analytics",
 		"cabin",
-		"ee",
+		"cname",
 	],
 	TITLE_MAX_LENGTH: 320,
 	FEED_ITEMS_CACHE_TTL_MS: 60 * 60,
