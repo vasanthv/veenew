@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
 const { Users, Posts, RemotePosts } = require("../model").getInstance();
@@ -280,6 +281,24 @@ router.get("/export", async (req, res, next) => {
 
 		// Send the JSON string as the response body
 		res.end(jsonString);
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.get("/feedback", async (req, res, next) => {
+	try {
+		if (!req.user) return res.redirect("/login");
+
+		const tokenPayload = {
+			email: req.user.email,
+			id: req.user._id,
+			name: req.user.name ?? req.user.username,
+		};
+
+		const cannySsoToken = jwt.sign(tokenPayload, config.CANNY_PRIVATE_KEY, { algorithm: "HS256" });
+
+		res.render("feedback", { user: req.user, csrfToken: req.csrfToken, cannySsoToken });
 	} catch (error) {
 		next(error);
 	}

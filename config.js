@@ -15,6 +15,7 @@ module.exports = {
 	SECRET: process.env.SECRET ?? "some-secret",
 	AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY_ID,
 	AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+	CANNY_PRIVATE_KEY: process.env.CANNY_PRIVATE_KEY,
 	NO_REPLY_EMAIL: process.env.NO_REPLY_EMAIL ?? "Veenew <noreply@email.veenew.com>",
 	INVALID_HANDLES: [
 		"administrator",
