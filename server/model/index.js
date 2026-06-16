@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 
 const config = require("../../config");
-const { userSchema, postSchema, remoteUserSchema, remotePostSchema } = require("./schema");
+const { userSchema, postSchema } = require("./schema");
 
 module.exports = (() => {
 	let instance;
@@ -34,10 +34,8 @@ module.exports = (() => {
 
 		const Users = mongoose.model("Users", userSchema);
 		const Posts = mongoose.model("Posts", postSchema);
-		const RemoteUsers = mongoose.model("RemoteUsers", remoteUserSchema);
-		const RemotePosts = mongoose.model("RemotePosts", remotePostSchema);
 
-		return { Posts, Users, RemoteUsers, RemotePosts };
+		return { Posts, Users };
 	};
 	return {
 		getInstance: () => {

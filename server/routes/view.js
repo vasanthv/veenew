@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
-const { Users, Posts, RemotePosts } = require("../model").getInstance();
-const { getPagedPosts, getPagedUsers, getUserBaseUrl, getPagedUserRelations, getFediverseHandle } = require("../utils");
+const { Users, Posts } = require("../model").getInstance();
+const { getPagedPosts, getPagedUsers, getUserBaseUrl } = require("../utils");
 const config = require("../../config");
 
 const staticViews = ["/terms", "/privacy"];
@@ -65,19 +65,6 @@ router.get(["/login", "/signup"], (req, res, next) => {
 	}
 });
 
-// redirect the fediverse actor url to the user subdomain
-router.get("/users/:username", (req, res, next) => {
-	try {
-		const username = String(req.params.username || "")
-			.toLowerCase()
-			.trim();
-		if (!/^([a-zA-Z0-9]){3,18}$/.test(username)) return next();
-		res.redirect(301, `http${config.IS_PROD ? "s" : ""}://${username}.${config.DOMAIN}/`);
-	} catch (error) {
-		next(error);
-	}
-});
-
 router.get("/new", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
@@ -133,116 +120,11 @@ router.get("/pages/edit/:id", async (req, res, next) => {
 	}
 });
 
-router.get("/followings", async (req, res, next) => {
-	try {
-		if (!req.user) return res.redirect("/login");
-		const pagination = await getPagedUserRelations(req, req.user._id, "follows");
-		const myHandle = getFediverseHandle(req.user);
-
-		res.render("followings", {
-			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
-			follows: pagination.items,
-			page: pagination.page,
-			totalPages: pagination.totalPages,
-			prevPage: pagination.prevPage,
-			nextPage: pagination.nextPage,
-			queryParams: pagination.queryParams,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/followers", async (req, res, next) => {
-	try {
-		if (!req.user) return res.redirect("/login");
-		const pagination = await getPagedUserRelations(req, req.user._id, "followers");
-		const followDoc = await Users.findById(req.user._id).select("follows").lean().exec();
-		const myHandle = getFediverseHandle(req.user);
-		const followStateByRemoteId = new Map(
-			(followDoc?.follows || []).map((f) => [String(f.remoteUser), Boolean(f.accepted)])
-		);
-		const followers = pagination.items.map((f) => ({
-			...f,
-			accepted: followStateByRemoteId.get(String(f._id)) || false,
-		}));
-
-		res.render("followers", {
-			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
-			followers,
-			page: pagination.page,
-			totalPages: pagination.totalPages,
-			prevPage: pagination.prevPage,
-			nextPage: pagination.nextPage,
-			queryParams: pagination.queryParams,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/follow", async (req, res, next) => {
-	try {
-		if (!req.user) return res.redirect("/login");
-		const myHandle = getFediverseHandle(req.user);
-		res.render("follow", {
-			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/timeline", async (req, res, next) => {
-	try {
-		if (!req.user) return res.redirect("/login");
-		const userDoc = await Users.findById(req.user._id).select("follows").lean().exec();
-		const followingIds = (userDoc?.follows || []).map((f) => f.remoteUser);
-		const myHandle = getFediverseHandle(req.user);
-
-		const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-		const limit = config.PAGE_LIMIT;
-		const skip = (page - 1) * limit;
-		const query = { remoteUser: { $in: followingIds } };
-		const [posts, totalPosts] = await Promise.all([
-			RemotePosts.find(query)
-				.sort("-createdOn")
-				.skip(skip)
-				.limit(limit)
-				.populate("remoteUser", "handle name iconUrl actorUrl")
-				.lean()
-				.exec(),
-			RemotePosts.countDocuments(query),
-		]);
-		const totalPages = Math.max(1, Math.ceil(totalPosts / limit));
-		res.render("timeline", {
-			user: req.user,
-			csrfToken: req.csrfToken,
-			myHandle,
-			posts,
-			page,
-			totalPages,
-			prevPage: page > 1 ? page - 1 : 0,
-			nextPage: page < totalPages ? page + 1 : 0,
-			queryParams: req.query,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
 router.get("/settings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
 		res.render("settings", {
 			user: req.user,
-			userDomain: `${req.user.username}.${config.DOMAIN}`,
 			csrfToken: req.csrfToken,
 		});
 	} catch (error) {

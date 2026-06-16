@@ -34,21 +34,6 @@ const userSchema = new Schema({
 	customStyle: String,
 	customScriptUrl: String,
 	devices: [{ token: { type: String, index: true }, userAgent: String }],
-	publicKey: String,
-	privateKey: String,
-	follows: [
-		{
-			remoteUser: { type: Schema.Types.ObjectId, ref: "RemoteUsers", index: true },
-			since: { type: Date, default: Date.now },
-			accepted: { type: Boolean, default: false },
-		},
-	],
-	followers: [
-		{
-			remoteUser: { type: Schema.Types.ObjectId, ref: "RemoteUsers", index: true },
-			since: { type: Date, default: Date.now },
-		},
-	],
 	deletionDate: { type: Date, expires: 0 },
 });
 
@@ -64,38 +49,7 @@ const postSchema = new Schema({
 	deletionDate: { type: Date, expires: 0 },
 });
 
-const remoteUserSchema = new Schema({
-	actorUrl: { type: String, index: true, unique: true, required: true },
-	username: String,
-	domain: String,
-	handle: { type: String, index: true },
-	name: String,
-	iconUrl: String,
-	summary: String,
-	inboxUrl: String,
-	sharedInboxUrl: String,
-	outboxUrl: String,
-	followersUrl: String,
-	followingUrl: String,
-	publicKey: String,
-	publicKeyId: String,
-	discoveredOn: { type: Date, default: Date.now },
-	lastFetchedOn: Date,
-});
-
-const remotePostSchema = new Schema({
-	remoteUser: { type: Schema.Types.ObjectId, ref: "RemoteUsers", index: true, required: true },
-	activityPubId: { type: String, index: true, unique: true, required: true },
-	url: String,
-	content: String,
-	imageUrls: [String],
-	createdOn: { type: Date, default: Date.now, index: true },
-	updatedOn: Date,
-});
-
 module.exports = {
 	userSchema,
 	postSchema,
-	remoteUserSchema,
-	remotePostSchema,
 };

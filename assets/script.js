@@ -8,7 +8,6 @@ const defaultState = function () {
 		authCreds: { username: "", password: "" },
 		post: { text: params.has("text") ? params.get("text") : "", slug: "" },
 		myAccount: { username: "", email: "", password: "", name: "", bio: "", menu: [] },
-		followHandle: "",
 		deleteConfirm: false,
 		isLoading: false,
 	};
@@ -161,29 +160,6 @@ const App = Vue.createApp({
 					redirect("/pages");
 				});
 			}
-		},
-		followRemote() {
-			if (this.isLoading) return;
-			const handle = (this.followHandle || "").trim();
-			if (!handle) return this.setToast("Enter a handle like user@instance");
-			this.isLoading = true;
-			axios
-				.post("/api/follows", { handle })
-				.then((response) => {
-					this.setToast(response.data.message, "success");
-					setTimeout(() => redirect("/timeline"), 1000);
-				})
-				.finally(() => (this.isLoading = false));
-		},
-		unfollowRemote(id) {
-			if (!confirm("Are you sure you want to unfollow this user?")) return;
-			this.isLoading = true;
-			axios
-				.delete(`/api/follows/${id}`)
-				.then((response) => {
-					this.setToast(response.data.message, "success");
-				})
-				.finally(() => (this.isLoading = false));
 		},
 		timeAgo(dateString) {
 			const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);

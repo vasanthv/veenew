@@ -20,9 +20,6 @@ router.put("/account", apiHandler.updateAccount);
 router.post("/logout", apiHandler.logOut);
 router.delete("/account", apiHandler.deleteAccount);
 
-router.post("/follows", rateLimit({ max: 30 }), apiHandler.followUser);
-router.delete("/follows/:id", apiHandler.unfollowUser);
-
 router.post("/posts", rateLimit({ max: 5 }), apiHandler.createPost);
 router.put("/posts/:id", apiHandler.updatePost);
 router.delete("/posts/:id", apiHandler.deletePost);

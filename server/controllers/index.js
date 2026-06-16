@@ -2,13 +2,6 @@ const randomString = require("randomstring");
 const uuid = require("uuid").v4;
 
 const utils = require("../utils");
-const {
-	followRemoteUser,
-	unfollowRemoteUser,
-	broadcastPostCreate,
-	broadcastPostUpdate,
-	broadcastPostDelete,
-} = require("../federation");
 const { Users, Posts } = require("../model").getInstance();
 
 const ensureUniquePageSlug = async (userId, slug, excludeId = null) => {
@@ -257,9 +250,6 @@ const createPost = async (req, res, next) => {
 		res.json({ message: type === "page" ? "Page created" : "Post created", post });
 
 		if (type === "post") {
-			broadcastPostCreate(req.user, post.toObject ? post.toObject() : post).catch((err) =>
-				console.error("Federation broadcast (create) failed:", err.message)
-			);
 			Users.updateOne({ _id: req.user._id }, { $set: { lastPostedOn: post.createdOn } }).catch((err) =>
 				console.error(err)
 			);
@@ -291,13 +281,6 @@ const updatePost = async (req, res, next) => {
 		await Posts.updateOne({ _id: post._id }, updateFields);
 
 		res.json({ message: type === "page" ? "Page updated" : "Post updated" });
-
-		if (type === "post") {
-			const merged = { ...post.toObject(), ...updateFields };
-			broadcastPostUpdate(req.user, merged).catch((err) =>
-				console.error("Federation broadcast (update) failed:", err.message)
-			);
-		}
 	} catch (error) {
 		next(error);
 	}
@@ -309,12 +292,6 @@ const deletePost = async (req, res, next) => {
 		if (!post) return utils.httpError(404, "Post not found");
 
 		res.json({ message: "Post deleted" });
-
-		if (post.type === "post") {
-			broadcastPostDelete(req.user, post._id).catch((err) =>
-				console.error("Federation broadcast (delete) failed:", err.message)
-			);
-		}
 	} catch (error) {
 		next(error);
 	}
@@ -346,44 +323,6 @@ const deletePage = async (req, res, next) => {
 	}
 };
 
-const followUser = async (req, res, next) => {
-	try {
-		const handle = (req.body.handle || "").trim();
-		if (!handle) return utils.httpError(400, "Handle is required");
-
-		const result = await followRemoteUser(req.user, handle);
-		res.json({
-			message: `Following ${result.remoteUser.handle || result.remoteUser.actorUrl}. Ingested ${result.postsIngested} recent posts.`,
-			remoteUser: {
-				_id: result.remoteUser._id,
-				handle: result.remoteUser.handle,
-				name: result.remoteUser.name,
-				actorUrl: result.remoteUser.actorUrl,
-			},
-		});
-	} catch (error) {
-		if (!error.httpErrorCode) {
-			error.httpErrorCode = 400;
-			error.message = error.message || "Could not follow user";
-		}
-		next(error);
-	}
-};
-
-const unfollowUser = async (req, res, next) => {
-	try {
-		const remoteUserId = req.params.id;
-		await unfollowRemoteUser(req.user, remoteUserId);
-		res.json({ message: "Unfollowed" });
-	} catch (error) {
-		if (!error.httpErrorCode) {
-			error.httpErrorCode = 400;
-			error.message = error.message || "Could not unfollow";
-		}
-		next(error);
-	}
-};
-
 module.exports = {
 	signUp,
 	logIn,
@@ -399,6 +338,4 @@ module.exports = {
 	createPage,
 	updatePage,
 	deletePage,
-	followUser,
-	unfollowUser,
 };

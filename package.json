@@ -28,7 +28,6 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-ses": "^3.556.0",
-		"@fedify/express": "^2.2.3",
 		"@fedify/fedify": "^2.2.3",
 		"axios": "^1.8.2",
 		"bcryptjs": "^2.4.3",
