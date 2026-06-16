@@ -36,29 +36,16 @@ const attachUsertoRequest = async (req, res, next) => {
 };
 
 /**
- * Resolves username from subdomain or custom domain and sets req.userDomain.
+ * Resolves username from subdomain and sets req.userDomain.
  * Falls through on base domain; responds with 404 for unknown/invalid hostnames.
  */
 const attachUserDomainToRequest = async (req, res, next) => {
 	try {
 		const hostname = (req.hostname || "").toLowerCase();
 		const baseDomain = config.DOMAIN.split(":")[0].toLowerCase();
-		const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 		if (!hostname || hostname === baseDomain) return next();
 		if (hostname === `www.${baseDomain}`) return next();
-
-		// Custom domain support: match request hostname against Users.domain
-		const customDomainUser = await Users.findOne({
-			domain: { $regex: new RegExp(`^${escapeRegExp(hostname)}$`, "i") },
-		})
-			.select("username")
-			.lean()
-			.exec();
-		if (customDomainUser) {
-			req.userDomain = customDomainUser.username;
-			return next();
-		}
 
 		const domainSuffix = `.${baseDomain}`;
 		if (!hostname.endsWith(domainSuffix)) return res.status(404).render("404");
@@ -94,7 +81,6 @@ const isUserAuthed = (req, res, next) => {
  */
 const csrfMiddleware = (req, res, next) => {
 	if (config.DISABLE_CSRF) return next();
-	if (req.path === "/api/stripe/webhook") return next();
 	const CSRF_COOKIE = config.CSRF_COOKIE;
 
 	// Only protect state-changing requests

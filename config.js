@@ -36,5 +36,4 @@ module.exports = {
 	FEED_ITEMS_CACHE_TTL_MS: 60 * 60,
 	// Analytics should be enabled only for the production env
 	ANALYTICS_URL: IS_PROD ? process.env.ANALYTICS_URL : null,
-	STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
 };

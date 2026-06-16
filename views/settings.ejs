@@ -85,27 +85,11 @@
       </details>
 
       <details>
-        <summary>Paid features 💰</summary>
-        <div class="field">
-          <label for="domain">Custom domain</label>
-          <input type="text" id="domain" placeholder="enter a custom domain" v-model="myAccount.domain" :disabled="myAccount.isFreeUser" />
-          <div class="help">
-            Example: blog.example.com<br>
-            To use a custom domain, create a CNAME record that points to <em><%=userDomain%></em>
-          </div>
-        </div>
+        <summary>Custom script</summary>
         <div class="field">
           <label for="scriptUrl">Custom Script URL</label>
-          <input type="text" id="scriptUrl" placeholder="enter a script URL" v-model="myAccount.customScriptUrl" :disabled="myAccount.isFreeUser" />
+          <input type="text" id="scriptUrl" placeholder="enter a script URL" v-model="myAccount.customScriptUrl" />
           <div class="help">Eg: https://example.com/script.js</div>
-        </div>
-        <div v-if="myAccount.isFreeUser">
-          <hr />
-          <p>Get access to all Veenew paid features with a one-time payment of <strong>$36</strong>.</p>
-          <div class="flex">
-            <div class="flex-1"></div>
-            <button class="ghost" v-on:click="startPremiumCheckout">Buy now for $36</button>
-          </div>
         </div>
       </details>
       <div class="spacer"></div>
@@ -151,11 +135,9 @@
         username: "<%=user.username%>",
         email: "<%=user.email%>",
         name: "<%=user.name%>",
-        isFreeUser: "<%=user.usertype%>" === 'free',
         bio: "<%- JSON.stringify(user.bio || '').slice(1, -1) %>",
         password: "",
         iconUrl: "<%=user.iconUrl%>",
-        domain: "<%=user.domain%>",
         nav: "<%- JSON.stringify(user.nav || '').slice(1, -1) %>",
         menu: <%- JSON.stringify(user.menu) %>,
         customStyle: "<%- JSON.stringify(user.customStyle || '').slice(1, -1) %>",

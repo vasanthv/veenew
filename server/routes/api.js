@@ -19,8 +19,6 @@ router.use(isUserAuthed);
 router.put("/account", apiHandler.updateAccount);
 router.post("/logout", apiHandler.logOut);
 router.delete("/account", apiHandler.deleteAccount);
-router.post("/premium/checkout", apiHandler.createStripePremiumCheckout);
-router.post("/premium/confirm", apiHandler.confirmStripePremiumCheckout);
 
 router.post("/follows", rateLimit({ max: 30 }), apiHandler.followUser);
 router.delete("/follows/:id", apiHandler.unfollowUser);

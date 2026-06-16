@@ -80,27 +80,6 @@ const App = Vue.createApp({
 		removeMenuItem(index) {
 			this.myAccount.menu.splice(index, 1);
 		},
-		startPremiumCheckout() {
-			axios.post("/api/premium/checkout").then((response) => {
-				redirect(response.data.checkoutUrl);
-			});
-		},
-		confirmPremiumFromUrl() {
-			const params = new URLSearchParams(window.location.search);
-			if (params.get("stripe") !== "success") return;
-			const sessionId = params.get("session_id");
-			if (!sessionId) return this.setToast("Missing Stripe checkout session");
-
-			axios.post("/api/premium/confirm", { sessionId }).then((response) => {
-				this.myAccount.isFreeUser = false;
-				this.setToast(response.data.message, "success");
-				params.delete("stripe");
-				params.delete("session_id");
-				const nextQuery = params.toString();
-				const path = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`;
-				window.history.replaceState({}, "", path);
-			});
-		},
 		deleteAccount() {
 			if (confirm("Are you sure you want to delete your account?")) {
 				axios.delete("/api/account").then((response) => {
@@ -254,5 +233,4 @@ const App = Vue.createApp({
 		}
 	);
 
-	if (window.location.pathname === "/settings") App.confirmPremiumFromUrl();
 })();

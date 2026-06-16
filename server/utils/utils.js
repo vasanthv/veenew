@@ -284,18 +284,8 @@ const getTitle = (str) => {
 	return markdownLinkMatch ? markdownLinkMatch[1].trim() : firstLine;
 };
 
-/**
- * Builds a user's canonical base URL.
- * Prefers custom domain when present, otherwise falls back to username subdomain.
- * @param {object} user - User object containing username and optional domain
- * @returns {string} Base URL ending with "/"
- * @throws {Error} If user or username is invalid
- */
 const getUserBaseUrl = (user) => {
 	if (!user?.username) return httpError(400, "Invalid user");
-
-	const customDomain = user?.domain?.trim();
-	if (customDomain) return `https://${customDomain}/`;
 
 	return `http${config.IS_PROD ? "s" : ""}://${user.username}.${config.DOMAIN}/`;
 };

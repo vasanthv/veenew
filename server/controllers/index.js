@@ -9,8 +9,6 @@ const {
 	broadcastPostUpdate,
 	broadcastPostDelete,
 } = require("../federation");
-const { createStripePremiumCheckout, confirmStripePremiumCheckout, stripeWebhook } = require("./stripe");
-
 const { Users, Posts } = require("../model").getInstance();
 
 const ensureUniquePageSlug = async (userId, slug, excludeId = null) => {
@@ -191,15 +189,10 @@ const updateAccount = async (req, res, next) => {
 
 		updateFields["customStyle"] = customStyle;
 
-		if (req.user.usertype !== "free") {
-			const domain = req.body.domain ? await utils.getValidString(req.body.domain, 1, 100, "Domain") : null;
-			const customScriptUrl = req.body.customScriptUrl
-				? await utils.getValidString(req.body.customScriptUrl, 1, 500, "Custom Script URL")
-				: null;
-
-			updateFields["domain"] = domain;
-			updateFields["customScriptUrl"] = customScriptUrl;
-		}
+		const customScriptUrl = req.body.customScriptUrl
+			? await utils.getValidString(req.body.customScriptUrl, 1, 500, "Custom Script URL")
+			: null;
+		updateFields["customScriptUrl"] = customScriptUrl;
 
 		await Users.updateOne({ _id: req.user._id }, { ...updateFields, lastUpdatedOn: new Date() });
 		res.json({
@@ -406,8 +399,6 @@ module.exports = {
 	createPage,
 	updatePage,
 	deletePage,
-	createStripePremiumCheckout,
-	confirmStripePremiumCheckout,
 	followUser,
 	unfollowUser,
 };
