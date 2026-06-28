@@ -1,8 +1,11 @@
 const router = require("express").Router();
 const bodyParser = require("body-parser");
+const multer = require("multer");
 
 const apiHandler = require("../controllers");
 const { rateLimit, isUserAuthed } = require("../middlewares");
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: false }));
@@ -26,6 +29,8 @@ router.delete("/posts/:id", apiHandler.deletePost);
 router.post("/pages", rateLimit({ max: 5 }), apiHandler.createPage);
 router.put("/pages/:id", apiHandler.updatePage);
 router.delete("/pages/:id", apiHandler.deletePage);
+
+router.post("/import", upload.single("file"), apiHandler.importPosts);
 
 /**
  * API endpoints common error handling middleware

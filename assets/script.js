@@ -10,6 +10,7 @@ const defaultState = function () {
 		myAccount: { username: "", email: "", password: "", name: "", bio: "", menu: [] },
 		deleteConfirm: false,
 		isLoading: false,
+		importFile: null,
 	};
 };
 function redirect(path, replace = false) {
@@ -160,6 +161,26 @@ const App = Vue.createApp({
 					redirect("/pages");
 				});
 			}
+		},
+		onImportFileChange(event) {
+			this.importFile = event.target.files[0] || null;
+		},
+		importPosts() {
+			if (this.isLoading) return;
+			if (!this.importFile) return this.setToast("Please choose a JSON file");
+			const formData = new FormData();
+			formData.append("file", this.importFile);
+			this.isLoading = true;
+			axios
+				.post("/api/import", formData)
+				.then((response) => {
+					this.setToast(response.data.message, "success");
+				})
+				.catch(() => {
+					this.importFile = null;
+					if (this.$refs.fileInput) this.$refs.fileInput.value = "";
+				})
+				.finally(() => (this.isLoading = false));
 		},
 		timeAgo(dateString) {
 			const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);

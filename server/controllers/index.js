@@ -323,6 +323,45 @@ const deletePage = async (req, res, next) => {
 	}
 };
 
+const importPosts = async (req, res, next) => {
+	try {
+		if (!req.file) return res.status(400).json({ message: "No file uploaded." });
+
+		let rows;
+		try {
+			rows = JSON.parse(req.file.buffer.toString("utf8"));
+		} catch {
+			return res.status(400).json({ message: "Invalid JSON file." });
+		}
+
+		if (!Array.isArray(rows)) {
+			return res.status(400).json({ message: "File must be a JSON array." });
+		}
+
+		// Validate every post first — abort the whole import if any post is invalid.
+		const docs = rows.map((row, index) => {
+			if (!row?.text) return utils.httpError(400, `Post ${index + 1} is missing a text field.`);
+			const text = utils.getValidPost(row.text);
+			const createdOn = row.date ? new Date(row.date) : new Date();
+			if (isNaN(createdOn.getTime())) return utils.httpError(400, `Post ${index + 1} has an invalid date.`);
+			return {
+				user: req.user._id,
+				type: "post",
+				text,
+				html: utils.markdownToHtml(text),
+				hashtags: utils.getHashtagsFromText(text),
+				createdOn,
+			};
+		});
+
+		if (docs.length > 0) await Posts.insertMany(docs);
+
+		res.json({ message: "Posts imported" });
+	} catch (error) {
+		next(error);
+	}
+};
+
 module.exports = {
 	signUp,
 	logIn,
@@ -338,4 +377,5 @@ module.exports = {
 	createPage,
 	updatePage,
 	deletePage,
+	importPosts,
 };

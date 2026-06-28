@@ -1,0 +1,45 @@
+<!doctype html>
+
+<html lang="en">
+<%- include('partials/html-head', {title: "Import posts"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header',{title: "Import posts"}); -%>
+
+    <section>
+      <p>Upload a JSON file to bulk-import posts. Each post in the file must have a <code>text</code> field. The <code>date</code> field is optional - if omitted, the current date is used.</p>
+
+      <form @submit.prevent="importPosts">
+        <div class="field">
+          <label for="file">JSON file</label>
+          <input type="file" id="file" name="file" accept=".json" ref="fileInput" @change="onImportFileChange" required />
+        </div>
+        <button type="submit" :disabled="isLoading">
+          {{ isLoading ? "Importing…" : "Import" }}</button>
+      </form>
+    </section>
+
+    <div class="spacer"></div>
+
+    <section>
+      <details>
+        <summary>Sample file format</summary>
+        <pre><code>[
+  {
+    "text": "Hello world! This is my first imported post. #hello",
+    "date": "2024-01-15T10:30:00Z"
+  },
+  {
+    "text": "Another post without a date — current date will be used."
+  }
+]</code></pre>
+        <p>The <code>text</code> field supports Markdown formatting. The <code>date</code> field accepts any valid ISO 8601 date string.</p>
+      </details>
+    </section>
+
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>
