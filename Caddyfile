@@ -1,0 +1,55 @@
+{
+	email {$ACME_EMAIL}
+
+	# Certificates for customer custom domains are issued during the TLS
+	# handshake, but only after the app confirms the hostname belongs to a real
+	# account. `ask` failing closed is what prevents cert-issuance abuse.
+	on_demand_tls {
+		ask http://app:3000/internal/tls-check?token={$TLS_CHECK_TOKEN}
+		interval 2m
+		burst 5
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Main app + per-user subdomains.
+# The wildcard is issued over DNS-01 so it keeps renewing even while the zone
+# is proxied (orange-clouded) on Cloudflare.
+# ---------------------------------------------------------------------------
+{$APP_DOMAIN}, *.{$APP_DOMAIN} {
+	tls {
+		dns cloudflare {$CLOUDFLARE_API_TOKEN}
+		resolvers 1.1.1.1
+	}
+
+	# Reachable by the proxy over the internal network only.
+	handle /internal/* {
+		respond 404
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+
+	encode gzip zstd
+}
+
+# ---------------------------------------------------------------------------
+# Customer custom domains: any hostname not matched above. These must reach the
+# droplet directly (DNS-only / grey-clouded) for on-demand issuance to work.
+# ---------------------------------------------------------------------------
+:443 {
+	tls {
+		on_demand
+	}
+
+	handle /internal/* {
+		respond 404
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+
+	encode gzip zstd
+}

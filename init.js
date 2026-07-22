@@ -8,6 +8,7 @@ const config = require("./config");
 const apiRoutes = require("./server/routes/api");
 const viewRoutes = require("./server/routes/view");
 const profileRoutes = require("./server/routes/profile");
+const internalRoutes = require("./server/routes/internal");
 const mw = require("./server/middlewares");
 
 const app = express();
@@ -24,6 +25,12 @@ app.use(express.static(path.join(__dirname, "node_modules/vue/dist/")));
 // Serve frontend assets & images to the browser
 app.use(express.static(path.join(__dirname, "assets")));
 app.use(express.static(path.join(__dirname, "assets/icons")));
+
+// Internal endpoints for the reverse proxy / platform health checks. Mounted
+// before host resolution because these requests arrive with the container's
+// own hostname, which is not a routable public domain. The reverse proxy must
+// block /internal/* from public traffic.
+app.use("/internal", internalRoutes);
 
 app.use(mw.attachUserDomainToRequest);
 app.use((req, res, next) => {

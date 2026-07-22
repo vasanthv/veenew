@@ -13,6 +13,8 @@ module.exports = {
 	CSRF_COOKIE: "csrf_cookie",
 	CSRF_TOKEN_EXPIRY: 60 * 30, // 30 mins
 	SECRET: process.env.SECRET ?? "some-secret",
+	// Shared secret between the reverse proxy and /internal/tls-check.
+	TLS_CHECK_TOKEN: process.env.TLS_CHECK_TOKEN,
 	AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY_ID,
 	AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
 	CANNY_PRIVATE_KEY: process.env.CANNY_PRIVATE_KEY,

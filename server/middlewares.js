@@ -37,46 +37,20 @@ const attachUsertoRequest = async (req, res, next) => {
 
 /**
  * Resolves the profile owner for the request host and sets req.userDomain.
- * Falls through on the base domain, resolves `username.<base>` subdomains, and
- * looks up user-configured custom domains. Responds with 404 for unknown hosts.
+ * Falls through on the base domain, resolves `username.<base>` subdomains and
+ * user-configured custom domains, and 404s for unknown hosts.
  */
 const attachUserDomainToRequest = async (req, res, next) => {
 	try {
-		const hostname = (req.hostname || "").toLowerCase();
-		const baseDomain = config.DOMAIN.split(":")[0].toLowerCase();
+		const owner = await utils.getHostOwner(req.hostname);
 
-		if (!hostname || hostname === baseDomain) return next();
-		if (hostname === `www.${baseDomain}`) return next();
-
-		const domainSuffix = `.${baseDomain}`;
-		if (hostname.endsWith(domainSuffix)) {
-			// A subdomain of the base domain maps to a username handle.
-			const subdomain = hostname.slice(0, -domainSuffix.length);
-			if (!subdomain || subdomain.includes(".")) return res.status(404).render("404");
-
-			const username = subdomain.toLowerCase();
-			if (!/^([a-zA-Z0-9]){3,18}$/.test(username) || config.INVALID_HANDLES.includes(username)) {
-				return res.status(404).render("404");
-			}
-			const user = await Users.findOne({ username }).select("username").lean().exec();
-
-			if (!user) return res.status(404).render("404");
-			req.userDomain = user.username;
+		if (owner.type === "base") return next();
+		if (owner.type === "user") {
+			req.userDomain = owner.user.username;
 			return next();
 		}
 
-		// Any other host is treated as a user's custom domain. Also match the
-		// apex/`www.` counterpart so a single CNAME serves both variants.
-		const bareHost = hostname.startsWith("www.") ? hostname.slice(4) : hostname;
-		const user = await Users.findOne({ domain: { $in: [hostname, bareHost] } })
-			.select("username")
-			.lean()
-			.exec();
-
-		if (!user) return res.status(404).render("404");
-		req.userDomain = user.username;
-
-		next();
+		return res.status(404).render("404");
 	} catch (error) {
 		next(error);
 	}

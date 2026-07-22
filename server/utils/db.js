@@ -55,6 +55,45 @@ const isNewDomain = async (domain, currentUserId) => {
 };
 
 /**
+ * Resolves which account (if any) owns a request hostname.
+ *
+ * This is the single source of truth for host routing. Both the request
+ * middleware and Caddy's on-demand TLS check use it, so a certificate is never
+ * issued for a hostname the app would refuse to serve.
+ *
+ * @param {string} hostname - The request hostname
+ * @returns {Promise<{type: "base"|"user"|"unknown", user?: Object}>}
+ */
+const getHostOwner = async (hostname) => {
+	const host = (hostname || "").toLowerCase();
+	const baseDomain = config.DOMAIN.split(":")[0].toLowerCase();
+
+	if (!host) return { type: "unknown" };
+	if (host === baseDomain || host === `www.${baseDomain}`) return { type: "base" };
+
+	const domainSuffix = `.${baseDomain}`;
+	if (host.endsWith(domainSuffix)) {
+		// A subdomain of the base domain maps to a username handle.
+		const subdomain = host.slice(0, -domainSuffix.length);
+		if (!subdomain || subdomain.includes(".")) return { type: "unknown" };
+		if (!/^([a-zA-Z0-9]){3,18}$/.test(subdomain) || config.INVALID_HANDLES.includes(subdomain)) {
+			return { type: "unknown" };
+		}
+		const user = await Users.findOne({ username: subdomain }).select("username").lean().exec();
+		return user ? { type: "user", user } : { type: "unknown" };
+	}
+
+	// Any other host is a user's custom domain. Also match the apex/`www.`
+	// counterpart so a single CNAME serves both variants.
+	const bareHost = host.startsWith("www.") ? host.slice(4) : host;
+	const user = await Users.findOne({ domain: { $in: [host, bareHost] } })
+		.select("username")
+		.lean()
+		.exec();
+	return user ? { type: "user", user } : { type: "unknown" };
+};
+
+/**
  * Retrieves a user by their username.
  * @param {string} username - The username to search for
  * @returns {Promise<Object|null>} The user object if found, null otherwise
@@ -146,6 +185,7 @@ module.exports = {
 	isNewUsername,
 	isNewEmail,
 	isNewDomain,
+	getHostOwner,
 	getUserByUsername,
 	getPagedPosts,
 	getPagedUsers,
