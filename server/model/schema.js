@@ -30,7 +30,7 @@ const userSchema = new Schema({
 		type: String,
 		default: '<a href="/">Home</a>',
 	},
-	domain: String,
+	domain: { type: String, index: true, unique: true, sparse: true, lowercase: true },
 	customStyle: String,
 	customScriptUrl: String,
 	devices: [{ token: { type: String, index: true }, userAgent: String }],

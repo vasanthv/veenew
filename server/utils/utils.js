@@ -287,7 +287,42 @@ const getTitle = (str) => {
 const getUserBaseUrl = (user) => {
 	if (!user?.username) return httpError(400, "Invalid user");
 
+	// Prefer the user's verified custom domain when one is configured.
+	if (user.domain) return `https://${user.domain}/`;
+
 	return `http${config.IS_PROD ? "s" : ""}://${user.username}.${config.DOMAIN}/`;
+};
+
+/**
+ * Validates and normalizes a user's custom domain (a bare hostname).
+ * Accepts values with an optional protocol/port/path and strips them.
+ * @param {string} domain - The custom domain to validate
+ * @returns {string} The normalized, lowercase hostname
+ * @throws {Error} If the domain is empty, malformed, or points at the base domain
+ */
+const getValidDomain = (domain) => {
+	if (!domain) return httpError(400, "Empty domain");
+
+	// Strip anything the user may have pasted around the bare hostname.
+	const value = String(domain)
+		.trim()
+		.toLowerCase()
+		.replace(/^https?:\/\//, "")
+		.replace(/\/.*$/, "")
+		.replace(/:\d+$/, "");
+
+	if (value.length > 253) return httpError(400, "Domain is too long");
+
+	// Requires at least two dot-separated labels; no leading/trailing hyphens.
+	const DOMAIN_REGEX = /^(?!-)[a-z0-9-]{1,63}(?<!-)(?:\.(?!-)[a-z0-9-]{1,63}(?<!-))+$/;
+	if (!DOMAIN_REGEX.test(value)) return httpError(400, "Invalid domain");
+
+	const baseDomain = config.DOMAIN.split(":")[0].toLowerCase();
+	if (value === baseDomain || value.endsWith(`.${baseDomain}`)) {
+		return httpError(400, `Domain cannot be a ${baseDomain} address`);
+	}
+
+	return value;
 };
 
 /**
@@ -359,6 +394,7 @@ module.exports = {
 	markdownToHtml,
 	getTitle,
 	getUserBaseUrl,
+	getValidDomain,
 
 	formatPostDate,
 	getCustomStyleTag,

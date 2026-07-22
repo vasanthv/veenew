@@ -77,6 +77,19 @@
 
 
       <details>
+        <summary>Custom domain</summary>
+        <p>Serve your blog from your own domain instead of <code><%=user.username%>.<%= domain %></code>.</p>
+        <div class="field">
+          <label for="domain">Domain</label>
+          <input type="text" id="domain" placeholder="eg: blog.example.com" v-model="myAccount.domain" />
+          <div class="help">
+            Point a CNAME record for your domain to <code><%= cnameTarget %></code>, then enter the domain here.
+            Leave blank to remove.
+          </div>
+        </div>
+      </details>
+
+      <details>
         <summary>Custom style</summary>
         <div class="field">
           <label for="style">CSS styles</label>
@@ -146,6 +159,7 @@
         menu: <%- JSON.stringify(user.menu) %>,
         customStyle: "<%- JSON.stringify(user.customStyle || '').slice(1, -1) %>",
         customScriptUrl: "<%=user.customScriptUrl%>",
+        domain: "<%=user.domain || ''%>",
       };
     }
   </script>

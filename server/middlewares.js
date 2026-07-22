@@ -36,8 +36,9 @@ const attachUsertoRequest = async (req, res, next) => {
 };
 
 /**
- * Resolves username from subdomain and sets req.userDomain.
- * Falls through on base domain; responds with 404 for unknown/invalid hostnames.
+ * Resolves the profile owner for the request host and sets req.userDomain.
+ * Falls through on the base domain, resolves `username.<base>` subdomains, and
+ * looks up user-configured custom domains. Responds with 404 for unknown hosts.
  */
 const attachUserDomainToRequest = async (req, res, next) => {
 	try {
@@ -48,16 +49,29 @@ const attachUserDomainToRequest = async (req, res, next) => {
 		if (hostname === `www.${baseDomain}`) return next();
 
 		const domainSuffix = `.${baseDomain}`;
-		if (!hostname.endsWith(domainSuffix)) return res.status(404).render("404");
+		if (hostname.endsWith(domainSuffix)) {
+			// A subdomain of the base domain maps to a username handle.
+			const subdomain = hostname.slice(0, -domainSuffix.length);
+			if (!subdomain || subdomain.includes(".")) return res.status(404).render("404");
 
-		const subdomain = hostname.slice(0, -domainSuffix.length);
-		if (!subdomain || subdomain.includes(".")) return res.status(404).render("404");
+			const username = subdomain.toLowerCase();
+			if (!/^([a-zA-Z0-9]){3,18}$/.test(username) || config.INVALID_HANDLES.includes(username)) {
+				return res.status(404).render("404");
+			}
+			const user = await Users.findOne({ username }).select("username").lean().exec();
 
-		const username = subdomain.toLowerCase();
-		if (!/^([a-zA-Z0-9]){3,18}$/.test(username) || config.INVALID_HANDLES.includes(username)) {
-			return res.status(404).render("404");
+			if (!user) return res.status(404).render("404");
+			req.userDomain = user.username;
+			return next();
 		}
-		const user = await Users.findOne({ username }).select("username").lean().exec();
+
+		// Any other host is treated as a user's custom domain. Also match the
+		// apex/`www.` counterpart so a single CNAME serves both variants.
+		const bareHost = hostname.startsWith("www.") ? hostname.slice(4) : hostname;
+		const user = await Users.findOne({ domain: { $in: [hostname, bareHost] } })
+			.select("username")
+			.lean()
+			.exec();
 
 		if (!user) return res.status(404).render("404");
 		req.userDomain = user.username;

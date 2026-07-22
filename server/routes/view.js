@@ -123,9 +123,12 @@ router.get("/pages/edit/:id", async (req, res, next) => {
 router.get("/settings", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");
+		const baseDomain = config.DOMAIN.split(":")[0];
 		res.render("settings", {
 			user: req.user,
 			csrfToken: req.csrfToken,
+			domain: baseDomain,
+			cnameTarget: `cname.${baseDomain}`,
 		});
 	} catch (error) {
 		next(error);

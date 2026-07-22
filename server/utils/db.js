@@ -38,6 +38,23 @@ const isNewEmail = async (email, currentUserId) => {
 };
 
 /**
+ * Checks if a custom domain is available for a user.
+ * @param {string} domain - The normalized domain to check
+ * @param {string} [currentUserId] - Optional ID of the current user (for updates)
+ * @returns {Promise<string>} The domain if available
+ * @throws {Error} If the domain is already claimed by another user
+ */
+const isNewDomain = async (domain, currentUserId) => {
+	let query = { domain };
+	if (currentUserId) {
+		query["_id"] = { $ne: currentUserId };
+	}
+
+	const existingDomain = await Users.findOne(query).select("domain").exec();
+	return existingDomain ? httpError(400, "Domain already taken") : domain;
+};
+
+/**
  * Retrieves a user by their username.
  * @param {string} username - The username to search for
  * @returns {Promise<Object|null>} The user object if found, null otherwise
@@ -128,6 +145,7 @@ const getPaginationMeta = (req, totalItems) => {
 module.exports = {
 	isNewUsername,
 	isNewEmail,
+	isNewDomain,
 	getUserByUsername,
 	getPagedPosts,
 	getPagedUsers,

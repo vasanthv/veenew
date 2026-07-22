@@ -51,6 +51,26 @@ npm start
 The app runs on `http://localhost:3000` by default.
 You can also access it via `http://veenew.local:3000`.
 
+## Custom domains
+
+Every user is served at `username.veenew.com`. Users can also serve their blog
+from their own domain:
+
+1. In **Settings → Custom domain**, enter the domain (e.g. `blog.example.com`).
+2. Create a `CNAME` DNS record for that domain pointing to `cname.veenew.com`.
+
+Once DNS propagates, the blog is served on the custom domain, and canonical URLs
+(RSS/JSON feeds, the directory, etc.) use it. Requests to the `www.` counterpart
+of a configured apex domain resolve to the same blog. Clear the field in Settings
+to revert to the default subdomain.
+
+Notes:
+
+- The reverse proxy / TLS terminator in front of the app must route the custom
+  domain's traffic to this server and provision a certificate for it.
+- To test locally, point a fake domain at `127.0.0.1` in `/etc/hosts`, set it as
+  your custom domain in Settings, and browse to it with the app's port.
+
 ## Scripts
 
 - `npm start`: start server

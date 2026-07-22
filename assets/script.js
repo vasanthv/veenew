@@ -7,7 +7,7 @@ const defaultState = function () {
 		newAccount: { username: "", email: "", password: "" },
 		authCreds: { username: "", password: "" },
 		post: { text: params.has("text") ? params.get("text") : "", slug: "" },
-		myAccount: { username: "", email: "", password: "", name: "", bio: "", menu: [] },
+		myAccount: { username: "", email: "", password: "", name: "", bio: "", menu: [], domain: "" },
 		deleteConfirm: false,
 		isLoading: false,
 		importFile: null,

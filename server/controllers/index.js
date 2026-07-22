@@ -187,7 +187,22 @@ const updateAccount = async (req, res, next) => {
 			: null;
 		updateFields["customScriptUrl"] = customScriptUrl;
 
-		await Users.updateOne({ _id: req.user._id }, { ...updateFields, lastUpdatedOn: new Date() });
+		// A custom domain is optional: set it when provided, clear it when blank.
+		const unsetFields = {};
+		if (typeof req.body.domain !== "undefined") {
+			if (req.body.domain && req.body.domain.trim()) {
+				const domain = utils.getValidDomain(req.body.domain);
+				await utils.isNewDomain(domain, req.user._id);
+				updateFields["domain"] = domain;
+			} else if (req.user.domain) {
+				unsetFields["domain"] = 1;
+			}
+		}
+
+		const update = { $set: { ...updateFields, lastUpdatedOn: new Date() } };
+		if (Object.keys(unsetFields).length) update["$unset"] = unsetFields;
+
+		await Users.updateOne({ _id: req.user._id }, update);
 		res.json({
 			message: `Account updated. ${updateFields["emailVerificationCode"] ? "Please verify your email" : ""}`,
 		});
