@@ -42,9 +42,30 @@ services:
     networks:
       - veenew
 
+  # Ships app + caddy stdout to Better Stack. Reading the Docker socket is what
+  # lets it attach to containers across restarts; note this grants effective
+  # root on the host, so treat the image tag as security-sensitive and pin it.
+  vector:
+    image: timberio/vector:0.44.0-alpine
+    restart: unless-stopped
+    environment:
+      BETTERSTACK_INGEST_HOST: ${BETTERSTACK_INGEST_HOST}
+      BETTERSTACK_SOURCE_TOKEN: ${BETTERSTACK_SOURCE_TOKEN}
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - vector_data:/var/lib/vector
+    # Keep it from crowding the app on a 1 GB droplet.
+    mem_limit: 128m
+    depends_on:
+      - app
+    networks:
+      - veenew
+
 volumes:
   caddy_data:
   caddy_config:
+  vector_data:
 
 networks:
   veenew:

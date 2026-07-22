@@ -1,0 +1,54 @@
+data_dir: /var/lib/vector
+
+sources:
+  docker:
+    type: docker_logs
+    # Compose names containers "<project>-<service>-<n>", e.g. veenew-app-1.
+    include_containers:
+      - veenew-app-
+      - veenew-caddy-
+
+transforms:
+  prepare:
+    type: remap
+    inputs: [docker]
+    source: |
+      # Better Stack reads the event timestamp from `dt`.
+      .dt = del(.timestamp)
+      .service = .label."com.docker.compose.service"
+      .container = del(.container_name)
+
+      # Caddy emits JSON; lift it so fields are queryable instead of a blob.
+      parsed, err = parse_json(.message)
+      if err == null && is_object(parsed) {
+        .caddy = parsed
+        del(.message)
+      }
+
+      del(.label)
+      del(.container_created_at)
+      del(.image)
+
+sinks:
+  betterstack:
+    type: http
+    inputs: [prepare]
+    uri: "https://${BETTERSTACK_INGEST_HOST}"
+    method: post
+    encoding:
+      codec: json
+    framing:
+      method: newline_delimited
+    auth:
+      strategy: bearer
+      token: "${BETTERSTACK_SOURCE_TOKEN}"
+    batch:
+      max_events: 200
+      timeout_secs: 2
+    request:
+      retry_attempts: 10
+    # Survive a Better Stack outage or network blip without losing logs.
+    buffer:
+      type: disk
+      max_size: 268435488
+      when_full: drop_newest
