@@ -3,11 +3,10 @@
 
 	# Certificates for customer custom domains are issued during the TLS
 	# handshake, but only after the app confirms the hostname belongs to a real
-	# account. `ask` failing closed is what prevents cert-issuance abuse.
+	# account. Caddy 2.10 removed the `interval`/`burst` rate limiter, so `ask`
+	# failing closed is the only thing preventing cert-issuance abuse.
 	on_demand_tls {
 		ask http://app:3000/internal/tls-check?token={$TLS_CHECK_TOKEN}
-		interval 2m
-		burst 5
 	}
 }
 
