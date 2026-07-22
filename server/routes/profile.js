@@ -183,7 +183,7 @@ router.get("/:slug", async (req, res, next) => {
 	}
 });
 
-router.get("/*", async (req, res, next) => res.status(404).render("404"));
+router.get("/*", async (req, res) => res.status(404).render("404"));
 
 // Handle the known errors
 router.use((err, req, res, next) => {

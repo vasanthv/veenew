@@ -70,7 +70,7 @@ const isValidUrl = (url) => {
 	try {
 		const _url = new URL(url);
 		return ["http:", "https:"].includes(_url.protocol) ? Boolean(_url) : false;
-	} catch (e) {
+	} catch {
 		return false;
 	}
 };
@@ -228,7 +228,7 @@ const verifyPassword = async (plaintext, savedHash) => {
 	try {
 		const matched = await bcrypt.compare(plaintext, savedHash);
 		return { matched, needsUpgrade: false };
-	} catch (error) {
+	} catch {
 		return { matched: false, needsUpgrade: false };
 	}
 };

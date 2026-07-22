@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const router = require("express").Router();
 const { attachDayjsToLocals, attachTagsFromQuery } = require("../middlewares");
 const { Users, Posts } = require("../model").getInstance();
@@ -191,7 +190,7 @@ router.get("/import", async (req, res, next) => {
 	}
 });
 
-router.get("/*", async (req, res, next) => res.status(404).render("404", { user: req.user }));
+router.get("/*", async (req, res) => res.status(404).render("404", { user: req.user }));
 
 // Handle the known errors
 router.use((err, req, res, next) => {

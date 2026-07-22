@@ -158,29 +158,6 @@ const getPagedUsers = async (req, query, sortBy = "-createdOn") => {
 	};
 };
 
-/**
- * Builds consistent pagination metadata for list pages.
- * @param {Object} req - Express request object
- * @param {number} totalItems - Total number of items
- * @returns {{page: number, totalPages: number, prevPage: number, nextPage: number, queryParams: Object, limit: number, skip: number}}
- */
-const getPaginationMeta = (req, totalItems) => {
-	const requestedPage = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
-	const limit = config.PAGE_LIMIT;
-	const totalPages = Math.max(1, Math.ceil(totalItems / limit));
-	const page = Math.min(requestedPage, totalPages);
-	const skip = (page - 1) * limit;
-	return {
-		page,
-		totalPages,
-		prevPage: page > 1 ? page - 1 : 0,
-		nextPage: page < totalPages ? page + 1 : 0,
-		queryParams: req.query,
-		limit,
-		skip,
-	};
-};
-
 module.exports = {
 	isNewUsername,
 	isNewEmail,

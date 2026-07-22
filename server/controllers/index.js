@@ -76,7 +76,9 @@ const logIn = async (req, res, next) => {
 					Posts.updateOne({ user: user._id }, { $unset: { deletionDate: 1 } }),
 				]);
 			}
-		} catch (err) {}
+		} catch {
+			// Best-effort undelete; a failure here must not fail the login.
+		}
 	} catch (error) {
 		next(error);
 	}
