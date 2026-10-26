@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Guestbook"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Guestbook"}); -%>
+
+    <blockquote>
+      <em>Let visitors sign your guestbook with <code v-pre>{{guestbook.form}}</code>. Their email is confirmed before the entry reaches you. Show the entries you approve with <code v-pre>{{guestbook.entries.approved}}</code>. <strong>Veenew does not moderate your guestbook.</strong> Entries stay hidden until you approve them, and you can unapprove or delete any entry at any time.</em>
+    </blockquote>
+
+    <section>
+      <% if (entries.length <= 0) { %>
+      <div class="empty">No guestbook entries yet.</div>
+      <% } else { %>
+      <% for (var i = 0; i < entries.length; i++) { %>
+      <article class="maxh">
+        <div><strong><%= entries[i].name %></strong> &middot; <small><%= entries[i].email %></small></div>
+        <div style="white-space: pre-wrap;"><%= entries[i].text %></div>
+        <div><small>
+          <time datetime="<%= new Date(entries[i].createdOn).toISOString() %>" title="<%= new Date(entries[i].createdOn).toISOString().slice(0, 10) %>"><%= getRelativeTime(entries[i].createdOn) %></time>
+          &middot; <%= entries[i].isApproved ? "approved" : "pending" %>
+          &middot;
+          <% if (entries[i].isApproved) { %>
+          <a href="javascript:void(0)" v-on:click="setGuestbookApproval('<%= entries[i]._id %>', false)">Unapprove</a>
+          <% } else { %>
+          <a href="javascript:void(0)" v-on:click="setGuestbookApproval('<%= entries[i]._id %>', true)">Approve</a>
+          <% } %>
+          &middot; <a href="javascript:void(0)" v-on:click="deleteGuestbookEntry('<%= entries[i]._id %>')" class="red">Delete</a>
+        </small></div>
+      </article>
+      <% } %>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<% const isEdit = typeof microblog !== "undefined"; %>
+<%- include('partials/html-head', {title: `${isEdit ? "Edit" : "New"} microblog`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: `${isEdit ? "Edit" : "New"} microblog`}); -%>
+
+    <section id="postbox">
+      <form @submit.prevent="saveMicroblog(<%- isEdit ? `'${microblog._id}'` : "" %>)">
+        <textarea v-model="microblog.text" placeholder="what's on your mind? use #hashtags to tag" maxlength="500" required></textarea>
+        <div class="spacer"></div>
+        <div class="flex">
+          <div class="flex-1">
+            <% if (isEdit) { %>
+            <a href="javascript:void(0)" v-on:click="deleteMicroblog('<%= microblog._id %>')" class="red">Delete microblog</a>
+            <% } %>
+          </div>
+          <button type="submit" :disabled="isLoading"><%= isEdit ? "Update" : "Add" %></button>
+        </div>
+        <div class="spacer"></div>
+        <em>Plain text only, up to 500 characters. Markdown and HTML are not supported.</em>
+      </form>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+  <% if (isEdit) { %>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.microblog = <%- JSON.stringify({ text: microblog.text || "" }).replace(/</g, "\\u003c") %>;
+    };
+  </script>
+  <% } %>
+</body>
+
+</html>

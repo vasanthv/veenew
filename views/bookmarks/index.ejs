@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Bookmarks"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Bookmarks"}); -%>
+
+    <section class="flex">
+      <div class="flex-1"></div>
+      <a href="/bookmarks/new">+ New bookmark</a>
+    </section>
+    <blockquote>
+      <em>Save links you want to remember here. Show your public bookmarks on any page with <code v-pre>{{bookmarks.all}}</code>, or only the ones tagged #name with <code v-pre>{{bookmarks.tag.name}}</code>. Use #hashtags in notes to organise them, and mark a bookmark private to keep it off your blog.</em>
+    </blockquote>
+
+    <section>
+      <% if (bookmarks.length <= 0) { %>
+      <div class="empty">No bookmarks to show.</div>
+      <% } else { %>
+      <% for (var i = 0; i < bookmarks.length; i++) { %>
+      <article class="maxh">
+        <div>
+          <% if (bookmarks[i].isPrivate) { %><span title="Private" aria-label="Private">&#128274;</span> <% } %><a href="<%= bookmarks[i].url %>" target="_blank" rel="noopener noreferrer"><strong><%= bookmarks[i].title || bookmarks[i].url %></strong></a>
+          <small>
+            &middot; <a href="/bookmarks/edit/<%= bookmarks[i]._id %>">Edit</a>
+            &middot; <a href="javascript:void(0)" v-on:click="deleteBookmark('<%= bookmarks[i]._id %>')" class="red">Delete</a>
+          </small>
+        </div>
+        <% if (bookmarks[i].notes) { %>
+        <div><small><%= bookmarks[i].notes %></small></div>
+        <% } %>
+        <% if (bookmarks[i].hashtags && bookmarks[i].hashtags.length > 0) { %>
+        <div><small>
+          <% bookmarks[i].hashtags.forEach(function (tag) { %>#<%= tag %> <% }) %>
+        </small></div>
+        <% } %>
+      </article>
+      <% } %>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

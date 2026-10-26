@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Reset password"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Reset password"}); -%>
+
+    <section class="mini-wrap">
+      <form @submit.prevent="completeReset">
+        <div class="field">
+          <label for="password">New password</label>
+          <input type="password" id="password" placeholder="enter a new password" v-model="resetPassword" />
+          <div class="help">At least 8 characters.</div>
+        </div>
+
+        <button type="submit">Set new password</button>
+      </form>
+      <div class="spacer"></div>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

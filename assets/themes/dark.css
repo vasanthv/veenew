@@ -1,0 +1,10 @@
+/* Dark — an always-on dark theme, regardless of system preference. */
+:root {
+	--background: #121212;
+	--text: #e4e4e4;
+	--grey: #2e2e2e;
+	--blue: #6ea8fe;
+	--link: var(--blue);
+	--red: #ff6b5e;
+	--green: #4ade80;
+}

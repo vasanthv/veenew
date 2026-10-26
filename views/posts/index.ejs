@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Posts"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Posts"}); -%>
+
+    <section class="flex">
+      <div class="flex-1"></div>
+      <a href="/new">+ New post</a>
+    </section>
+    <blockquote>
+      <em>Manage all your blog posts here. Show them on any page with <code v-pre>{{posts.all}}</code>. Use #hashtags in a blog post to organise them, and show only the blog posts tagged #name with <code v-pre>{{posts.tag.name}}</code>.</em>
+    </blockquote>
+
+    <%- include('posts/titles', {showEdit: true}); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: `${profile.name ?? profile.username} / ${title}`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
+
+    <section>
+      <p>Confirm your subscription to <%= profile.name ?? profile.username %>. You will get an email whenever there is a new post.</p>
+      <form method="post" action="">
+        <button type="submit">Confirm my subscription</button>
+      </form>
+    </section>
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>

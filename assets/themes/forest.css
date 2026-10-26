@@ -1,0 +1,23 @@
+/* Forest — a calm theme with green accents. */
+:root {
+	--background: #f6f8f4;
+	--text: #1f2a1c;
+	--grey: #d3dfcb;
+	--blue: #2f7a4d;
+	--link: var(--blue);
+	--red: #b23a2e;
+	--green: #2f7a4d;
+}
+body {
+	font-family: system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #14201a;
+		--text: #cfe0cd;
+		--grey: #2a3a30;
+		--blue: #6bbf87;
+		--red: #e07a6e;
+		--green: #6bbf87;
+	}
+}

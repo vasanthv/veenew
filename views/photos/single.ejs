@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<% const photoUrl = `${userBaseUrl}photos/${photo._id}`; %>
+<%- include('partials/html-head', {title: "Photo"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Photo"}); -%>
+
+    <section class="flex">
+      <a href="/photos">&larr; all photos</a>
+      <div class="flex-1"></div>
+      <a href="javascript:void(0)" v-on:click="deletePhoto('<%= photo._id %>')" class="red">Delete photo</a>
+    </section>
+
+    <section>
+      <a href="<%= photoUrl %>" target="_blank" rel="noopener noreferrer"><img class="photo-full" src="<%= photoUrl %>" alt="" /></a>
+    </section>
+
+    <section>
+      <p>Use this URL on any page:</p>
+      <input type="text" value="<%= photoUrl %>" readonly onfocus="this.select()" />
+      <div class="spacer"></div>
+      <p>Or as markdown:</p>
+      <input type="text" value="![](<%= photoUrl %>)" readonly onfocus="this.select()" />
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

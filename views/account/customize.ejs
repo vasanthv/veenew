@@ -1,0 +1,92 @@
+<!doctype html>
+
+<html lang="en">
+<%- include('partials/html-head', {title: "Customize"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header',{title: "Customize"}); -%>
+
+    <section>
+
+      <details open>
+        <summary>Navigation</summary>
+        <p>Add links to the top navigation for your internal pages and posts, or any external websites.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Link</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in myAccount.menu" :key="index">
+              <td>
+                <input type="text" placeholder="Menu name" v-model="item.name" />
+              </td>
+              <td>
+                <input type="text" placeholder="/path or URL" v-model="item.link" />
+              </td>
+              <td>
+                <button type="button" class="red" v-on:click="removeMenuItem(index)">Remove</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="field">
+          <button type="button" class="ghost" v-on:click="addMenuItem">Add field</button>
+        </div>
+      </details>
+
+      <details>
+        <summary>Custom style</summary>
+        <div class="field">
+          <label for="theme">Theme</label>
+          <select id="theme" v-model="myAccount.theme">
+            <% themes.forEach(function(theme){ %>
+            <option value="<%= theme.key %>"><%= theme.label %></option>
+            <% }); %>
+          </select>
+          <div class="help">Pick a base theme for your blog. Custom CSS below overrides it.</div>
+        </div>
+        <div class="field">
+          <label for="style">CSS styles</label>
+          <textarea id="style" placeholder="eg: body{background:red;}" v-model="myAccount.customStyle" rows="2" style="font-family: monospace;"></textarea>
+          <div class="help">Custom CSS overrides the selected theme.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Custom script</summary>
+        <div class="field">
+          <label for="scriptUrl">Custom Script URL</label>
+          <input type="text" id="scriptUrl" placeholder="enter a script URL" v-model="myAccount.customScriptUrl" />
+          <div class="help">Eg: https://example.com/script.js</div>
+          <div class="help">Loaded on every page of your blog, deferred until the page has been parsed. Only use scripts you trust, since they run with full access to your visitors' pages.</div>
+        </div>
+      </details>
+      <div class="spacer"></div>
+      <div class="spacer"></div>
+
+      <button v-on:click="updateAccount">Update</button>
+    </section>
+
+    <div class="spacer"></div>
+    <%- include('partials/footer'); -%>
+
+  </div>
+
+  <script type="text/javascript">
+    window.onload = () => {
+      App.myAccount = {
+        menu: <%- JSON.stringify(user.menu) %>,
+        theme: "<%= user.theme || '' %>",
+        customStyle: "<%- JSON.stringify(user.customStyle || '').slice(1, -1) %>",
+        customScriptUrl: "<%=user.customScriptUrl%>",
+      };
+    }
+  </script>
+</body>
+
+</html>

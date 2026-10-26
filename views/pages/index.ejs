@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Pages"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Pages"}); -%>
+    <br/>
+    <nav class="flex">
+      <ul class="flex-1">
+        <li><a href="<%=userBaseUrl%>" target="_blank">View your blog</a></li>
+        <li><a href="/customize">Customize</a></li>
+        <li><a href="/settings">Settings</a></li>
+        <li><a href="/logout">Log out</a></li>
+        <% if(typeof isAdmin !== "undefined" && isAdmin) { %>
+        <li><a href="/newsletter">Newsletter</a></li>
+        <% } %>
+      </ul>
+      <a href="/pages/new">+ New page</a>
+    </nav>
+
+    <blockquote>
+      <em>Manage all your pages here. Choose which pages appear in your blog's navigation on the <a href="/customize">Customize</a> page.</em>
+    </blockquote>
+
+    <%- include('pages/titles'); -%>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

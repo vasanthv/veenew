@@ -1,0 +1,83 @@
+[v-cloak] {
+	display: none;
+}
+#toast {
+	background-color: var(--text);
+	color: var(--background);
+	text-align: center;
+	box-sizing: border-box;
+	margin: auto;
+	position: sticky;
+	top: 1rem;
+	padding: 0.5rem;
+	z-index: 10;
+}
+#toast.error {
+	background: var(--red);
+}
+#toast.success {
+	background: var(--green);
+}
+#postbox textarea {
+	background-color: var(--grey);
+	border: none;
+	min-height: 7rem;
+	padding: 1rem;
+}
+#loader {
+	position: relative;
+}
+#loader > div {
+	position: absolute;
+	z-index: 100;
+	background-color: var(--text);
+	color: var(--background);
+	padding: 0rem 0.5rem;
+	font-size: 1rem;
+	bottom: 0rem;
+	right: 0px;
+}
+#loader .emoji {
+	font-size: 1.5rem;
+}
+
+#loader .emoji::before {
+	content: "😀";
+	animation: faces 2s infinite steps(1);
+}
+
+@keyframes faces {
+	0% {
+		content: "😀";
+	}
+	10% {
+		content: "😃";
+	}
+	20% {
+		content: "😄";
+	}
+	30% {
+		content: "😁";
+	}
+	40% {
+		content: "😆";
+	}
+	50% {
+		content: "😅";
+	}
+	60% {
+		content: "😂";
+	}
+	70% {
+		content: "🤣";
+	}
+	80% {
+		content: "😎";
+	}
+	90% {
+		content: "🥳";
+	}
+	100% {
+		content: "😀";
+	}
+}

@@ -1,0 +1,16 @@
+<section>
+  <% if(posts.length <= 0) { %>
+  <div class="empty">No pages to show.</div>
+  <% } else { %>
+  <% for (var i = 0; i < posts.length; i++) { %>
+  <article class="maxh">
+    <div>
+      <strong><%= posts[i].title %></strong>
+      &middot;
+      <code>/<%= posts[i].slug %></code>
+      <small>&nbsp; <a href="/pages/edit/<%= posts[i]._id %>">Edit</a></small>
+    </div>
+  </article>
+  <% } %>
+  <% } %>
+</section>

@@ -1,0 +1,127 @@
+/* Scribble — a handwritten notepad: ruled yellow paper, a red margin line and a handwriting font. */
+:root {
+	--desk: #e9e4d8;
+	--background: #fff9c4;
+	--text: #26324d;
+	--grey: #c9d6e8;
+	--blue: #2f5fb3;
+	--link: var(--blue);
+	--red: #c0392b;
+	--green: #3b7d3b;
+	--rule: #bfd4ea;
+	--margin-line: #e57373;
+	--line: 32px;
+}
+html {
+	background: var(--desk);
+}
+body {
+	background: var(--desk);
+	font-family:
+		"Segoe Print", "Bradley Hand", "Chalkboard SE", "Noteworthy", "Marker Felt", "Comic Sans MS", "Comic Neue",
+		cursive;
+	font-size: 22px;
+	line-height: var(--line);
+	letter-spacing: 0;
+}
+/* The page is a sheet of paper: ruled lines, a double red margin line and a soft shadow. */
+.wrap {
+	background-color: var(--background);
+	background-image:
+		linear-gradient(to right, transparent 3.25rem, var(--margin-line) 3.25rem, var(--margin-line) calc(3.25rem + 1px), transparent calc(3.25rem + 1px), transparent calc(3.25rem + 4px), var(--margin-line) calc(3.25rem + 4px), var(--margin-line) calc(3.25rem + 5px), transparent calc(3.25rem + 5px)),
+		repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
+	background-position: 0 0, 0 12px;
+	min-height: 100vh;
+	padding: 1rem 1.5rem 3rem 5rem;
+	box-shadow: 0 0 24px rgb(0 0 0 / 0.18);
+	position: relative;
+}
+/* Binding holes down the left edge. */
+.wrap::before {
+	content: "";
+	position: absolute;
+	top: 3rem;
+	bottom: 3rem;
+	left: 0.9rem;
+	width: 1.1rem;
+	background: radial-gradient(circle at center, var(--desk) 0.4rem, transparent 0.45rem) 0 0 / 1.1rem 6rem repeat-y;
+	opacity: 0.9;
+	pointer-events: none;
+}
+h1,
+h2,
+h3 {
+	letter-spacing: 0;
+	line-height: calc(var(--line) * 1.25);
+	font-weight: 700;
+}
+h2 {
+	font-size: 1.75rem;
+}
+h3 {
+	font-size: 1.4rem;
+}
+h2,
+h3 {
+	margin-top: var(--line);
+	margin-bottom: calc(var(--line) / 2);
+}
+p {
+	margin-bottom: var(--line);
+}
+a,
+a:focus,
+a:active {
+	text-decoration-line: underline;
+	text-decoration-style: wavy;
+	text-decoration-thickness: 1px;
+	text-decoration-color: var(--blue);
+}
+blockquote {
+	font-family: inherit;
+	font-size: inherit;
+	border-left: 3px solid var(--margin-line);
+}
+input[type="text"],
+input[type="url"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+select,
+textarea {
+	background: transparent;
+	border: none;
+	border-bottom: 2px dashed var(--grey);
+	border-radius: 0;
+}
+input:focus,
+select:focus,
+textarea:focus {
+	border-bottom-color: var(--text);
+}
+button {
+	border-radius: 0.5rem 0.2rem 0.5rem 0.2rem;
+	border-width: 2px;
+}
+@media (max-width: 600px) {
+	.wrap {
+		padding-left: 3.5rem;
+		background-position: -1.5rem 0, 0 12px;
+	}
+	.wrap::before {
+		left: 0.4rem;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--desk: #14161a;
+		--background: #23262b;
+		--text: #e6e1cf;
+		--grey: #3d434d;
+		--blue: #8ab4f8;
+		--red: #ef8a80;
+		--green: #8bc58b;
+		--rule: #32373f;
+		--margin-line: #b85450;
+	}
+}

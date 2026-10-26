@@ -1,0 +1,120 @@
+<!doctype html>
+
+<html lang="en">
+<%- include('partials/html-head', {title: "Settings"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header',{title: "Settings"}); -%>
+
+    <section>
+
+      <details open>
+        <summary>Profile</summary>
+        <div class="field">
+          <label for="name">Name</label>
+          <input type="text" id="name" placeholder="enter your name" v-model="myAccount.name" />
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="enter a short description" v-model="myAccount.description" rows="2" maxlength="300"></textarea>
+          <div class="help">Used in search and social previews and in your feed. It isn't shown on your blog.</div>
+        </div>
+        <div class="field">
+          <label for="icon">Favicon</label>
+          <% var faviconSrc = user.favicon && user.favicon.updatedOn ? "/favicon.png?v=" + new Date(user.favicon.updatedOn).getTime() : user.iconUrl; %>
+          <div class="flex">
+            <% if (faviconSrc) { %>
+            <img src="<%= user.favicon && user.favicon.updatedOn ? userBaseUrl + faviconSrc.slice(1) : faviconSrc %>" alt="Current favicon" width="32" height="32" />
+            <% } %>
+            <input type="file" id="icon" class="flex-1" accept="image/png" v-on:change="uploadFavicon" :disabled="isLoading" />
+            <% if (faviconSrc) { %>
+            <button type="button" class="ghost" v-on:click="deleteFavicon" :disabled="isLoading">Remove</button>
+            <% } %>
+          </div>
+          <div class="help">PNG only, up to 512KB. A square image works best. It is served from <code><%= userBaseUrl %>favicon.png</code>.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Account</summary>
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="enter your username" v-model="myAccount.username" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="text" id="email" placeholder="enter your email" v-model="myAccount.email" />
+          <% if(typeof user.emailVerificationCode !== "undefined") { %>
+          <a href="javascript:void(0)" v-on:click="resendVerification">Resend verification</a>
+          <% } %>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="new password" v-model="myAccount.password" />
+        </div>
+      </details>
+
+
+      <details>
+        <summary>Custom domain</summary>
+        <p>Serve your blog from your own domain instead of <code><%=user.username%>.<%= domain %></code>.</p>
+        <div class="field">
+          <label for="domain">Domain</label>
+          <input type="text" id="domain" placeholder="eg: blog.example.com" v-model="myAccount.domain" />
+        </div>
+        <p>
+          A custom domain is a one-time fee of $36. Pay it at
+          <a href="https://paypal.me/imvasanthv/36USD" target="_blank" rel="noopener noreferrer">paypal.me/imvasanthv/36USD</a>,
+          then email <a href="mailto:vasanth@veenew.com">vasanth@veenew.com</a> and I'll send you the instructions to enable it.
+        </p>
+      </details>
+
+      <div class="spacer"></div>
+      <div class="spacer"></div>
+
+      <button v-on:click="updateAccount">Update</button>
+    </section>
+
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <section>
+      <details>
+        <summary>Account deletion</summary>
+        <p>To delete your account, first delete all your posts, pages, bookmarks, microblogs, photos, guestbook entries and subscribers, and remove your favicon. Your account is then permanently removed after 7 days. If you change your mind, just log back in within those 7 days to cancel the deletion.</p>
+
+        <p><a href="/export" target="_blank">Export your data</a> before deleting it. The export has your posts, pages, bookmarks, microblogs, guestbook entries, subscribers and a list of your photos with a link to each one. Photo files are not in the export, so save them from those links.</p>
+
+        <div v-if="!deleteConfirm">
+          <button class="red" v-on:click="deleteConfirm = true">Delete account</button>
+        </div>
+
+        <div v-if="deleteConfirm">
+          <p><strong>Are you sure?</strong></p>
+          <button class="red" v-on:click="deleteAccount">Confirm & delete</button>
+        </div>
+      </details>
+      <hr />
+    </section>
+    <div class="spacer"></div>
+    <%- include('partials/footer'); -%>
+
+  </div>
+
+  <script type="text/javascript">
+    window.onload = () => {
+      App.myAccount = {
+        username: "<%=user.username%>",
+        email: "<%=user.email%>",
+        name: "<%=user.name%>",
+        description: "<%- JSON.stringify(user.description || '').slice(1, -1) %>",
+        password: "",
+        domain: "<%=user.domain || ''%>",
+      };
+    }
+  </script>
+</body>
+
+</html>

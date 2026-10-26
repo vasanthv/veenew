@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Microblogs"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Microblogs"}); -%>
+
+    <section class="flex">
+      <div class="flex-1"></div>
+      <a href="/microblogs/new">+ New microblog</a>
+    </section>
+    <blockquote>
+      <em>Log your random thoughts or status updates here. Show all your microblogs on any page with <code v-pre>{{microblogs.all}}</code>, or only the ones tagged #name with <code v-pre>{{microblogs.tag.name}}</code>. Use #hashtags to organise them.</em>
+    </blockquote>
+
+    <section>
+      <% if (microblogs.length <= 0) { %>
+      <div class="empty">No microblogs to show.</div>
+      <% } else { %>
+      <% for (var i = 0; i < microblogs.length; i++) { %>
+      <article class="maxh">
+        <div style="white-space: pre-wrap;"><%= microblogs[i].text %></div>
+        <div><small>
+          <a href="/microblog/<%= microblogs[i]._id %>"><time datetime="<%= new Date(microblogs[i].createdOn).toISOString() %>" title="<%= new Date(microblogs[i].createdOn).toISOString().slice(0, 10) %>"><%= getRelativeTime(microblogs[i].createdOn) %></time></a>
+          &middot; <a href="/microblogs/edit/<%= microblogs[i]._id %>">Edit</a>
+          &middot; <a href="javascript:void(0)" v-on:click="deleteMicroblog('<%= microblogs[i]._id %>')" class="red">Delete</a>
+          <% (microblogs[i].hashtags || []).forEach(function (tag) { %>&middot; #<%= tag %> <% }) %>
+        </small></div>
+      </article>
+      <% } %>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

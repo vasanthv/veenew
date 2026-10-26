@@ -1,0 +1,17 @@
+<!doctype html>
+
+<html lang="en">
+<%- include('partials/html-head', {title: "Page not found"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <% const isProfile = typeof profile !== "undefined"; %>
+    <%- include(isProfile ? 'profile/header' : 'partials/header', {title: "Not found"}); -%>
+    <section>
+      <p>👻 The page you are looking for does not exist on this server.</p>
+    </section>
+    <%- include(isProfile ? 'profile/footer' : 'partials/footer'); -%>
+  </div>
+</body>
+
+</html>

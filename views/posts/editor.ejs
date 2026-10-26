@@ -1,0 +1,107 @@
+<!doctype html>
+
+<html lang="en">
+<%
+  const isPage = typeof contentType !== "undefined" && contentType === "page";
+  const entityName = isPage ? "page" : "post";
+%>
+<%- include('partials/html-head', {title: `${typeof post !== "undefined" ? "Edit" : "New"} ${entityName}`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: `${typeof post !== "undefined" ? "Edit" : "New"} ${entityName}`}); -%>
+
+    <section id="postbox">
+      <form @submit.prevent="<%- typeof post !== "undefined" ? (isPage ? `updatePage('${post._id}')` : `updatePost('${post._id}')`) : (isPage ? 'createPage' : 'createPost') %>">
+        <input type="text" v-model="post.title" placeholder="title" maxlength="160" required />
+        <div class="spacer"></div>
+        <% if (isPage) { %>
+        <input type="text" v-model="post.slug" placeholder="slug (example: about-us)" />
+        <div class="spacer"></div>
+        <% } else { %>
+        <input type="text" v-model="post.slug" placeholder="slug (optional, created from the title)" />
+        <div class="spacer"></div>
+        <% } %>
+        <% if (!isPage) { %>
+        <label>Published on <input type="date" v-model="post.publishedDate" required /></label>
+        <div class="spacer"></div>
+        <% } %>
+        <textarea v-model="post.text" placeholder="start writing.." <% if(typeof post === "undefined") { %>@keyup="onPostChange" <% } %>></textarea>
+        <div class="spacer"></div>
+        <div class="flex">
+          <div class="flex-1">
+            <% if(typeof post !== "undefined" && !(isPage && !post.slug)) { %>
+            <a href="javascript:void(0)" v-on:click="<%- isPage ? `deletePage('${post._id}')` : `deletePost('${post._id}')` %>" class="red">delete <%= entityName %></a>
+            <% } %>
+          </div>
+          <button type="submit" :disabled="isLoading"><%- typeof post !== "undefined" ? "Update" : "Create" %></button>
+        </div>
+        <div class="spacer"></div>
+        <details class="guide" v-pre>
+          <summary>Guide to your editor</summary>
+          <h3>Markdown</h3>
+          <p>The editor supports Markdown, a simple way to format your text with symbols.</p>
+          <table>
+            <tbody>
+              <tr><td><code># Heading</code></td><td>Large heading (use <code>##</code> or <code>###</code> for smaller)</td></tr>
+              <tr><td><code>**bold**</code></td><td><strong>bold</strong></td></tr>
+              <tr><td><code>*italic*</code></td><td><em>italic</em></td></tr>
+              <tr><td><code>[text](https://example.com)</code></td><td>Link</td></tr>
+              <tr><td><code>![alt text](https://example.com/image.jpg)</code></td><td>Image</td></tr>
+              <tr><td><code>- item</code></td><td>Bulleted list (use <code>1.</code> for numbered)</td></tr>
+              <tr><td><code>&gt; quote</code></td><td>Quote</td></tr>
+              <tr><td><code>`code`</code></td><td>Inline code</td></tr>
+              <tr><td><code>---</code></td><td>Horizontal line</td></tr>
+            </tbody>
+          </table>
+          <% if (isPage) { %>
+          <h3>Dynamic content</h3>
+          <p>Type any of these on its own line to show dynamic content on this page. Replace <code>name</code> with a tag, without the #.</p>
+          <table>
+            <tbody>
+              <tr><td><code>{{posts.all}}</code></td><td>Every post</td></tr>
+              <tr><td><code>{{posts.latest}}</code></td><td>The five most recent posts</td></tr>
+              <tr><td><code>{{posts.tag.name}}</code></td><td>Posts tagged #name</td></tr>
+              <tr><td><code>{{tags.all}}</code></td><td>All tags</td></tr>
+              <tr><td><code>{{microblogs.all}}</code></td><td>Every microblog</td></tr>
+              <tr><td><code>{{microblogs.tag.name}}</code></td><td>Microblogs tagged #name</td></tr>
+              <tr><td><code>{{bookmarks.all}}</code></td><td>Public bookmarks</td></tr>
+              <tr><td><code>{{bookmarks.tag.name}}</code></td><td>Public bookmarks tagged #name</td></tr>
+              <tr><td><code>{{photos.grid}}</code></td><td>Photo grid</td></tr>
+              <tr><td><code>{{guestbook.form}}</code></td><td>Form to sign the guestbook</td></tr>
+              <tr><td><code>{{guestbook.entries.approved}}</code></td><td>Approved guestbook entries</td></tr>
+              <tr><td><code>{{subscription.form}}</code></td><td>Form to subscribe to new posts by email</td></tr>
+            </tbody>
+          </table>
+          <% } %>
+        </details>
+      </form>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+  <% if(typeof post !== "undefined") { %>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.post = {
+        title: "<%- JSON.stringify(post.title || '').slice(1, -1) %>",
+        text: "<%- JSON.stringify(post.text).slice(1, -1) %>",
+        slug: "<%- JSON.stringify(post.slug || '').slice(1, -1) %>",
+        publishedDate: "<%= typeof publishedDate !== "undefined" ? publishedDate : "" %>"
+      }
+    }
+  </script>
+  <% }else { %>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.post = {
+        title: "",
+        text: window.localStorage.<%= isPage ? "newPage" : "newPost" %> ?? "",
+        slug: "",
+        publishedDate: new Date().toLocaleDateString("en-CA")
+      }
+    }
+  </script>
+  <% } %>
+</body>
+
+</html>

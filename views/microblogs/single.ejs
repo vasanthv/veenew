@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: `${microblog.user.name ?? microblog.user.username} / ${title}`}); -%>
+
+<body id="body-microblog-<%= microblog._id %>">
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: microblog.user.name ?? microblog.user.username}); -%>
+
+    <section>
+      <article id="microblog-<%= microblog._id %>">
+        <div class="content" style="white-space: pre-wrap;"><%= microblog.text %></div>
+        <div class="spacer"></div>
+        <small>
+          <time datetime="<%= new Date(microblog.createdOn).toISOString() %>" title="<%= new Date(microblog.createdOn).toISOString().slice(0, 10) %>"><%= getRelativeTime(microblog.createdOn) %></time>
+        </small>
+      </article>
+    </section>
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>

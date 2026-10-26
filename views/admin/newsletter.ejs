@@ -1,0 +1,37 @@
+<!doctype html>
+
+<html lang="en">
+<%- include('partials/html-head', {title: "Newsletter"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Newsletter"}); -%>
+
+    <section id="postbox">
+      <form @submit.prevent="sendNewsletter">
+        <input type="text" v-model="newsletter.subject" placeholder="subject" />
+        <div class="spacer"></div>
+        <textarea v-model="newsletter.message" placeholder="start writing.."></textarea>
+        <div class="spacer"></div>
+        <div class="field">
+          <label>
+            <input type="checkbox" v-model="newsletter.testEmail" @change="onTestEmailChange" />
+            Test email (send only to admin)
+          </label>
+        </div>
+        <div class="spacer"></div>
+        <div class="flex">
+          <div class="flex-1"></div>
+          <button type="submit" :disabled="isLoading">
+            {{ newsletter.testEmail ? "Send test email" : "Send to all users" }}
+          </button>
+        </div>
+        <div class="spacer"></div>
+        <a href="https://www.markdownguide.org/cheat-sheet/#basic-syntax" target="_blank"><em>Markdown guide</em></a>
+      </form>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

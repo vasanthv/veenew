@@ -1,0 +1,13 @@
+<header>
+  <nav>
+    <% if (Array.isArray(profile.menu) && profile.menu.length > 0) { %>
+    <ul>
+      <% profile.menu.forEach((item, index) => { %>
+      <% const isExternal = /^https?:\/\//i.test(item.link); %>
+      <li><a href="<%= item.link %>" <%= isExternal ? 'target="_blank" rel="noopener noreferrer"' : "" %>><%= item.name %></a></li>
+      <% }); %>
+    </ul>
+    <% } %>
+  </nav>
+  <h1 class="page-title"><%= title  %></h1>
+</header>

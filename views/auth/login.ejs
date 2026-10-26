@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Log in"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Log in"}); -%>
+
+    <section class="mini-wrap">
+      <form @submit.prevent="signIn">
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="enter your username" v-model="authCreds.username" />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="enter your password" v-model="authCreds.password" @keyup.enter="signIn" />
+        </div>
+
+        <button type="submit">Log in</button>
+        &nbsp;
+        <a href="javascript:void(0)" v-on:click="forgotPassword"><strong>forgot password?</strong></a>
+
+      </form>
+      <div class="spacer"></div>
+      <small>New to Veenew? <a href="/signup"><strong>Sign up</strong></a></small>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

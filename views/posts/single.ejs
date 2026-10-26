@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: `${post.user.name ?? post.user.username} / ${title}`}); -%>
+
+<body id="body-post-<%= post._id %>">
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: post.user.name ?? post.user.username}); -%>
+
+    <section>
+      <article id="post-<%= post._id %>">
+        <h2 class="entry-title"><%= post.title %></h2>
+        <div class="content"><%- post.html %></div>
+        <div class="spacer"></div>
+        <small>
+          Posted on
+          <time datetime="<%= publishedDate %>">
+            <em><%= postDate %></em>
+          </time>
+        </small>
+        <% if (post.hashtags && post.hashtags.length > 0) { %>
+        <div>
+          <small>
+            <% post.hashtags.forEach(function (tag) { %>
+            <a href="/posts/tag/<%= encodeURIComponent(tag) %>">#<%= tag %></a>
+            <% }) %>
+          </small>
+        </div>
+        <% } %>
+      </article>
+    </section>
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>

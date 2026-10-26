@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Subscribers"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Subscribers"}); -%>
+
+    <blockquote>
+      <em>Let visitors subscribe with <code v-pre>{{subscription.form}}</code>. They confirm their email first, then get every new post by email with a link to unsubscribe.</em>
+    </blockquote>
+
+    <section>
+      <% if (subscribers.length <= 0) { %>
+      <div class="empty">No subscribers yet.</div>
+      <% } else { %>
+      <% var confirmed = subscribers.filter(function (s) { return s.isConfirmed; }).length; %>
+      <p><small><%= confirmed %> confirmed &middot; <%= subscribers.length - confirmed %> pending</small></p>
+      <% for (var i = 0; i < subscribers.length; i++) { %>
+      <article class="maxh">
+        <div><strong><%= subscribers[i].email %></strong></div>
+        <div><small>
+          <time datetime="<%= new Date(subscribers[i].createdOn).toISOString() %>" title="<%= new Date(subscribers[i].createdOn).toISOString().slice(0, 10) %>"><%= getRelativeTime(subscribers[i].createdOn) %></time>
+          &middot; <%= subscribers[i].isConfirmed ? "confirmed" : "pending" %>
+          &middot; <a href="javascript:void(0)" v-on:click="deleteSubscriber('<%= subscribers[i]._id %>')" class="red">Remove</a>
+        </small></div>
+      </article>
+      <% } %>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

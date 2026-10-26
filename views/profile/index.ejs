@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: profile.name ?? profile.username}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
+
+    <%- include('posts/titles'); -%>
+    <%- include('profile/footer'); -%>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+/* Sepia — a warm, paper-like reading theme. */
+:root {
+	--background: #f4ecd8;
+	--text: #433422;
+	--grey: #ddceb0;
+	--blue: #9a6a3a;
+	--link: var(--blue);
+	--red: #a3352b;
+	--green: #4f7a3f;
+}
+body {
+	font-family: Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #2b241a;
+		--text: #e8dcc4;
+		--grey: #4a4030;
+		--blue: #c99a63;
+		--red: #d9705f;
+		--green: #8bb072;
+	}
+}

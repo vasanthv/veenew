@@ -1,0 +1,76 @@
+{
+	"name": "veenew",
+	"version": "2.0.0",
+	"description": "A minimal microblogging website built on open standards",
+	"keywords": [
+		"microblogging",
+		"naked blogging",
+		"calm social",
+		"ActivityPub",
+		"rss"
+	],
+	"homepage": "https://github.com/vasanthv/veenew#readme",
+	"bugs": {
+		"url": "https://github.com/vasanthv/veenew/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/vasanthv/veenew.git"
+	},
+	"license": "MIT",
+	"author": "Vasanth.V <vasanth@veenew.com>",
+	"main": "init.js",
+	"scripts": {
+		"lint": "eslint",
+		"start": "node init.js",
+		"dev": "node --env-file=.env init.js",
+		"api-dev": "DISABLE_CSRF=true node --env-file=.env init.js",
+		"test": "npm run lint"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.1157.0",
+		"@aws-sdk/client-ses": "^3.556.0",
+		"axios": "^1.8.2",
+		"bcryptjs": "^2.4.3",
+		"body-parser": "^1.20.2",
+		"connect-mongo": "^5.1.0",
+		"cookie-parser": "^1.4.7",
+		"dompurify": "^3.0.9",
+		"ejs": "^3.1.10",
+		"express": "^4.21.2",
+		"express-rate-limit": "^7.2.0",
+		"express-session": "^1.18.0",
+		"feed": "^5.1.0",
+		"jsdom": "^24.0.0",
+		"marked": "^17.0.1",
+		"mongoose": "^8.3.2",
+		"morgan": "^1.10.1",
+		"multer": "^2.2.0",
+		"uuid": "^14.0.0",
+		"vue": "^3.4.25"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.14.0",
+		"eslint": "^9.13.0",
+		"eslint-config-prettier": "^9.1.0",
+		"globals": "^15.12.0",
+		"prettier": "3.4.2"
+	},
+	"prettier": {
+		"printWidth": 120,
+		"singleQuote": false,
+		"trailingComma": "es5",
+		"tabWidth": 2,
+		"useTabs": true,
+		"overrides": [
+			{
+				"files": [
+					"*.ejs"
+				],
+				"options": {
+					"parser": "html"
+				}
+			}
+		]
+	}
+}

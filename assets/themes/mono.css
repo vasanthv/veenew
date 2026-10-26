@@ -1,0 +1,28 @@
+/* Mono — a stark black-and-white monospace theme. */
+:root {
+	--background: #ffffff;
+	--text: #111111;
+	--grey: #cccccc;
+	--blue: #111111;
+	--link: var(--blue);
+	--red: #111111;
+	--green: #111111;
+}
+body {
+	font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+a,
+a:focus,
+a:active {
+	text-decoration: underline;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0a0a0a;
+		--text: #ededed;
+		--grey: #333333;
+		--blue: #ededed;
+		--red: #ededed;
+		--green: #ededed;
+	}
+}

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Verify email"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Verify email"}); -%>
+
+    <section class="mini-wrap">
+      <p>Confirm that you want to verify this email address for your Veenew account.</p>
+      <button type="button" :disabled="isLoading" v-on:click="verifyEmail">Verify my email</button>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>
