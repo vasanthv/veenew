@@ -858,6 +858,93 @@ const sendNewsletter = async (req, res, next) => {
 	}
 };
 
+/**
+ * Lists the latest 100 blogs, optionally narrowed to usernames containing the search text.
+ * Routes using this are already guarded by the isUserAdmin middleware.
+ */
+const adminListBlogs = async (req, res, next) => {
+	try {
+		const search = typeof req.query.q === "string" ? req.query.q.trim().toLowerCase() : "";
+		const query = {};
+		if (search) {
+			if (!/^[a-z0-9]{1,18}$/.test(search)) return res.json({ blogs: [] });
+			query.username = { $regex: search };
+		}
+		const users = await Users.find(query)
+			.select("username email domain createdOn lastPostedOn deletionDate")
+			.sort({ createdOn: -1 })
+			.limit(100)
+			.lean()
+			.exec();
+		const blogs = users.map((user) => ({
+			_id: user._id,
+			username: user.username,
+			email: user.email,
+			domain: user.domain || "",
+			url: utils.getUserBaseUrl(user),
+			createdOn: user.createdOn,
+			lastPostedOn: user.lastPostedOn,
+			isAdmin: utils.isAdmin(user),
+			isScheduledForDeletion: !!user.deletionDate,
+		}));
+		res.json({ blogs });
+	} catch (error) {
+		next(error);
+	}
+};
+
+/**
+ * Permanently deletes a blog: its S3 files, all of its content, and then the user itself (which also
+ * ends every session of that user), then emails the user the admin's reason. Admin accounts can't be deleted from here.
+ */
+const adminDeleteBlog = async (req, res, next) => {
+	try {
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Blog not found");
+		const user = await Users.findById(req.params.id).lean().exec();
+		if (!user) return utils.httpError(404, "Blog not found");
+		if (utils.isAdmin(user)) return utils.httpError(400, "Admin blogs can't be deleted here");
+		const reason = utils.getValidString(req.body.reason, 1, 1000, "Reason");
+
+		const owner = { user: user._id };
+		// Delete from S3 first: if it fails the blog stays and can be deleted again.
+		const photos = await Photos.find(owner).select("+s3Key").lean().exec();
+		for (const photo of photos) await s3.deleteObject(photo.s3Key);
+		if (user.favicon?.updatedOn) await s3.deleteObject(utils.getFaviconKey(user._id));
+
+		await Promise.all([
+			Posts.deleteMany(owner),
+			Bookmarks.deleteMany(owner),
+			Microblogs.deleteMany(owner),
+			Photos.deleteMany(owner),
+			GuestbookEntries.deleteMany(owner),
+			Subscribers.deleteMany(owner),
+		]);
+		await Users.deleteOne({ _id: user._id });
+
+		utils.blogDeletedByAdminEmail(user.username, user.email, reason);
+		res.json({ message: `Blog ${user.username} deleted` });
+	} catch (error) {
+		next(error);
+	}
+};
+
+/**
+ * Removes the custom domain of a blog, which then serves only from its subdomain.
+ */
+const adminDeleteDomain = async (req, res, next) => {
+	try {
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Blog not found");
+		const user = await Users.findById(req.params.id).select("username domain").lean().exec();
+		if (!user) return utils.httpError(404, "Blog not found");
+		if (!user.domain) return utils.httpError(400, "This blog has no custom domain");
+
+		await Users.updateOne({ _id: user._id }, { $unset: { domain: 1 }, updatedOn: new Date() });
+		res.json({ message: `Domain ${user.domain} removed from ${user.username}` });
+	} catch (error) {
+		next(error);
+	}
+};
+
 module.exports = {
 	signUp,
 	logIn,
@@ -897,4 +984,7 @@ module.exports = {
 	deleteFavicon,
 	serveFavicon,
 	sendNewsletter,
+	adminListBlogs,
+	adminDeleteBlog,
+	adminDeleteDomain,
 };

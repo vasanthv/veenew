@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Admin"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Admin"}); -%>
+
+    <nav class="flex">
+      <ul class="flex-1">
+        <li><a href="/newsletter">Newsletter</a></li>
+      </ul>
+    </nav>
+
+    <section>
+      <form @submit.prevent="loadBlogs">
+        <input type="text" v-model="blogSearch" placeholder="search blogs by username" maxlength="18" />
+      </form>
+      <div class="spacer"></div>
+      <p><small>{{ blogSearch.trim() ? "Matching blogs" : "Latest 100 blogs" }}</small></p>
+      <div v-if="blogsLoaded && blogs.length === 0" class="empty">No blogs found.</div>
+      <article v-for="blog in blogs" :key="blog._id" class="maxh">
+        <div>
+          <strong><a :href="blog.url" target="_blank">{{ blog.username }}</a></strong>
+          <small v-if="blog.isScheduledForDeletion"> &middot; deletion scheduled</small>
+        </div>
+        <div><small>
+          <a :href="'mailto:' + blog.email">{{ blog.email }}</a>
+          &middot; joined {{ new Date(blog.createdOn).toISOString().slice(0, 10) }}
+          <template v-if="blog.domain">
+            &middot; {{ blog.domain }}
+            (<a href="javascript:void(0)" @click="adminDeleteDomain(blog)" class="red">Delete domain</a>)
+          </template>
+          <template v-if="!blog.isAdmin">
+            &middot; <a href="javascript:void(0)" @click="adminDeleteBlog(blog)" class="red">Delete blog</a>
+          </template>
+        </small></div>
+      </article>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

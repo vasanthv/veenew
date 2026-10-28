@@ -181,6 +181,34 @@ const accountDeletionEmail = (name, email) => {
 };
 
 /**
+ * Tells a user that an admin deleted their blog, along with the admin's reason.
+ * @param {string} username - Username shown in the message.
+ * @param {string} email - Recipient email address.
+ * @param {string} reason - Why the blog was deleted, written by the admin.
+ * @returns {void}
+ */
+const blogDeletedByAdminEmail = (username, email, reason) => {
+	const params = {
+		Source: config.NO_REPLY_EMAIL,
+		Destination: { ToAddresses: [email] },
+		Message: {
+			Subject: { Charset: "UTF-8", Data: `Your Veenew blog has been deleted` },
+			Body: {
+				Html: {
+					Charset: "UTF-8",
+					Data: `Hello @${username}<br/><br/>Your Veenew blog and all of its content have been deleted by an administrator.<br/><br/><strong>Reason:</strong><br/>${escapeHtml(reason).replace(/\n/g, "<br/>")}<br/><br/>Veenew Team`,
+				},
+				Text: {
+					Charset: "UTF-8",
+					Data: `Hello @${username}\n\nYour Veenew blog and all of its content have been deleted by an administrator.\n\nReason:\n${reason}\n\nVeenew Team`,
+				},
+			},
+		},
+	};
+	sendEmail(params).catch((error) => console.error(error));
+};
+
+/**
  * Sends a newsletter email to a single recipient.
  * @param {string} email - Recipient email address.
  * @param {string} subject - Email subject line.
@@ -318,6 +346,7 @@ const sendEmail = async (params) => {
 module.exports = {
 	verificationEmail,
 	accountDeletionEmail,
+	blogDeletedByAdminEmail,
 	resetPasswordEmail,
 	guestbookConfirmationEmail,
 	guestbookEntryEmail,

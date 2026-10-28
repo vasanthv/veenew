@@ -8,6 +8,9 @@ const defaultState = function () {
 		authCreds: { username: "", password: "" },
 		resetPassword: "",
 		post: { title: params.has("title") ? params.get("title") : "", text: params.has("text") ? params.get("text") : "", slug: "", publishedDate: "" },
+		blogs: [],
+		blogSearch: "",
+		blogsLoaded: false,
 		newsletter: { subject: "", message: "", testEmail: true },
 		myAccount: { username: "", email: "", password: "", name: "", description: "", menu: [], domain: "" },
 		bookmark: { title: "", url: "", notes: "", isPrivate: false },
@@ -24,6 +27,9 @@ function redirect(path, replace = false) {
 const App = Vue.createApp({
 	data() {
 		return defaultState();
+	},
+	mounted() {
+		if (window.location.pathname === "/admin") this.loadBlogs();
 	},
 	methods: {
 		setToast(message, type = "error") {
@@ -310,6 +316,33 @@ const App = Vue.createApp({
 					redirect("/photos");
 				});
 			}
+		},
+		loadBlogs() {
+			axios
+				.get("/api/admin/blogs", { params: { q: this.blogSearch.trim() } })
+				.then((response) => {
+					this.blogs = response.data.blogs;
+					this.blogsLoaded = true;
+				});
+		},
+		adminDeleteBlog(blog) {
+			const reason = prompt(
+				`Permanently delete the blog "${blog.username}" and all of its content? There is no undo.\n\nThis reason will be emailed to the user:`
+			);
+			if (reason === null) return;
+			if (!reason.trim()) return this.setToast("A reason is required to delete a blog");
+			axios.delete(`/api/admin/blogs/${blog._id}`, { data: { reason: reason.trim() } }).then((response) => {
+				this.setToast(response.data.message, "success");
+				this.blogs = this.blogs.filter((item) => item._id !== blog._id);
+			});
+		},
+		adminDeleteDomain(blog) {
+			if (!confirm(`Remove the domain "${blog.domain}" from ${blog.username}?`)) return;
+			axios.delete(`/api/admin/blogs/${blog._id}/domain`).then((response) => {
+				this.setToast(response.data.message, "success");
+				blog.domain = "";
+				blog.url = `${window.location.protocol}//${blog.username}.${window.location.host}/`;
+			});
 		},
 		onTestEmailChange(event) {
 			// Ask for confirmation before switching off the safety of a test-only send.

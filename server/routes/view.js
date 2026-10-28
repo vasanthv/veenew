@@ -265,6 +265,16 @@ router.get("/newsletter", async (req, res, next) => {
 	}
 });
 
+router.get("/admin", async (req, res, next) => {
+	try {
+		if (!req.user) return res.redirect("/login");
+		if (!res.locals.isAdmin) return res.status(404).render("404", { user: req.user });
+		res.render("admin/index", { user: req.user, csrfToken: req.csrfToken });
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.get("/export", async (req, res, next) => {
 	try {
 		if (!req.user) return res.redirect("/login");

@@ -70,6 +70,10 @@ router.delete("/favicon", apiHandler.deleteFavicon);
 
 router.post("/newsletter", isUserAdmin, rateLimit({ max: 10 }), apiHandler.sendNewsletter);
 
+router.get("/admin/blogs", isUserAdmin, rateLimit({ max: 120 }), apiHandler.adminListBlogs);
+router.delete("/admin/blogs/:id", isUserAdmin, rateLimit({ max: 30 }), apiHandler.adminDeleteBlog);
+router.delete("/admin/blogs/:id/domain", isUserAdmin, rateLimit({ max: 30 }), apiHandler.adminDeleteDomain);
+
 /**
  * API endpoints common error handling middleware
  */
