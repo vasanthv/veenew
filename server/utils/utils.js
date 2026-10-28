@@ -225,7 +225,7 @@ const hashResetToken = (token) => crypto.createHash("sha256").update(token).dige
  */
 const getValidPassword = async (password) => {
 	if (!password) return httpError(400, "Invalid password");
-	if (password.length < 8) return httpError(400, "Password length should be atleast 8 characters");
+	if (password.length < 8) return httpError(400, "Password length should be at least 8 characters");
 	return await bcrypt.hash(password, PASSWORD_BCRYPT_ROUNDS);
 };
 

@@ -145,7 +145,7 @@ const completePasswordReset = async (req, res, next) => {
 const resendEmailVerification = async (req, res, next) => {
 	try {
 		const { username, email, emailVerificationCode } = req.user;
-		if (!emailVerificationCode) return utils.httpError(400, "Email has been already verified");
+		if (!emailVerificationCode) return utils.httpError(400, "Email has already been verified");
 
 		utils.verificationEmail(username, email, emailVerificationCode);
 

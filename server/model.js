@@ -1,5 +1,5 @@
 /**
- * A singleton implemetaion for the database models
+ * A singleton implementation for the database models
  */
 const mongoose = require("mongoose");
 

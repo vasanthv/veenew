@@ -12,7 +12,7 @@ const { getConfirmedSubscribers } = require("./db");
  * @returns {void}
  */
 const verificationEmail = (username, email, code) => {
-	const verificartionEmailLink = `${config.URL}verify/${code}`;
+	const verificationEmailLink = `${config.URL}verify/${code}`;
 
 	const params = {
 		Source: config.NO_REPLY_EMAIL,
@@ -22,11 +22,11 @@ const verificationEmail = (username, email, code) => {
 			Body: {
 				Html: {
 					Charset: "UTF-8",
-					Data: `Hello @${username}<br/><br/>Please click on the link below to verify your email.<br/><a href="${verificartionEmailLink}" target='_blank'>${verificartionEmailLink}</a><br/><br/>Thanks<br/>`,
+					Data: `Hello @${username}<br/><br/>Please click on the link below to verify your email.<br/><a href="${verificationEmailLink}" target='_blank'>${verificationEmailLink}</a><br/><br/>Thanks<br/>`,
 				},
 				Text: {
 					Charset: "UTF-8",
-					Data: `Hello @${username}\n\nPlease click on the link below to verify your email.\n${verificartionEmailLink}\n\nThanks\n`,
+					Data: `Hello @${username}\n\nPlease click on the link below to verify your email.\n${verificationEmailLink}\n\nThanks\n`,
 				},
 			},
 		},
