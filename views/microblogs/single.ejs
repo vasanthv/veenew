@@ -2,12 +2,12 @@
 <html lang="en">
 <%- include('partials/html-head', {title: `${microblog.user.name ?? microblog.user.username} / ${title}`}); -%>
 
-<body id="body-microblog-<%= microblog._id %>">
+<body id="microblog-<%= microblog._id %>">
   <div id="app" class="wrap">
     <%- include('profile/header', {title: microblog.user.name ?? microblog.user.username}); -%>
 
     <section>
-      <article id="microblog-<%= microblog._id %>">
+      <article>
         <div class="content" style="white-space: pre-wrap;"><%= microblog.text %></div>
         <div class="spacer"></div>
         <small>

@@ -19,10 +19,7 @@
 	background: var(--green);
 }
 #postbox textarea {
-	background-color: var(--grey);
-	border: none;
 	min-height: 7rem;
-	padding: 1rem;
 }
 #loader {
 	position: relative;
@@ -80,4 +77,14 @@
 	100% {
 		content: "😀";
 	}
+}
+
+#postbox .field-label {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	white-space: nowrap;
+}
+#postbox .field-label input {
+	flex: 1;
 }

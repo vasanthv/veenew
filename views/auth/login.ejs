@@ -10,17 +10,17 @@
       <form @submit.prevent="signIn">
         <div class="field">
           <label for="username">Username</label>
-          <input type="text" id="username" placeholder="enter your username" v-model="authCreds.username" />
+          <input type="text" id="username" placeholder="Enter your username" v-model="authCreds.username" />
         </div>
 
         <div class="field">
           <label for="password">Password</label>
-          <input type="password" id="password" placeholder="enter your password" v-model="authCreds.password" @keyup.enter="signIn" />
+          <input type="password" id="password" placeholder="Enter your password" v-model="authCreds.password" @keyup.enter="signIn" />
         </div>
 
         <button type="submit">Log in</button>
         &nbsp;
-        <a href="javascript:void(0)" v-on:click="forgotPassword"><strong>forgot password?</strong></a>
+        <a href="javascript:void(0)" v-on:click="forgotPassword"><strong>Forgot password?</strong></a>
 
       </form>
       <div class="spacer"></div>

@@ -18,7 +18,9 @@ renderer.link = function (href, title, text) {
 	const resolvedText = token ? token.text : text;
 	if (!resolvedHref) return resolvedText ?? "";
 	const t = resolvedTitle ? ` title="${resolvedTitle}"` : "";
-	const externalTarget = /^https?:\/\//i.test(resolvedHref) ? ` target="_blank"` : "";
+	const externalTarget = /^https?:\/\//i.test(resolvedHref)
+		? ` target="_blank" rel="nofollow ugc noopener noreferrer"`
+		: "";
 	return `<a href="${resolvedHref}"${t}${externalTarget}>${resolvedText}</a>`;
 };
 
@@ -32,7 +34,7 @@ renderer.text = function (text) {
 	// 1️⃣ Linkify URLs
 	let result = safeText.replace(
 		/\bhttps?:\/\/[^\s<]+[^\s<.,:;"')\]]/gi,
-		(url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+		(url) => `<a href="${url}" target="_blank" rel="nofollow ugc noopener noreferrer">${url}</a>`
 	);
 	// 2️⃣ Linkify hashtags
 	result = result.replace(

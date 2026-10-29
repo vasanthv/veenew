@@ -7,69 +7,81 @@
     <header>
       <%- include('partials/nav'); -%>
       <div class="spacer"></div>
-      <h1 class="page-title"><em>Veenew</em> - <span style="font-weight: normal;">Your calm corner on the web</span></h1>
+      <h1 class="page-title"><em>Veenew</em> - <span style="font-weight: normal;">Build your corner of the web</span></h1>
     </header>
 
     <section>
-      <p class="landing-lead">One calm space for everything you put on the web. Make a personal website, a blog, a status log or a bookmark collection, or mix them all on pages of your own.</p>
-      <p>Veenew is a simple blogging platform at its core, but flexible enough for regular blogs, microblogs, bookmarks, essays, journals, personal websites, and everything in between. No follows, no likes, just your thoughts.</p>
+      <p class="landing-lead">One calm space for everything you put on the web. Make a personal website, a blog, a status log or a bookmark collection, or mix them all on your own.</p>
+      <p>Veenew is a simple blogging platform at its core, but flexible enough for regular blogs, microblogs, bookmarks, essays, journals, personal websites, and everything in between. </p>
       <div class="landing-cta">
         <a class="btn" href="/signup">Get started &rarr;</a>
         <a href="/login">Log in</a>
       </div>
     </section>
 
-    <section>
+    <section class="showcase">
       <h2 class="landing-heading">Features</h2>
-      <div class="features">
-        <article class="feature">
-          <h3>Unlimited pages</h3>
-          <p>Create a page for anything you can imagine, from a personal homepage to a journal or collection of things you love.</p>
-        </article>
-        <article class="feature">
-          <h3>Unlimited posts</h3>
-          <p>Write essays, stories, and passing thoughts in Markdown, with links and hashtags.</p>
-        </article>
-        <article class="feature">
-          <h3>Your own style</h3>
-          <p>Customize your theme and styling to create a space that feels unmistakably yours.</p>
-        </article>
-        <article class="feature">
-          <h3>Photos</h3>
-          <p>Give your favorite memories and everyday snapshots a home with simple photo grids like Instagram.</p>
-        </article>
-        <article class="feature">
-          <h3>Microblogs</h3>
-          <p>Share little updates, quick thoughts, and everyday moments without writing a whole post.</p>
-        </article>
-        <article class="feature">
-          <h3>Bookmarks</h3>
-          <p>Collect the links, articles, and corners of the web worth coming back to and share it with your readers.</p>
-        </article>
-        <article class="feature">
-          <h3>Guestbook</h3>
-          <p>Give visitors a place to say hello, leave a note, share a thought, or simply let you know they stopped by.</p>
-        </article>
-        <article class="feature">
-          <h3>Email subscriptions</h3>
-          <p>Let readers subscribe to your writing and receive new posts straight in their inbox.</p>
-        </article>
-        <article class="feature">
-          <h3>RSS feeds</h3>
-          <p>Let readers follow your posts through their favorite RSS reader, without algorithms or social feeds.</p>
-        </article>
-        <article class="feature">
-          <h3>Free to use</h3>
-          <p>Create pages, publish posts, and make your corner of the web without a monthly subscription.</p>
-        </article>
-        <article class="feature">
-          <h3>Your own domain</h3>
-          <p>Give your site its own address with a one-time $36 fee for custom domain support.</p>
-        </article>
+      <p class="customize-lead">Everything you need to write, share and grow your own corner of the web.</p>
+      <div class="feature-rows">
+        <div class="feature-row">
+          <span>Unlimited Pages</span>
+          <span>Unlimited Posts</span>
+        </div>
+        <div class="feature-row">
+          <span>Photo uploads</span>
+          <span>Microblogging</span>
+          <span>Bookmarking</span>
+        </div>
+        <div class="feature-row">
+          <span>Guestbook</span>
+          <span>Email subscriptions</span>
+          <span>RSS subscription</span>
+        </div>
       </div>
-      <div class="landing-cta">
+      <div class="shot">
+        <img src="/screenshots/author-home.png" alt="The Veenew author dashboard showing a list of pages" loading="lazy">
+      </div>
+      <div class="landing-cta landing-cta-center">
         <a class="btn" href="/signup">Get started &rarr;</a>
       </div>
+    </section>
+
+    <section class="showcase customize">
+      <h2 class="landing-heading landing-heading-sm">Make it yours</h2>
+      <p class="customize-lead">Pick from ready-made themes, add your own CSS, or even drop in custom javascripts.</p>
+      <div class="customize-points">
+        <span>Themes</span>
+        <span>Custom styling</span>
+        <span>Custom scripts</span>
+      </div>
+      <div class="fan">
+        <img class="fan-card fan-left" src="/screenshots/profile-hack.png" alt="A Veenew site using the Hack theme" loading="lazy">
+        <img class="fan-card fan-right" src="/screenshots/profile-rainbow.png" alt="A Veenew site using the Peach theme" loading="lazy">
+        <img class="fan-card fan-center" src="/screenshots/profile-peach.png" alt="A Veenew site using the default theme" loading="lazy">
+      </div>
+    </section>
+
+    <section class="pricing">
+      <h2 class="landing-heading landing-heading-sm">Pricing</h2>
+      <div class="plans">
+        <div class="plan">
+          <p class="plan-label">Everything</p>
+          <p class="plan-price">Free</p>
+          <p class="plan-note">for everyone, forever</p>
+        </div>
+        <div class="plan plan-addon">
+          <p class="plan-label">Custom domain</p>
+          <p class="plan-price">$36</p>
+          <p class="plan-note">one-time fee, no subscription</p>
+        </div>
+      </div>
+      <p class="pricing-support">Like Veenew? Support it on <a href="https://github.com/sponsors/vasanthv" target="_blank" rel="noopener noreferrer">GitHub Sponsors</a> or <a href="https://ko-fi.com/vasanthv" target="_blank" rel="noopener noreferrer">Ko-fi</a>.</p>
+    </section>
+
+    <section class="maker">
+      <p class="maker-label">From the maker</p>
+      <p class="maker-text">I built Veenew to be a calm place for my own writing, and I run my blog on it too. Take a look at a real site made with Veenew.</p>
+      <a class="maker-link" href="https://vasanth.veenew.com" target="_blank" rel="noopener noreferrer">vasanth.veenew.com</a>
     </section>
 
     <%- include('partials/footer'); -%>

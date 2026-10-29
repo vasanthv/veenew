@@ -24,6 +24,7 @@ const {
 	getValidUsername,
 	formatPostDate,
 	getPostDate,
+	isPublished,
 	getPostPath,
 	getRelativeTime,
 	getThemeStyleTag,
@@ -64,11 +65,11 @@ router.get("/", async (req, res, next) => {
 			type: "page",
 			slug: "",
 		})
-			.select("title text html slug")
+			.select("title text html slug hideTitle")
 			.lean();
 		if (homePage) return await renderPage(res, homePage, profileUser._id);
 
-		const pagination = await getAllPosts({ user: profileUser._id, type: "post" });
+		const pagination = await getAllPosts({ user: profileUser._id, type: "post" }, undefined, { publishedOnly: true });
 
 		res.render("profile/index", {
 			url: config.URL,
@@ -82,17 +83,17 @@ router.get("/", async (req, res, next) => {
 router.get("/post/:slug", async (req, res, next) => {
 	try {
 		const query = { user: req.profileUser._id, type: "post", slug: req.params.slug };
-		let post = await Posts.findOne(query).populate("user").lean();
+		let post = await Posts.findOne(query).populate("user", "username name").lean();
 
 		// Links made before slugs existed used the post id.
 		if (!post && isValidObjectId(req.params.slug)) {
 			post = await Posts.findOne({ _id: req.params.slug, user: req.profileUser._id, type: "post" })
-				.populate("user")
+				.populate("user", "username name")
 				.lean();
 			if (post?.slug) return res.redirect(301, `/post/${post.slug}`);
 		}
 
-		if (!post) return res.status(404).render("404");
+		if (!post || !isPublished(post)) return res.status(404).render("404");
 
 		const publishedDate = getPostDate(post);
 		const postDate = formatPostDate(publishedDate);
@@ -106,7 +107,9 @@ router.get("/post/:slug", async (req, res, next) => {
 router.get("/posts/tag/:tag", async (req, res, next) => {
 	try {
 		const tag = req.params.tag.trim().toLowerCase();
-		const pagination = await getAllPosts({ user: req.profileUser._id, type: "post", hashtags: tag });
+		const pagination = await getAllPosts({ user: req.profileUser._id, type: "post", hashtags: tag }, undefined, {
+			publishedOnly: true,
+		});
 
 		res.render("profile/index", {
 			tags: [tag],
@@ -122,7 +125,7 @@ router.get("/microblog/:id", async (req, res, next) => {
 	try {
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404");
 		const microblog = await Microblogs.findOne({ _id: req.params.id, user: req.profileUser._id })
-			.populate("user")
+			.populate("user", "username name")
 			.lean();
 		if (!microblog) return res.status(404).render("404");
 
@@ -174,7 +177,11 @@ router.get(["/feed.xml", "/feed.json"], async (req, res, next) => {
 	try {
 		const profileUser = req.profileUser;
 
-		const { posts: allPosts } = await getAllPosts({ user: profileUser._id, type: "post" }, "title text html slug createdOn timezone publishedDate");
+		const { posts: allPosts } = await getAllPosts(
+			{ user: profileUser._id, type: "post" },
+			"title text html slug createdOn timezone publishedDate",
+			{ publishedOnly: true }
+		);
 		const posts = allPosts.slice(0, config.FEED_ITEMS_LIMIT);
 
 		const baseUrl = getUserBaseUrl(profileUser);
@@ -249,7 +256,7 @@ router.get("/:slug", async (req, res, next) => {
 			type: "page",
 			slug: req.params.slug,
 		})
-			.select("title text html slug")
+			.select("title text html slug hideTitle")
 			.lean();
 
 		if (!page) return res.status(404).render("404");

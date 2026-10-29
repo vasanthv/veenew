@@ -18,6 +18,12 @@ const PASSWORD_BCRYPT_ROUNDS = 12;
 const { window } = new JSDOM("");
 const DOMPurify = createDOMPurify(window);
 
+// Links to other sites carry no SEO value: they are marked nofollow/ugc, and never leak the opener.
+DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+	if (node.tagName !== "A" || !/^(https?:)?\/\//i.test(node.getAttribute("href") || "")) return;
+	node.setAttribute("rel", "nofollow ugc noopener noreferrer");
+});
+
 /**
  * Validates and returns a username if it meets the criteria.
  * @param {string} username - The username to validate
@@ -332,7 +338,52 @@ const getValidSubscriberEmail = (body) => {
  * @returns {string} Escaped string
  */
 const escapeHtml = (value) =>
-	String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+	String(value).replace(
+		/[&<>"']/g,
+		(char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
+	);
+
+/**
+ * Gets the visitor's IP address, from the configured platform header when there is one.
+ * @param {import("express").Request} req - The request
+ * @returns {string} IP address
+ */
+const getClientIp = (req) => (config.CLIENT_IP_HEADER && req.get(config.CLIENT_IP_HEADER)) || req.ip;
+
+/**
+ * Checks the Cloudflare Turnstile token sent with a form. Always passes when Turnstile is not configured.
+ * @param {string} token - The token the widget put in the form
+ * @param {string} ip - The visitor's IP address
+ * @throws {Error} If the token is missing, invalid or could not be checked
+ */
+const verifyTurnstile = async (token, ip) => {
+	if (!config.TURNSTILE_SECRET_KEY) return;
+	const failed = () => httpError(400, "Please complete the captcha and try again");
+	if (typeof token !== "string" || !token || token.length > 2048) return failed();
+	try {
+		const { data } = await axios.post(
+			"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+			new URLSearchParams({ secret: config.TURNSTILE_SECRET_KEY, response: token, remoteip: ip }),
+			{ timeout: 5000 }
+		);
+		if (data?.success === true) return;
+	} catch {
+		// An unreachable verifier counts as a failed check, so bots can't get in by blocking it.
+	}
+	return failed();
+};
+
+/**
+ * Serializes a value as JavaScript for an inline <script>. Characters that could end the script
+ * or the string early are escaped, so user text can never break out of it.
+ * @param {*} value - Any JSON-serializable value
+ * @returns {string} A JavaScript expression for the value
+ */
+const toScriptJson = (value) =>
+	JSON.stringify(value ?? null).replace(
+		/[<>&\u2028\u2029]/g,
+		(char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`
+	);
 
 const PHOTO_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
 
@@ -346,9 +397,14 @@ const getValidPhotoType = (buffer) => {
 	let contentType;
 	if (buffer.length > 12) {
 		if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) contentType = "image/jpeg";
-		else if (buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) contentType = "image/png";
+		else if (buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])))
+			contentType = "image/png";
 		else if (["GIF87a", "GIF89a"].includes(buffer.subarray(0, 6).toString("latin1"))) contentType = "image/gif";
-		else if (buffer.subarray(0, 4).toString("latin1") === "RIFF" && buffer.subarray(8, 12).toString("latin1") === "WEBP") contentType = "image/webp";
+		else if (
+			buffer.subarray(0, 4).toString("latin1") === "RIFF" &&
+			buffer.subarray(8, 12).toString("latin1") === "WEBP"
+		)
+			contentType = "image/webp";
 	}
 	if (!contentType) return httpError(400, "Only JPEG, PNG, GIF and WebP photos are supported");
 	return { contentType, extension: PHOTO_TYPES[contentType] };
@@ -368,48 +424,64 @@ const getFaviconKey = (userId) => `favicons/${userId}.png`;
  */
 const assertFaviconIsPng = (buffer) => {
 	const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-	const isPng = buffer.length > 33 && buffer.subarray(0, 8).equals(signature) && buffer.subarray(12, 16).toString("latin1") === "IHDR";
+	const isPng =
+		buffer.length > 33 &&
+		buffer.subarray(0, 8).equals(signature) &&
+		buffer.subarray(12, 16).toString("latin1") === "IHDR";
 	if (!isPng) return httpError(400, "Favicon must be a PNG image");
 };
 
 /**
- * Validates the fields of a bookmark request body.
+ * Validates the fields of a bookmark request body. Without a title, the page's own title is used,
+ * or the host name when it has none.
  * @param {Object} body - Request body
- * @returns {Object} Validated url, title, notes, hashtags and isPrivate
+ * @returns {Promise<Object>} Validated url, title, notes, hashtags and isPrivate
  */
-const getValidBookmarkFields = (body) => {
+const getValidBookmarkFields = async (body) => {
 	const notes = getValidBookmarkNotes(body.notes);
+	const url = getValidURL(typeof body.url === "string" ? body.url.trim() : "");
+	const title = getValidBookmarkTitle(body.title) || (await fetchPageTitle(url)) || new URL(url).hostname;
 	return {
-		url: getValidURL(typeof body.url === "string" ? body.url.trim() : ""),
-		title: getValidBookmarkTitle(body.title),
+		url,
+		title,
 		notes,
 		hashtags: getHashtagsFromText(notes),
 		isPrivate: body.isPrivate === true || body.isPrivate === "true",
 	};
 };
 
+const NON_PUBLIC_IPS = new net.BlockList();
+[
+	["0.0.0.0", 8],
+	["10.0.0.0", 8],
+	["100.64.0.0", 10],
+	["127.0.0.0", 8],
+	["169.254.0.0", 16],
+	["172.16.0.0", 12],
+	["192.0.0.0", 24],
+	["192.168.0.0", 16],
+	["198.18.0.0", 15],
+	["224.0.0.0", 3],
+].forEach(([network, prefix]) => NON_PUBLIC_IPS.addSubnet(network, prefix, "ipv4"));
+[
+	["::", 128],
+	["::1", 128],
+	["fc00::", 7],
+	["fe80::", 10],
+].forEach(([network, prefix]) => NON_PUBLIC_IPS.addSubnet(network, prefix, "ipv6"));
+
 /**
  * Whether an IP address is loopback, private, link-local or otherwise not publicly routable.
+ * IPv4-mapped IPv6 addresses (::ffff:a.b.c.d) are checked as the IPv4 address they carry.
  * @param {string} address - IPv4 or IPv6 address
  * @returns {boolean}
  */
-const isPrivateIp = (address) => {
-	if (net.isIPv4(address)) {
-		const [a, b] = address.split(".").map(Number);
-		return (
-			a === 0 ||
-			a === 10 ||
-			a === 127 ||
-			(a === 100 && b >= 64 && b <= 127) ||
-			(a === 169 && b === 254) ||
-			(a === 172 && b >= 16 && b <= 31) ||
-			(a === 192 && b === 168) ||
-			a >= 224
-		);
-	}
-	const ip = address.toLowerCase();
-	if (ip.startsWith("::ffff:")) return isPrivateIp(ip.slice(7));
-	return ip === "::" || ip === "::1" || /^f[cd]/.test(ip) || /^fe[89ab]/.test(ip);
+const isPrivateIp = (address) => NON_PUBLIC_IPS.check(address, net.isIPv4(address) ? "ipv4" : "ipv6");
+
+// Node skips DNS lookups for IP literals, so those are checked here instead.
+const assertPublicHost = (hostname) => {
+	const host = hostname.replace(/^\[|\]$/g, "");
+	if (net.isIP(host) && isPrivateIp(host)) throw new Error("Address is not allowed");
 };
 
 // DNS lookup that refuses private addresses, so page fetches cannot reach internal services
@@ -432,9 +504,11 @@ const publicOnlyLookup = (hostname, options, callback) => {
  */
 const fetchPageTitle = async (url) => {
 	try {
+		assertPublicHost(new URL(url).hostname);
 		const response = await axios.get(url, {
 			timeout: 5000,
 			maxRedirects: 3,
+			beforeRedirect: (options) => assertPublicHost(options.hostname),
 			maxContentLength: 1024 * 1024,
 			maxBodyLength: 1024 * 1024,
 			responseType: "text",
@@ -595,6 +669,15 @@ const getRelativeTime = (date, now = Date.now()) => {
 const getPostDate = (post) => post.publishedDate || toDateString(post.createdOn, post.timezone);
 
 /**
+ * Whether a post's published date has arrived, judged by the calendar date in the author's timezone.
+ * Posts dated in the future stay hidden from the public blog until then.
+ * @param {Object} post - Post with publishedDate, createdOn and timezone
+ * @param {Date|number} [now] - The reference time, defaults to the current time
+ * @returns {boolean} True when the post is published
+ */
+const isPublished = (post, now = Date.now()) => getPostDate(post) <= toDateString(now, post.timezone);
+
+/**
  * Formats a YYYY-MM-DD calendar date as: "August 12, 2012".
  * @param {string} dateString - Calendar date as YYYY-MM-DD
  * @returns {string} Formatted date string
@@ -615,10 +698,10 @@ const THEMES = [
 	{ key: "", label: "Default" },
 	{ key: "sepia", label: "Sepia" },
 	{ key: "dark", label: "Dark" },
-	{ key: "nocturne", label: "Nocturne" },
-	{ key: "forest", label: "Forest" },
-	{ key: "mono", label: "Mono" },
 	{ key: "scribble", label: "Scribble" },
+	{ key: "peach", label: "Peach" },
+	{ key: "hack", label: "Hack" },
+	{ key: "rainbow", label: "Rainbow" },
 ];
 
 const THEME_KEYS = THEMES.map((theme) => theme.key);
@@ -679,6 +762,7 @@ const isAdmin = (user) => {
 module.exports = {
 	getValidUsername,
 	getValidEmail,
+	getValidURL,
 	getValidString,
 	getValidMenus,
 	getValidPost,
@@ -695,6 +779,9 @@ module.exports = {
 	getValidGuestbookFields,
 	getValidSubscriberEmail,
 	escapeHtml,
+	toScriptJson,
+	getClientIp,
+	verifyTurnstile,
 	fetchPageTitle,
 	getValidPhotoType,
 	assertFaviconIsPng,
@@ -707,6 +794,7 @@ module.exports = {
 	toDateString,
 	getValidPublishedDate,
 	getPostDate,
+	isPublished,
 	getRelativeTime,
 	getValidTimezone,
 	THEMES,

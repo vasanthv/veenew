@@ -9,9 +9,9 @@
 
     <section id="postbox">
       <form @submit.prevent="sendNewsletter">
-        <input type="text" v-model="newsletter.subject" placeholder="subject" />
+        <input type="text" v-model="newsletter.subject" placeholder="Subject" />
         <div class="spacer"></div>
-        <textarea v-model="newsletter.message" placeholder="start writing.."></textarea>
+        <textarea v-model="newsletter.message" placeholder="Start writing.."></textarea>
         <div class="spacer"></div>
         <div class="field">
           <label>

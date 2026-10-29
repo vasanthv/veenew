@@ -3,6 +3,43 @@ const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 const config = require("../../config");
 const { escapeHtml, getUserBaseUrl, getPostPath } = require("./utils");
 const { getConfirmedSubscribers } = require("./db");
+const { Posts } = require("../model").getInstance();
+
+let client;
+const getClient = () => {
+	client ??= new SESClient({
+		region: config.AWS_REGION,
+		credentials: {
+			accessKeyId: config.AWS_ACCESS_KEY,
+			secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+		},
+	});
+	return client;
+};
+
+/**
+ * Sends an email using AWS SES.
+ * @param {Object} email
+ * @param {string} email.to - Recipient email address
+ * @param {string} email.subject - Subject line
+ * @param {string} email.html - HTML body
+ * @param {string} email.text - Plain-text body
+ * @returns {Promise<Object>} The response from AWS SES
+ */
+const sendEmail = ({ to, subject, html, text }) =>
+	getClient().send(
+		new SendEmailCommand({
+			Source: config.NO_REPLY_EMAIL,
+			Destination: { ToAddresses: [to] },
+			Message: {
+				Subject: { Charset: "UTF-8", Data: subject },
+				Body: { Html: { Charset: "UTF-8", Data: html }, Text: { Charset: "UTF-8", Data: text } },
+			},
+		})
+	);
+
+// Transactional emails are sent without waiting. A failure is only logged, so it never fails the request.
+const sendInBackground = (email) => sendEmail(email).catch((error) => console.error(error));
 
 /**
  * Sends an email verification message with a verification link.
@@ -12,26 +49,13 @@ const { getConfirmedSubscribers } = require("./db");
  * @returns {void}
  */
 const verificationEmail = (username, email, code) => {
-	const verificationEmailLink = `${config.URL}verify/${code}`;
-
-	const params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: `Please verify your email` },
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}<br/><br/>Please click on the link below to verify your email.<br/><a href="${verificationEmailLink}" target='_blank'>${verificationEmailLink}</a><br/><br/>Thanks<br/>`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}\n\nPlease click on the link below to verify your email.\n${verificationEmailLink}\n\nThanks\n`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
+	const link = `${config.URL}verify/${code}`;
+	sendInBackground({
+		to: email,
+		subject: "Please verify your email",
+		html: `Hello @${username}<br/><br/>Please click on the link below to verify your email.<br/><a href="${link}" target='_blank'>${link}</a><br/><br/>Thanks<br/>`,
+		text: `Hello @${username}\n\nPlease click on the link below to verify your email.\n${link}\n\nThanks\n`,
+	});
 };
 
 /**
@@ -42,25 +66,13 @@ const verificationEmail = (username, email, code) => {
  * @returns {void}
  */
 const resetPasswordEmail = (username, email, token) => {
-	const resetLink = `${config.URL}reset/${token}`;
-	var params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: `Reset your Veenew password` },
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}<br/><br/>Click the link below to choose a new password. It expires in 1 hour and can be used once.<br/><a href="${resetLink}" target='_blank'>${resetLink}</a><br/><br/>If you didn't request this, you can ignore this email.<br/><br/>Thanks<br/>`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}\n\nOpen the link below to choose a new password. It expires in 1 hour and can be used once.\n${resetLink}\n\nIf you didn't request this, you can ignore this email.\n\nThanks\n`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
+	const link = `${config.URL}reset/${token}`;
+	sendInBackground({
+		to: email,
+		subject: "Reset your Veenew password",
+		html: `Hello @${username}<br/><br/>Click the link below to choose a new password. It expires in 1 hour and can be used once.<br/><a href="${link}" target='_blank'>${link}</a><br/><br/>If you didn't request this, you can ignore this email.<br/><br/>Thanks<br/>`,
+		text: `Hello @${username}\n\nOpen the link below to choose a new password. It expires in 1 hour and can be used once.\n${link}\n\nIf you didn't request this, you can ignore this email.\n\nThanks\n`,
+	});
 };
 
 /**
@@ -72,24 +84,12 @@ const resetPasswordEmail = (username, email, token) => {
  * @returns {void}
  */
 const guestbookConfirmationEmail = (blogName, name, email, confirmLink) => {
-	const params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: `Confirm your guestbook entry on ${blogName}` },
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello ${escapeHtml(name)}<br/><br/>Please click on the link below to confirm your guestbook entry on ${escapeHtml(blogName)}. Your entry is only sent to the author once you confirm.<br/><a href="${confirmLink}" target='_blank'>${confirmLink}</a><br/><br/>If you didn't write in this guestbook, you can ignore this email.<br/><br/>Thanks<br/>`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello ${name}\n\nPlease open the link below to confirm your guestbook entry on ${blogName}. Your entry is only sent to the author once you confirm.\n${confirmLink}\n\nIf you didn't write in this guestbook, you can ignore this email.\n\nThanks\n`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
+	sendInBackground({
+		to: email,
+		subject: `Confirm your guestbook entry on ${blogName}`,
+		html: `Hello ${escapeHtml(name)}<br/><br/>Please click on the link below to confirm your guestbook entry on ${escapeHtml(blogName)}. Your entry is only sent to the author once you confirm.<br/><a href="${confirmLink}" target='_blank'>${confirmLink}</a><br/><br/>If you didn't write in this guestbook, you can ignore this email.<br/><br/>Thanks<br/>`,
+		text: `Hello ${name}\n\nPlease open the link below to confirm your guestbook entry on ${blogName}. Your entry is only sent to the author once you confirm.\n${confirmLink}\n\nIf you didn't write in this guestbook, you can ignore this email.\n\nThanks\n`,
+	});
 };
 
 /**
@@ -102,24 +102,12 @@ const guestbookConfirmationEmail = (blogName, name, email, confirmLink) => {
  */
 const guestbookEntryEmail = (username, email, name, text) => {
 	const guestbookLink = `${config.URL}guestbook`;
-	const params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: `New guestbook entry from ${name}` },
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}<br/><br/><strong>${escapeHtml(name)}</strong> signed your guestbook:<br/><blockquote style="white-space: pre-wrap;">${escapeHtml(text)}</blockquote>Approve or delete it from your guestbook.<br/><a href="${guestbookLink}" target='_blank'>${guestbookLink}</a><br/><br/>Thanks<br/>`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}\n\n${name} signed your guestbook:\n\n${text}\n\nApprove or delete it from your guestbook.\n${guestbookLink}\n\nThanks\n`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
+	sendInBackground({
+		to: email,
+		subject: `New guestbook entry from ${name}`,
+		html: `Hello @${username}<br/><br/><strong>${escapeHtml(name)}</strong> signed your guestbook:<br/><blockquote style="white-space: pre-wrap;">${escapeHtml(text)}</blockquote>Approve or delete it from your guestbook.<br/><a href="${guestbookLink}" target='_blank'>${guestbookLink}</a><br/><br/>Thanks<br/>`,
+		text: `Hello @${username}\n\n${name} signed your guestbook:\n\n${text}\n\nApprove or delete it from your guestbook.\n${guestbookLink}\n\nThanks\n`,
+	});
 };
 
 /**
@@ -130,24 +118,12 @@ const guestbookEntryEmail = (username, email, name, text) => {
  * @returns {void}
  */
 const subscriptionConfirmationEmail = (blogName, email, confirmLink) => {
-	const params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: `Confirm your subscription to ${blogName}` },
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello<br/><br/>Please click on the link below to confirm your subscription to ${escapeHtml(blogName)}. You will get an email whenever there is a new post.<br/><a href="${confirmLink}" target='_blank'>${confirmLink}</a><br/><br/>If you didn't subscribe, you can ignore this email.<br/><br/>Thanks<br/>`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello\n\nPlease open the link below to confirm your subscription to ${blogName}. You will get an email whenever there is a new post.\n${confirmLink}\n\nIf you didn't subscribe, you can ignore this email.\n\nThanks\n`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
+	sendInBackground({
+		to: email,
+		subject: `Confirm your subscription to ${blogName}`,
+		html: `Hello<br/><br/>Please click on the link below to confirm your subscription to ${escapeHtml(blogName)}. You will get an email whenever there is a new post.<br/><a href="${confirmLink}" target='_blank'>${confirmLink}</a><br/><br/>If you didn't subscribe, you can ignore this email.<br/><br/>Thanks<br/>`,
+		text: `Hello\n\nPlease open the link below to confirm your subscription to ${blogName}. You will get an email whenever there is a new post.\n${confirmLink}\n\nIf you didn't subscribe, you can ignore this email.\n\nThanks\n`,
+	});
 };
 
 /**
@@ -157,27 +133,12 @@ const subscriptionConfirmationEmail = (blogName, email, confirmLink) => {
  * @returns {void}
  */
 const accountDeletionEmail = (name, email) => {
-	var params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: {
-				Charset: "UTF-8",
-				Data: `Your Veenew account is scheduled for deletion`,
-			},
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello @${name}<br/><br/>We wanted to let you know that your Veenew account is scheduled for deletion in <strong>7 days</strong>. After that, all your data, including your posts and account information will be permanently removed from our systems.<br/><br/>If you didn't request this or would like to keep your account active, simply log in to Veenew before the 7-day period ends.<br/><br/>Thanks for being part of Veenew<br/>Veenew Team`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello @${name}\n\nWe wanted to let you know that your Veenew account is scheduled for deletion in 7 days. After that, all your data, including your posts and account information will be permanently removed from our systems.\n\nIf you didn't request this or would like to keep your account active, simply log in to Veenew before the 7-day period ends.\n\nThanks for being part of Veenew\nVeenew Team`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
+	sendInBackground({
+		to: email,
+		subject: "Your Veenew account is scheduled for deletion",
+		html: `Hello @${name}<br/><br/>We wanted to let you know that your Veenew account is scheduled for deletion in <strong>7 days</strong>. After that, all your data, including your posts and account information will be permanently removed from our systems.<br/><br/>If you didn't request this or would like to keep your account active, simply log in to Veenew before the 7-day period ends.<br/><br/>Thanks for being part of Veenew<br/>Veenew Team`,
+		text: `Hello @${name}\n\nWe wanted to let you know that your Veenew account is scheduled for deletion in 7 days. After that, all your data, including your posts and account information will be permanently removed from our systems.\n\nIf you didn't request this or would like to keep your account active, simply log in to Veenew before the 7-day period ends.\n\nThanks for being part of Veenew\nVeenew Team`,
+	});
 };
 
 /**
@@ -188,47 +149,12 @@ const accountDeletionEmail = (name, email) => {
  * @returns {void}
  */
 const blogDeletedByAdminEmail = (username, email, reason) => {
-	const params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: `Your Veenew blog has been deleted` },
-			Body: {
-				Html: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}<br/><br/>Your Veenew blog and all of its content have been deleted by an administrator.<br/><br/><strong>Reason:</strong><br/>${escapeHtml(reason).replace(/\n/g, "<br/>")}<br/><br/>Veenew Team`,
-				},
-				Text: {
-					Charset: "UTF-8",
-					Data: `Hello @${username}\n\nYour Veenew blog and all of its content have been deleted by an administrator.\n\nReason:\n${reason}\n\nVeenew Team`,
-				},
-			},
-		},
-	};
-	sendEmail(params).catch((error) => console.error(error));
-};
-
-/**
- * Sends a newsletter email to a single recipient.
- * @param {string} email - Recipient email address.
- * @param {string} subject - Email subject line.
- * @param {string} html - HTML body (already converted from markdown).
- * @param {string} text - Plain-text body fallback.
- * @returns {Promise<Object>} The response from AWS SES.
- */
-const newsletterEmail = (email, subject, html, text) => {
-	const params = {
-		Source: config.NO_REPLY_EMAIL,
-		Destination: { ToAddresses: [email] },
-		Message: {
-			Subject: { Charset: "UTF-8", Data: subject },
-			Body: {
-				Html: { Charset: "UTF-8", Data: html },
-				Text: { Charset: "UTF-8", Data: text },
-			},
-		},
-	};
-	return sendEmail(params);
+	sendInBackground({
+		to: email,
+		subject: "Your Veenew blog has been deleted",
+		html: `Hello @${username}<br/><br/>Your Veenew blog and all of its content have been deleted by an administrator.<br/><br/><strong>Reason:</strong><br/>${escapeHtml(reason).replace(/\n/g, "<br/>")}<br/><br/>Veenew Team`,
+		text: `Hello @${username}\n\nYour Veenew blog and all of its content have been deleted by an administrator.\n\nReason:\n${reason}\n\nVeenew Team`,
+	});
 };
 
 /**
@@ -245,7 +171,7 @@ const sendNewsletterEmails = async (emails, subject, html, text) => {
 	let failed = 0;
 	for (const email of emails) {
 		try {
-			await newsletterEmail(email, subject, html, text);
+			await sendEmail({ to: email, subject, html, text });
 			sent++;
 		} catch (error) {
 			failed++;
@@ -271,21 +197,10 @@ const sendNewPostEmails = async (blogName, post, postLink, baseUrl, subscribers)
 	for (const { email, unsubscribeToken } of subscribers) {
 		const unsubscribeLink = `${baseUrl}unsubscribe/${unsubscribeToken}`;
 		const params = {
-			Source: config.NO_REPLY_EMAIL,
-			Destination: { ToAddresses: [email] },
-			Message: {
-				Subject: { Charset: "UTF-8", Data: `${post.title} - ${blogName}` },
-				Body: {
-					Html: {
-						Charset: "UTF-8",
-						Data: `<h2><a href="${postLink}" target='_blank'>${escapeHtml(post.title)}</a></h2>${post.html}<hr/><small>You are getting this because you subscribed to ${escapeHtml(blogName)}. <a href="${unsubscribeLink}" target='_blank'>Unsubscribe</a></small>`,
-					},
-					Text: {
-						Charset: "UTF-8",
-						Data: `${post.title}\n${postLink}\n\n${post.text}\n\n--\nYou are getting this because you subscribed to ${blogName}. Unsubscribe: ${unsubscribeLink}\n`,
-					},
-				},
-			},
+			to: email,
+			subject: `${post.title} - ${blogName}`,
+			html: `<h2><a href="${postLink}" target='_blank'>${escapeHtml(post.title)}</a></h2>${post.html}<hr/><small>You are getting this because you subscribed to ${escapeHtml(blogName)}. <a href="${unsubscribeLink}" target='_blank'>Unsubscribe</a></small>`,
+			text: `${post.title}\n${postLink}\n\n${post.text}\n\n--\nYou are getting this because you subscribed to ${blogName}. Unsubscribe: ${unsubscribeLink}\n`,
 		};
 		try {
 			await sendEmail(params);
@@ -299,48 +214,33 @@ const sendNewPostEmails = async (blogName, post, postLink, baseUrl, subscribers)
 };
 
 /**
- * Emails a new post to the author's confirmed subscribers. Runs after the response, so a slow
- * or failing send never holds up or fails publishing; errors are only logged.
+ * Emails a post to the author's confirmed subscribers, at most once per post. The post's
+ * subscribersNotified flag is claimed before sending, so two requests can't both send it. A failure for
+ * one subscriber is only logged and the post still counts as emailed; the flag is handed back only when
+ * the send can't run at all (e.g. the subscribers can't be loaded), so it can be retried. Errors are
+ * only logged, so a slow or failing send never fails the request that triggered it.
+ * @param {Object} user - The post's author
+ * @param {Object} post - The post to send
+ * @returns {Promise<boolean>} False when the post was already emailed or the send failed
  */
 const notifySubscribers = async (user, post) => {
+	const claimed = await Posts.findOneAndUpdate(
+		{ _id: post._id, user: user._id, type: "post", subscribersNotified: false },
+		{ $set: { subscribersNotified: true } }
+	).exec();
+	if (!claimed) return false;
 	try {
 		const subscribers = await getConfirmedSubscribers(user._id);
-		if (subscribers.length === 0) return;
-		const baseUrl = getUserBaseUrl(user);
-		await sendNewPostEmails(
-			user.name ?? user.username,
-			post,
-			`${baseUrl}${getPostPath(post)}`,
-			baseUrl,
-			subscribers
-		);
+		if (subscribers.length > 0) {
+			const baseUrl = getUserBaseUrl(user);
+			await sendNewPostEmails(user.name ?? user.username, post, `${baseUrl}${getPostPath(post)}`, baseUrl, subscribers);
+		}
+		return true;
 	} catch (error) {
 		console.error(error);
+		await Posts.updateOne({ _id: post._id }, { $set: { subscribersNotified: false } }).exec();
+		return false;
 	}
-};
-
-/**
- * Sends an email using AWS SES.
- * @param {Object} params - The email parameters
- * @param {string} params.Source - The sender's email address
- * @param {Object} params.Destination - The recipient information
- * @param {string[]} params.Destination.ToAddresses - Array of recipient email addresses
- * @param {Object} params.Message - The email message content
- * @param {Object} params.Message.Subject - The email subject
- * @param {Object} params.Message.Body - The email body in HTML and text formats
- * @returns {Promise<Object>} The response from AWS SES
- */
-const sendEmail = async (params) => {
-	const client = new SESClient({
-		region: config.AWS_REGION,
-		credentials: {
-			accessKeyId: config.AWS_ACCESS_KEY,
-			secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
-		},
-	});
-	const command = new SendEmailCommand(params);
-	const response = await client.send(command);
-	return response;
 };
 
 module.exports = {

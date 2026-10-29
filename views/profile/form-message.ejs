@@ -2,7 +2,7 @@
 <html lang="en">
 <%- include('partials/html-head', {title: `${profile.name ?? profile.username} / ${title}`}); -%>
 
-<body>
+<body id="<%= title.toLowerCase() %>">
   <div id="app" class="wrap">
     <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
 

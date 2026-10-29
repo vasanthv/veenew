@@ -13,31 +13,34 @@
 
     <section id="postbox">
       <form @submit.prevent="<%- typeof post !== "undefined" ? (isPage ? `updatePage('${post._id}')` : `updatePost('${post._id}')`) : (isPage ? 'createPage' : 'createPost') %>">
-        <input type="text" v-model="post.title" placeholder="title" maxlength="160" required />
+        <input type="text" v-model="post.title" placeholder="Title" maxlength="160" required />
         <div class="spacer"></div>
-        <% if (isPage) { %>
-        <input type="text" v-model="post.slug" placeholder="slug (example: about-us)" />
+        <details class="muted-collapsible">
+          <summary>Optional fields</summary>
+          <% if (isPage) { %>
+          <input type="text" v-model="post.slug" placeholder="Slug (example: about-us)" />
+          <label><input type="checkbox" v-model="post.hideTitle" /> Hide title on the page</label>
+          <% } else { %>
+          <input type="text" v-model="post.slug" placeholder="Slug (optional, created from the title)" />
+          <label class="field-label">Published on <input type="date" v-model="post.publishedDate" /></label>
+          <% } %>
+        </details>
         <div class="spacer"></div>
-        <% } else { %>
-        <input type="text" v-model="post.slug" placeholder="slug (optional, created from the title)" />
-        <div class="spacer"></div>
-        <% } %>
-        <% if (!isPage) { %>
-        <label>Published on <input type="date" v-model="post.publishedDate" required /></label>
-        <div class="spacer"></div>
-        <% } %>
-        <textarea v-model="post.text" placeholder="start writing.." <% if(typeof post === "undefined") { %>@keyup="onPostChange" <% } %>></textarea>
+        <textarea v-model="post.text" placeholder="Body: start writing.." <% if(typeof post === "undefined") { %>@keyup="onPostChange" <% } %>></textarea>
         <div class="spacer"></div>
         <div class="flex">
           <div class="flex-1">
+            <% if(typeof post !== "undefined" && !isPage && post.subscribersNotified === false) { %>
+            <a href="javascript:void(0)" v-on:click="notifySubscribers('<%= post._id %>')">Email subscribers</a> &middot;
+            <% } %>
             <% if(typeof post !== "undefined" && !(isPage && !post.slug)) { %>
-            <a href="javascript:void(0)" v-on:click="<%- isPage ? `deletePage('${post._id}')` : `deletePost('${post._id}')` %>" class="red">delete <%= entityName %></a>
+            <a href="javascript:void(0)" v-on:click="<%- isPage ? `deletePage('${post._id}')` : `deletePost('${post._id}')` %>" class="red">Delete <%= entityName %></a>
             <% } %>
           </div>
           <button type="submit" :disabled="isLoading"><%- typeof post !== "undefined" ? "Update" : "Create" %></button>
         </div>
         <div class="spacer"></div>
-        <details class="guide" v-pre>
+        <details class="muted-collapsible" v-pre>
           <summary>Guide to your editor</summary>
           <h3>Markdown</h3>
           <p>The editor supports Markdown, a simple way to format your text with symbols.</p>
@@ -83,9 +86,10 @@
   <script type="text/javascript">
     window.onload = () => {
       App.post = {
-        title: "<%- JSON.stringify(post.title || '').slice(1, -1) %>",
-        text: "<%- JSON.stringify(post.text).slice(1, -1) %>",
-        slug: "<%- JSON.stringify(post.slug || '').slice(1, -1) %>",
+        title: <%- toScriptJson(post.title || "") %>,
+        text: <%- toScriptJson(post.text) %>,
+        slug: <%- toScriptJson(post.slug || "") %>,
+        hideTitle: <%= post.hideTitle === true %>,
         publishedDate: "<%= typeof publishedDate !== "undefined" ? publishedDate : "" %>"
       }
     }
@@ -97,6 +101,7 @@
         title: "",
         text: window.localStorage.<%= isPage ? "newPage" : "newPost" %> ?? "",
         slug: "",
+        hideTitle: false,
         publishedDate: new Date().toLocaleDateString("en-CA")
       }
     }

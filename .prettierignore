@@ -1,0 +1,4 @@
+node_modules
+package-lock.json
+# EJS templates mix template tags into HTML attributes, which Prettier's HTML parser cannot read
+*.ejs

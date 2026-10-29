@@ -1,0 +1,226 @@
+/* Peach - a cosy retro-computer theme: the page is a pastel app window with chunky borders, pill buttons and pixel fonts. */
+:root {
+	--desk: #ffe9db;
+	--background: #fff8f1;
+	--text: #5d4642;
+	--grey: #f0cfc2;
+	--border: #a3574d;
+	--titlebar: #f8d9cd;
+	--blue: #c0584f;
+	--link: #a3574d;
+	--red: #c0392b;
+	--green: #4f8a5b;
+	--accent: #d76b68;
+	--pixel: "VT323", "Courier New", monospace;
+	--hand: "Gaegu", "Comic Sans MS", "Chalkboard SE", cursive;
+}
+html {
+	background: var(--desk);
+}
+body {
+	background: var(--desk);
+	font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+	padding: 1.5rem 1rem 2.5rem;
+}
+/* The page is an app window: a title bar with three little buttons, a chunky border and a hard shadow. */
+.wrap {
+	position: relative;
+	background: var(--background);
+	border: 2px solid var(--border);
+	border-radius: 14px;
+	box-shadow: 4px 4px 0 var(--border);
+	padding: 3.25rem 1.5rem 1rem;
+	margin-top: 0;
+}
+.wrap::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2.25rem;
+	background: var(--titlebar);
+	border-bottom: 2px solid var(--border);
+	border-radius: 12px 12px 0 0;
+}
+.wrap::after {
+	content: "";
+	position: absolute;
+	top: 0.6rem;
+	right: 1rem;
+	width: 0.9rem;
+	height: 0.9rem;
+	border: 2px solid var(--border);
+	border-radius: 4px;
+	background: var(--background);
+	box-shadow:
+		-1.5rem 0 0 -2px var(--background),
+		-1.5rem 0 0 0 var(--border),
+		-3rem 0 0 -2px var(--background),
+		-3rem 0 0 0 var(--border);
+}
+a,
+a:focus,
+a:active {
+	text-decoration-line: underline;
+	text-decoration-style: dashed;
+	text-decoration-thickness: 1px;
+	text-decoration-color: var(--accent);
+}
+header {
+	padding-top: 0;
+	text-align: center;
+}
+.page-title {
+	font-family: var(--hand);
+	font-size: 3rem;
+	font-weight: 700;
+	letter-spacing: 0;
+	color: var(--accent);
+	text-shadow: 2px 2px 0 var(--grey);
+	margin: 1rem 0px 0px;
+}
+/* The menu is a row of pills. */
+header nav {
+	margin: 0px;
+}
+header nav ul {
+	justify-content: center;
+	gap: 0.5rem;
+}
+header nav ul li::after {
+	content: none;
+}
+header nav a {
+	display: inline-block;
+	padding: 0.1rem 0.9rem;
+	border: 2px solid var(--border);
+	border-radius: 999px;
+	background: var(--background);
+	font-family: var(--pixel);
+	font-size: 1.25rem;
+	line-height: 1.5;
+	text-decoration: none;
+}
+header nav a:hover {
+	background: var(--accent);
+	color: #fff;
+	border-color: var(--border);
+}
+h2,
+h3 {
+	font-family: var(--hand);
+	font-weight: 700;
+	letter-spacing: 0;
+	color: var(--accent);
+}
+h2 {
+	font-size: 1.9rem;
+}
+h3 {
+	font-size: 1.5rem;
+}
+.post-meta,
+.post-date {
+	font-family: var(--pixel);
+	font-size: 1.15rem;
+}
+article {
+	border-bottom: 2px dashed var(--grey);
+}
+blockquote {
+	font-family: var(--pixel);
+	font-size: 1.3rem;
+	font-style: normal;
+	border-left: 4px solid var(--accent);
+	background: var(--desk);
+	border-radius: 0 10px 10px 0;
+	padding: 0.5rem 1rem;
+}
+code,
+pre {
+	background: var(--desk);
+	border-color: var(--grey);
+	font-family: var(--pixel);
+	font-size: 1.1rem;
+}
+input[type="text"],
+input[type="url"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="date"],
+select,
+textarea {
+	background: #fff;
+	border: 2px solid var(--border);
+	border-radius: 10px;
+}
+input:focus,
+select:focus,
+textarea:focus {
+	border-color: var(--accent);
+}
+button {
+	background: var(--accent);
+	color: #fff;
+	border: 2px solid var(--border);
+	border-radius: 999px;
+	font-family: var(--pixel);
+	font-size: 1.25rem;
+	box-shadow: 2px 2px 0 var(--border);
+}
+button:active {
+	transform: translate(2px, 2px);
+	box-shadow: none;
+}
+hr {
+	border-top: 2px dashed var(--grey);
+}
+footer {
+	font-family: var(--pixel);
+	font-size: 1.1rem;
+}
+@media (max-width: 34rem) {
+	body {
+		padding: 1rem 0.5rem 2rem;
+	}
+	.wrap {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+	.page-title {
+		font-size: 2.5rem;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--desk: #2a1d22;
+		--background: #3a2830;
+		--text: #f3dcd2;
+		--grey: #5a3f46;
+		--border: #d98f86;
+		--titlebar: #4a323b;
+		--blue: #f2a09a;
+		--link: #f2a09a;
+		--red: #ef8a80;
+		--green: #8bc58b;
+		--accent: #f2a09a;
+	}
+	input[type="text"],
+	input[type="url"],
+	input[type="email"],
+	input[type="password"],
+	input[type="search"],
+	input[type="date"],
+	select,
+	textarea {
+		background: var(--desk);
+	}
+	button {
+		color: #2a1d22;
+	}
+	header nav a:hover {
+		color: #2a1d22;
+	}
+}

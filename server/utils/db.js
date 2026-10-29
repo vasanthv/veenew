@@ -1,6 +1,7 @@
 const {
 	httpError,
 	getPostDate,
+	isPublished,
 	getRelativeTime,
 	getPostPath,
 	markdownToHtml,
@@ -13,7 +14,15 @@ const {
 } = require("./utils");
 const config = require("../../config");
 const constants = require("../constants");
-const { Users, Posts, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribers } = require("../model").getInstance();
+const { Users, Posts, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribers } =
+	require("../model").getInstance();
+
+/**
+ * Builds a case-insensitive regex that matches the whole value literally.
+ * @param {string} value - Text to match, with any regex characters taken literally
+ * @returns {RegExp}
+ */
+const exactMatch = (value) => new RegExp(`^${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
 
 /**
  * Checks if a username is available for registration or update.
@@ -23,7 +32,7 @@ const { Users, Posts, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribe
  * @throws {Error} If username is already taken
  */
 const isNewUsername = async (username, currentUserId) => {
-	let query = { username: { $regex: new RegExp(`^${username}$`, "i") } };
+	let query = { username: { $regex: exactMatch(username) } };
 	if (currentUserId) {
 		query["_id"] = { $ne: currentUserId };
 	}
@@ -40,7 +49,7 @@ const isNewUsername = async (username, currentUserId) => {
  * @throws {Error} If email is already taken
  */
 const isNewEmail = async (email, currentUserId) => {
-	let query = { email: { $regex: new RegExp(`^${email}$`, "i") } };
+	let query = { email: { $regex: exactMatch(email) } };
 	if (currentUserId) {
 		query["_id"] = { $ne: currentUserId };
 	}
@@ -109,9 +118,11 @@ const getHostOwner = async (hostname) => {
  * @returns {Promise<Object|null>} The user object if found, null otherwise
  */
 const getUserByUsername = async (username) => {
-	let query = { username: { $regex: new RegExp(`^${username}$`, "i") } };
-
-	return await Users.findOne(query).lean().exec();
+	// Credentials and session tokens must never reach the templates that render a blog.
+	return await Users.findOne({ username: { $regex: exactMatch(username) } })
+		.select("-password -devices -passwordResetToken -passwordResetExpires -emailVerificationCode")
+		.lean()
+		.exec();
 };
 
 /**
@@ -119,10 +130,17 @@ const getUserByUsername = async (username) => {
  * Sorted by published date, then creation time.
  * @param {Object} query - Mongo query to execute on Posts collection
  * @param {string} [fields] - Space-separated fields to select
+ * @param {Object} [options]
+ * @param {boolean} [options.publishedOnly] - Leave out posts whose published date is still in the future
  * @returns {Promise<Object>} Object containing the posts list
  */
-const getAllPosts = async (query, fields = "title text slug createdOn timezone publishedDate") => {
-	const posts = await Posts.find(query).select(fields).lean().exec();
+const getAllPosts = async (
+	query,
+	fields = "title text slug createdOn timezone publishedDate",
+	{ publishedOnly = false } = {}
+) => {
+	let posts = await Posts.find(query).select(fields).lean().exec();
+	if (publishedOnly) posts = posts.filter((post) => isPublished(post));
 	posts.sort((a, b) => getPostDate(b).localeCompare(getPostDate(a)) || b.createdOn - a.createdOn);
 	return { posts };
 };
@@ -171,7 +189,15 @@ const getUniquePostSlug = async (userId, title, requestedSlug, excludeId = null)
  */
 const createStarterContent = async (userId) => {
 	const createdOn = new Date();
-	const page = (title, slug, text) => ({ user: userId, type: "page", title, slug, text, html: markdownToHtml(text), createdOn });
+	const page = (title, slug, text) => ({
+		user: userId,
+		type: "page",
+		title,
+		slug,
+		text,
+		html: markdownToHtml(text),
+		createdOn,
+	});
 
 	await Posts.insertMany([
 		page("Home", "", constants.STARTER_HOME_PAGE_TEXT),
@@ -228,13 +254,14 @@ const renderPostList = (posts) => {
  * @param {string} userId - Author whose posts are counted
  * @returns {Promise<{_id: string, count: number}[]>} Each tag with the number of posts using it
  */
-const getGroupedTags = (userId) =>
-	Posts.aggregate([
-		{ $match: { user: userId, type: "post" } },
-		{ $unwind: "$hashtags" },
-		{ $group: { _id: "$hashtags", count: { $sum: 1 } } },
-		{ $sort: { _id: 1 } },
-	]);
+const getGroupedTags = async (userId) => {
+	const { posts } = await getAllPosts({ user: userId, type: "post" }, "hashtags createdOn timezone publishedDate", {
+		publishedOnly: true,
+	});
+	const counts = new Map();
+	posts.forEach((post) => (post.hashtags || []).forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1)));
+	return [...counts].map(([_id, count]) => ({ _id, count })).sort((a, b) => a._id.localeCompare(b._id));
+};
 
 /**
  * Renders tags as links to the posts filtered by that tag.
@@ -260,7 +287,7 @@ const renderBookmarkList = (bookmarks) => {
 	if (bookmarks.length === 0) return '<div class="empty">No bookmarks to show.</div>';
 	const items = bookmarks.map((bookmark) => {
 		const label = bookmark.title || bookmark.url;
-		const link = `<a href="${escapeHtml(bookmark.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+		const link = `<a href="${escapeHtml(bookmark.url)}" target="_blank" rel="nofollow ugc noopener noreferrer">${escapeHtml(label)}</a>`;
 		const notes = bookmark.notes ? `<br /><small>${escapeHtml(bookmark.notes)}</small>` : "";
 		return `<li>${link}${notes}</li>`;
 	});
@@ -303,9 +330,12 @@ const renderMicroblogList = (microblogs) => {
  */
 const renderGuestbookForm = () =>
 	`<form class="guestbook-form" method="post" action="/guestbook">
-<div class="field"><label for="guestbook-name">Name</label><input type="text" id="guestbook-name" name="name" placeholder="Your name" maxlength="80" required /></div>
-<div class="field"><label for="guestbook-email">Email</label><input type="email" id="guestbook-email" name="email" placeholder="Your email" maxlength="254" required /><div class="help">Your email is never shown. We will email you a link to confirm your entry before it is sent to the author.</div></div>
-<div class="field"><label for="guestbook-text">Comment</label><textarea id="guestbook-text" name="text" placeholder="Write your comment" maxlength="1000" required style="min-height: 6rem"></textarea></div>
+<textarea name="text" placeholder="Write your comment" aria-label="Comment" maxlength="1000" required style="min-height: 6rem"></textarea>
+<div class="guestbook-form-row">
+<input type="text" name="name" placeholder="Your name" aria-label="Name" maxlength="80" required />
+<input type="email" name="email" placeholder="Your email" aria-label="Email" maxlength="254" required />
+</div>
+<small class="help">We will email you a link to confirm your entry before it is sent to the author.</small>
 <div style="position: absolute; left: -9999px" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off" /></div>
 <button type="submit">Sign the guestbook</button>
 </form>`;
@@ -354,9 +384,15 @@ const renderDynamicContent = async (html, userId) => {
 	if (!html || !DYNAMIC_CONTENT_TAG.test(html)) return html;
 
 	const renderers = {
-		"posts.all": async () => renderPostList((await getAllPosts({ user: userId, type: "post" })).posts),
+		"posts.all": async () =>
+			renderPostList((await getAllPosts({ user: userId, type: "post" }, undefined, { publishedOnly: true })).posts),
 		"posts.latest": async () =>
-			renderPostList((await getAllPosts({ user: userId, type: "post" })).posts.slice(0, LATEST_POSTS_COUNT)),
+			renderPostList(
+				(await getAllPosts({ user: userId, type: "post" }, undefined, { publishedOnly: true })).posts.slice(
+					0,
+					LATEST_POSTS_COUNT
+				)
+			),
 		"tags.all": async () => renderTagList(await getGroupedTags(userId)),
 		"bookmarks.all": async () => renderBookmarkList(await getAllBookmarks({ user: userId, isPrivate: false })),
 		"photos.grid": async () => renderPhotoGrid(await getAllPhotos({ user: userId })),
@@ -369,7 +405,9 @@ const renderDynamicContent = async (html, userId) => {
 
 	const tagged = {
 		posts: async (hashtags) =>
-			renderPostList((await getAllPosts({ user: userId, type: "post", hashtags })).posts),
+			renderPostList(
+				(await getAllPosts({ user: userId, type: "post", hashtags }, undefined, { publishedOnly: true })).posts
+			),
 		bookmarks: async (hashtags) =>
 			renderBookmarkList(await getAllBookmarks({ user: userId, isPrivate: false, hashtags })),
 		microblogs: async (hashtags) => renderMicroblogList(await getAllMicroblogs({ user: userId, hashtags })),
@@ -469,6 +507,7 @@ const getRemainingContent = async (user) => {
 const getAllPhotos = (query) => Photos.find(query).sort("-createdOn").lean().exec();
 
 module.exports = {
+	exactMatch,
 	isNewUsername,
 	isNewEmail,
 	isNewDomain,

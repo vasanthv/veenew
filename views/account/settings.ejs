@@ -13,11 +13,11 @@
         <summary>Profile</summary>
         <div class="field">
           <label for="name">Name</label>
-          <input type="text" id="name" placeholder="enter your name" v-model="myAccount.name" />
+          <input type="text" id="name" placeholder="Enter your name" v-model="myAccount.name" />
         </div>
         <div class="field">
           <label for="description">Description</label>
-          <textarea id="description" placeholder="enter a short description" v-model="myAccount.description" rows="2" maxlength="300"></textarea>
+          <textarea id="description" placeholder="Enter a short description" v-model="myAccount.description" rows="2" maxlength="300"></textarea>
           <div class="help">Used in search and social previews and in your feed. It isn't shown on your blog.</div>
         </div>
         <div class="field">
@@ -40,18 +40,18 @@
         <summary>Account</summary>
         <div class="field">
           <label for="username">Username</label>
-          <input type="text" id="username" placeholder="enter your username" v-model="myAccount.username" />
+          <input type="text" id="username" placeholder="Enter your username" v-model="myAccount.username" />
         </div>
         <div class="field">
           <label for="email">Email</label>
-          <input type="text" id="email" placeholder="enter your email" v-model="myAccount.email" />
+          <input type="text" id="email" placeholder="Enter your email" v-model="myAccount.email" />
           <% if(typeof user.emailVerificationCode !== "undefined") { %>
           <a href="javascript:void(0)" v-on:click="resendVerification">Resend verification</a>
           <% } %>
         </div>
         <div class="field">
           <label for="password">Password</label>
-          <input type="password" id="password" placeholder="new password" v-model="myAccount.password" />
+          <input type="password" id="password" placeholder="New password" v-model="myAccount.password" />
         </div>
       </details>
 
@@ -61,7 +61,7 @@
         <p>Serve your blog from your own domain instead of <code><%=user.username%>.<%= domain %></code>.</p>
         <div class="field">
           <label for="domain">Domain</label>
-          <input type="text" id="domain" placeholder="eg: blog.example.com" v-model="myAccount.domain" />
+          <input type="text" id="domain" placeholder="Eg: blog.example.com" v-model="myAccount.domain" />
         </div>
         <p>
           A custom domain is a one-time fee of $36. Pay it at
@@ -106,12 +106,12 @@
   <script type="text/javascript">
     window.onload = () => {
       App.myAccount = {
-        username: "<%=user.username%>",
-        email: "<%=user.email%>",
-        name: "<%=user.name%>",
-        description: "<%- JSON.stringify(user.description || '').slice(1, -1) %>",
+        username: <%- toScriptJson(user.username) %>,
+        email: <%- toScriptJson(user.email) %>,
+        name: <%- toScriptJson(user.name || "") %>,
+        description: <%- toScriptJson(user.description || "") %>,
         password: "",
-        domain: "<%=user.domain || ''%>",
+        domain: <%- toScriptJson(user.domain || "") %>,
       };
     }
   </script>

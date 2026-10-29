@@ -12,7 +12,7 @@ const { Users } = require("./model").getInstance();
 const sessionMiddleWare = session({
 	secret: config.SECRET,
 	store: mongoStore.create({ mongoUrl: config.MONGODB_URI }),
-	cookie: { maxAge: 1000 * 60 * 60 * 24 * 30 },
+	cookie: { maxAge: 1000 * 60 * 60 * 24 * 30, httpOnly: true, sameSite: "lax", secure: config.IS_PROD },
 	resave: false,
 	saveUninitialized: false,
 	rolling: true,
@@ -74,6 +74,14 @@ const isUserAuthed = (req, res, next) => {
 };
 
 /**
+ * Blocks creating or changing content until the user has confirmed their email. Use after isUserAuthed.
+ */
+const isEmailVerified = (req, res, next) => {
+	if (!req.user.emailVerificationCode) return next();
+	res.status(400).json({ message: "Please verify your email." });
+};
+
+/**
  * Issues CSRF token cookies for safe methods and validates tokens for state-changing requests.
  */
 const csrfMiddleware = (req, res, next) => {
@@ -132,7 +140,20 @@ const requireSameOrigin = (req, res, next) => {
 };
 
 /**
- * Builds a rate limiter with token-based keys for signed-in users and IP+UA fallback for guests.
+ * Sets response headers that harden every page against clickjacking and content sniffing.
+ */
+const securityHeaders = (req, res, next) => {
+	res.set({
+		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options": "SAMEORIGIN",
+		"Referrer-Policy": "strict-origin-when-cross-origin",
+	});
+	if (config.IS_PROD) res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+	next();
+};
+
+/**
+ * Builds a rate limiter with token-based keys for signed-in users and IP fallback for guests.
  */
 const rateLimit = (options) => {
 	return rateLimiter({
@@ -144,9 +165,9 @@ const rateLimit = (options) => {
 			// If user is authenticated, use their session token
 			if (req.session?.token) return req.session.token;
 
-			// Otherwise use a combination of IP and user agent
-			const userAgent = req.get("user-agent") || "unknown";
-			return `${req.ip}-${userAgent}`;
+			// Otherwise use the IP alone. The user agent is chosen by the client, so mixing it in
+			// would let anyone get a fresh limit by changing it.
+			return utils.getClientIp(req);
 		},
 		handler: (req, res) =>
 			res.status(429).json({
@@ -156,10 +177,12 @@ const rateLimit = (options) => {
 };
 
 module.exports = {
+	securityHeaders,
 	sessionMiddleWare,
 	attachUsertoRequest,
 	attachUserDomainToRequest,
 	isUserAuthed,
+	isEmailVerified,
 	isUserAdmin,
 	csrfMiddleware,
 	requireSameOrigin,

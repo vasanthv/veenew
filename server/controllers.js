@@ -10,6 +10,10 @@ const { Users, Posts, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribe
 
 const signUp = async (req, res, next) => {
 	try {
+		// Bots fill in the hidden field. Pretend it worked so they don't adapt.
+		if (req.body.website) return res.json({ message: "Account created. Please verify your email." });
+		await utils.verifyTurnstile(req.body.turnstileToken, utils.getClientIp(req));
+
 		const username = utils.getValidUsername(req.body.username);
 		await utils.isNewUsername(username);
 		const email = utils.getValidEmail(req.body.email);
@@ -46,9 +50,7 @@ const signUp = async (req, res, next) => {
 const logIn = async (req, res, next) => {
 	try {
 		const username = utils.getValidUsername(req.body.username);
-		const user = await Users.findOne({
-			username: { $regex: new RegExp(`^${username}$`, "i") },
-		}).exec();
+		const user = await Users.findOne({ username: { $regex: utils.exactMatch(username) } }).exec();
 
 		if (!user) return utils.httpError(400, "Invalid user credentials");
 		const matched = await utils.verifyPassword(req.body.password, user.password);
@@ -196,16 +198,16 @@ const updateAccount = async (req, res, next) => {
 				? await utils.getValidString(req.body.customStyle, 1, 5000, "Custom Style")
 				: null;
 		}
+
 		if (has("customScriptUrl")) {
-			updateFields["customScriptUrl"] = req.body.customScriptUrl
-				? await utils.getValidString(req.body.customScriptUrl, 1, 500, "Custom Script URL")
-				: null;
+			const scriptUrl = typeof req.body.customScriptUrl === "string" ? req.body.customScriptUrl.trim() : "";
+			updateFields["customScriptUrl"] = scriptUrl ? utils.getValidURL(scriptUrl) : null;
 		}
 
 		// A custom domain is optional: set it when provided, clear it when blank.
 		const unsetFields = {};
 		if (typeof req.body.domain !== "undefined") {
-			if (req.body.domain && req.body.domain.trim()) {
+			if (typeof req.body.domain === "string" && req.body.domain.trim()) {
 				const domain = utils.getValidDomain(req.body.domain);
 				await utils.isNewDomain(domain, req.user._id);
 				updateFields["domain"] = domain;
@@ -234,7 +236,10 @@ const deleteAccount = async (req, res, next) => {
 	try {
 		const remaining = await utils.getRemainingContent(req.user);
 		if (remaining.length > 0) {
-			return utils.httpError(400, `Delete your content before deleting your account. Still remaining: ${remaining.join(", ")}.`);
+			return utils.httpError(
+				400,
+				`Delete your content before deleting your account. Still remaining: ${remaining.join(", ")}.`
+			);
 		}
 
 		await utils.accountDeletionEmail(req.user.username, req.user.email);
@@ -262,12 +267,22 @@ const logOut = async (req, res, next) => {
 	}
 };
 
+const notifyPostSubscribers = async (req, res, next) => {
+	try {
+		const post = await Posts.findOne({ _id: req.params.id, user: req.user._id, type: "post" }).lean().exec();
+		if (!post) return utils.httpError(404, "Post not found");
+		if (post.subscribersNotified !== false) return utils.httpError(400, "Subscribers have already been emailed");
+		if (!utils.isPublished(post)) return utils.httpError(400, "This post is not published yet");
+
+		res.json({ message: "Emailing your subscribers" });
+		await utils.notifySubscribers(req.user, post);
+	} catch (error) {
+		next(error);
+	}
+};
+
 const createPost = async (req, res, next) => {
 	try {
-		if (req.user.emailVerificationCode) {
-			return utils.httpError(400, "Please verify your email.");
-		}
-
 		const type = req.body.type === "page" ? "page" : "post";
 		const title = utils.getValidString(req.body.title, 1, 160, "Title");
 		const text = utils.getValidPost(req.body.text);
@@ -281,6 +296,7 @@ const createPost = async (req, res, next) => {
 			hashtags: type === "post" ? utils.getHashtagsFromText(text) : [],
 			createdOn: new Date(),
 		};
+		if (type === "post") postData.subscribersNotified = false;
 		const timezone = utils.getValidTimezone(req.body.timezone);
 		if (timezone) postData.timezone = timezone;
 		if (type === "post") {
@@ -293,12 +309,14 @@ const createPost = async (req, res, next) => {
 			const slug = utils.getValidSlug(req.body.slug);
 			await utils.ensureUniquePageSlug(req.user._id, slug);
 			postData.slug = slug;
+			postData.hideTitle = req.body.hideTitle === true;
 		}
 
 		const post = await new Posts(postData).save();
 		res.json({ message: type === "page" ? "Page created" : "Post created", post });
 
-		if (type === "post") {
+		// Posts dated in the future stay hidden, so they don't notify subscribers about a link that isn't live yet.
+		if (type === "post" && utils.isPublished(post)) {
 			Users.updateOne({ _id: req.user._id }, { $set: { lastPostedOn: post.createdOn } }).catch((err) =>
 				console.error(err)
 			);
@@ -326,11 +344,17 @@ const updatePost = async (req, res, next) => {
 			const slug = utils.getValidSlug(req.body.slug);
 			await utils.ensureUniquePageSlug(req.user._id, slug, post._id);
 			updateFields["slug"] = slug;
+			updateFields["hideTitle"] = req.body.hideTitle === true;
 		}
 
 		if (type === "post") {
 			const requestedSlug = req.body.slug || post.slug;
-			updateFields["slug"] = await utils.getUniquePostSlug(req.user._id, updateFields["title"], requestedSlug, post._id);
+			updateFields["slug"] = await utils.getUniquePostSlug(
+				req.user._id,
+				updateFields["title"],
+				requestedSlug,
+				post._id
+			);
 			const publishedDate = utils.getValidPublishedDate(req.body.publishedDate);
 			if (publishedDate) updateFields["publishedDate"] = publishedDate;
 		}
@@ -387,9 +411,7 @@ const deletePage = async (req, res, next) => {
 
 const createBookmark = async (req, res, next) => {
 	try {
-		const fields = utils.getValidBookmarkFields(req.body);
-		// Without a title, use the page's own title, or the host name when it has none.
-		if (!fields.title) fields.title = (await utils.fetchPageTitle(fields.url)) || new URL(fields.url).hostname;
+		const fields = await utils.getValidBookmarkFields(req.body);
 		const bookmark = await new Bookmarks({ ...fields, user: req.user._id, createdOn: new Date() }).save();
 		res.json({ message: "Bookmark added", bookmark });
 	} catch (error) {
@@ -402,8 +424,7 @@ const updateBookmark = async (req, res, next) => {
 		const bookmark = await Bookmarks.findOne({ _id: req.params.id, user: req.user._id }).exec();
 		if (!bookmark) return utils.httpError(404, "Bookmark not found");
 
-		const fields = utils.getValidBookmarkFields(req.body);
-		if (!fields.title) fields.title = (await utils.fetchPageTitle(fields.url)) || new URL(fields.url).hostname;
+		const fields = await utils.getValidBookmarkFields(req.body);
 		await Bookmarks.updateOne({ _id: bookmark._id }, { ...fields, updatedOn: new Date() });
 		res.json({ message: "Bookmark updated" });
 	} catch (error) {
@@ -717,7 +738,10 @@ const uploadPhoto = async (req, res, next) => {
 		const { contentType, extension } = utils.getValidPhotoType(req.file.buffer);
 
 		if ((await Photos.countDocuments({ user: req.user._id })) >= config.PHOTO_MAX_PER_USER) {
-			return utils.httpError(400, `You can have at most ${config.PHOTO_MAX_PER_USER} photos. Delete one to upload another.`);
+			return utils.httpError(
+				400,
+				`You can have at most ${config.PHOTO_MAX_PER_USER} photos. Delete one to upload another.`
+			);
 		}
 
 		const _id = new mongoose.Types.ObjectId();
@@ -958,6 +982,7 @@ module.exports = {
 	createPost,
 	updatePost,
 	deletePost,
+	notifyPostSubscribers,
 	createPage,
 	updatePage,
 	deletePage,

@@ -9,11 +9,11 @@
 
     <section id="postbox">
       <form @submit.prevent="saveBookmark(<%- isEdit ? `'${bookmark._id}'` : "" %>)">
-        <input type="url" v-model="bookmark.url" placeholder="link, eg: https://example.com" maxlength="2000" required />
+        <input type="url" v-model="bookmark.url" placeholder="Link, eg: https://example.com" maxlength="2000" required />
         <div class="spacer"></div>
-        <input type="text" v-model="bookmark.title" placeholder="title (optional, fetched from the link if empty)" maxlength="160" />
+        <input type="text" v-model="bookmark.title" placeholder="Title (optional, fetched from the link if empty)" maxlength="160" />
         <div class="spacer"></div>
-        <textarea v-model="bookmark.notes" placeholder="notes (plain text, use #hashtags to tag)" maxlength="640"></textarea>
+        <textarea v-model="bookmark.notes" placeholder="Notes (plain text, use #hashtags to tag)" maxlength="640"></textarea>
         <div class="spacer"></div>
         <label><input type="checkbox" v-model="bookmark.isPrivate" /> Private</label>
         <div class="spacer"></div>
@@ -34,7 +34,7 @@
   <% if (isEdit) { %>
   <script type="text/javascript">
     window.onload = () => {
-      App.bookmark = <%- JSON.stringify({ url: bookmark.url, title: bookmark.title || "", notes: bookmark.notes || "", isPrivate: bookmark.isPrivate }).replace(/</g, "\\u003c") %>;
+      App.bookmark = <%- toScriptJson({ url: bookmark.url, title: bookmark.title || "", notes: bookmark.notes || "", isPrivate: bookmark.isPrivate }) %>;
     };
   </script>
   <% } %>

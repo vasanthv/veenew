@@ -1,0 +1,148 @@
+/* Hack - a dark code-editor theme: monospace type, syntax-highlight colours and comment-style details. */
+:root {
+	--background: #292c36;
+	--text: #d7d9e6;
+	--grey: #3d4150;
+	--blue: #4fb3b0;
+	--link: var(--blue);
+	--red: #e5505b;
+	--green: #8fbf6a;
+	--orange: #dd9a6a;
+	--purple: #8a8fd0;
+	--pink: #c548a0;
+	--teal: #4fb3b0;
+	--panel: #23252e;
+	--mono: ui-monospace, "SF Mono", Menlo, "Source Code Pro", Consolas, monospace;
+	color-scheme: dark;
+}
+body {
+	font-family: var(--mono);
+	font-size: 17px;
+	line-height: 1.75;
+	letter-spacing: 0;
+}
+a,
+a:focus,
+a:active {
+	text-decoration-line: underline;
+	text-decoration-thickness: 1px;
+	text-decoration-color: color-mix(in srgb, var(--link) 45%, transparent);
+}
+/* The blog name reads like a line of code: print("Name") */
+.page-title {
+	font-family: var(--mono);
+	font-size: 2rem;
+	font-weight: 500;
+	letter-spacing: -0.02em;
+	color: var(--red);
+	margin-top: 1.5rem;
+}
+.page-title::before {
+	content: "print(";
+	color: var(--teal);
+}
+.page-title::after {
+	content: ")";
+	color: var(--teal);
+}
+/* Each menu item gets its own highlight colour. */
+header nav ul li:nth-child(6n + 1) a {
+	color: var(--purple);
+}
+header nav ul li:nth-child(6n + 2) a {
+	color: var(--orange);
+}
+header nav ul li:nth-child(6n + 3) a {
+	color: var(--red);
+}
+header nav ul li:nth-child(6n + 4) a {
+	color: var(--pink);
+}
+header nav ul li:nth-child(6n + 5) a {
+	color: var(--teal);
+}
+header nav ul li:nth-child(6n + 6) a {
+	color: var(--green);
+}
+h2,
+h3 {
+	font-family: var(--mono);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+h2 {
+	color: var(--orange);
+	font-size: 1.6rem;
+}
+h3 {
+	color: var(--purple);
+	font-size: 1.25rem;
+}
+/* Dates and footer notes are styled like code comments. */
+.post-meta,
+.post-date,
+footer {
+	color: var(--green);
+}
+.post-meta a,
+footer small {
+	color: var(--green);
+}
+.post-meta::before,
+footer small::before {
+	content: "/* ";
+}
+.post-meta::after,
+footer small::after {
+	content: " */";
+}
+article {
+	border-bottom-color: var(--grey);
+}
+blockquote {
+	font-family: var(--mono);
+	font-size: inherit;
+	font-style: normal;
+	border-left: 3px solid var(--pink);
+	color: var(--purple);
+}
+code,
+pre {
+	background: var(--panel);
+	border-color: var(--grey);
+	font-family: var(--mono);
+	color: var(--orange);
+}
+pre code {
+	color: var(--text);
+}
+input[type="text"],
+input[type="url"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="date"],
+select,
+textarea {
+	background: var(--panel);
+	border: 1px solid var(--grey);
+	border-radius: 6px;
+	font-family: var(--mono);
+}
+input:focus,
+select:focus,
+textarea:focus {
+	border-color: var(--teal);
+}
+button {
+	background: linear-gradient(#55c4bf, #2f9a96);
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	font-family: var(--mono);
+}
+button.ghost {
+	background: none;
+	border: 1px solid var(--grey);
+	color: var(--text);
+}

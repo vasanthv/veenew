@@ -15,6 +15,9 @@ const {
 } = require("../utils");
 const config = require("../../config");
 
+// Pages that need a signed-in user send everyone else to the login page.
+const requireLogin = (req, res, next) => (req.user ? next() : res.redirect("/login"));
+
 const staticViews = ["/terms", "/privacy"];
 router.get(staticViews, (req, res) => res.render(`legal${req.path}`, { user: req.user }));
 
@@ -28,11 +31,13 @@ router.get("/", async (req, res, next) => {
 	}
 });
 
-router.get("/posts", async (req, res, next) => {
+router.get("/posts", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const userBaseUrl = getUserBaseUrl(req.user);
-		const pagination = await getAllPosts({ user: req.user._id, type: "post" });
+		const pagination = await getAllPosts(
+			{ user: req.user._id, type: "post" },
+			"title text slug createdOn timezone publishedDate subscribersNotified"
+		);
 		res.render("posts/index", { user: req.user, ...pagination, userBaseUrl });
 	} catch (error) {
 		next(error);
@@ -54,7 +59,7 @@ router.get(["/login", "/signup"], (req, res, next) => {
 		if (req.user) return res.redirect("/");
 
 		const view = req.path.substring(1);
-		res.render(`auth/${view}`, { csrfToken: req.csrfToken });
+		res.render(`auth/${view}`, { csrfToken: req.csrfToken, turnstileSiteKey: config.TURNSTILE_SITE_KEY });
 	} catch (error) {
 		next(error);
 	}
@@ -69,19 +74,16 @@ router.get("/reset/:token", (req, res, next) => {
 	}
 });
 
-router.get("/new", async (req, res, next) => {
+router.get("/new", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		res.render("posts/editor", { user: req.user, csrfToken: req.csrfToken, contentType: "post" });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/edit/:id", async (req, res, next) => {
+router.get("/edit/:id", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
-
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
 		const post = await Posts.findOne({ _id: req.params.id, user: req.user._id, type: "post" }).lean();
 		if (!post) return res.status(404).render("404", { user: req.user });
@@ -100,18 +102,17 @@ router.get("/edit/:id", async (req, res, next) => {
 
 router.get("/pages", (req, res) => res.redirect("/"));
 
-router.get("/pages/new", async (req, res, next) => {
+router.get("/pages/new", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		res.render("posts/editor", { user: req.user, csrfToken: req.csrfToken, contentType: "page" });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/pages/edit/:id", async (req, res, next) => {
+router.get("/pages/edit/:id", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
+		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
 		const page = await Posts.findOne({ _id: req.params.id, user: req.user._id, type: "page" }).lean();
 		if (!page) return res.status(404).render("404", { user: req.user });
 		res.render("posts/editor", { user: req.user, post: page, csrfToken: req.csrfToken, contentType: "page" });
@@ -120,9 +121,8 @@ router.get("/pages/edit/:id", async (req, res, next) => {
 	}
 });
 
-router.get("/bookmarks", async (req, res, next) => {
+router.get("/bookmarks", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const bookmarks = await getAllBookmarks({ user: req.user._id });
 		res.render("bookmarks/index", { user: req.user, bookmarks, csrfToken: req.csrfToken });
 	} catch (error) {
@@ -130,18 +130,16 @@ router.get("/bookmarks", async (req, res, next) => {
 	}
 });
 
-router.get("/bookmarks/new", (req, res, next) => {
+router.get("/bookmarks/new", requireLogin, (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		res.render("bookmarks/editor", { user: req.user, csrfToken: req.csrfToken });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/bookmarks/edit/:id", async (req, res, next) => {
+router.get("/bookmarks/edit/:id", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
 		const bookmark = await Bookmarks.findOne({ _id: req.params.id, user: req.user._id }).lean();
 		if (!bookmark) return res.status(404).render("404", { user: req.user });
@@ -151,9 +149,8 @@ router.get("/bookmarks/edit/:id", async (req, res, next) => {
 	}
 });
 
-router.get("/microblogs", async (req, res, next) => {
+router.get("/microblogs", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const microblogs = await getAllMicroblogs({ user: req.user._id });
 		res.render("microblogs/index", { user: req.user, microblogs, getRelativeTime, csrfToken: req.csrfToken });
 	} catch (error) {
@@ -161,18 +158,16 @@ router.get("/microblogs", async (req, res, next) => {
 	}
 });
 
-router.get("/microblogs/new", (req, res, next) => {
+router.get("/microblogs/new", requireLogin, (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		res.render("microblogs/editor", { user: req.user, csrfToken: req.csrfToken });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/microblogs/edit/:id", async (req, res, next) => {
+router.get("/microblogs/edit/:id", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
 		const microblog = await Microblogs.findOne({ _id: req.params.id, user: req.user._id }).lean();
 		if (!microblog) return res.status(404).render("404", { user: req.user });
@@ -182,9 +177,8 @@ router.get("/microblogs/edit/:id", async (req, res, next) => {
 	}
 });
 
-router.get("/guestbook", async (req, res, next) => {
+router.get("/guestbook", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const entries = await getAllGuestbookEntries({ user: req.user._id, isConfirmed: true });
 		res.render("guestbook/index", { user: req.user, entries, getRelativeTime, csrfToken: req.csrfToken });
 	} catch (error) {
@@ -192,9 +186,8 @@ router.get("/guestbook", async (req, res, next) => {
 	}
 });
 
-router.get("/subscribers", async (req, res, next) => {
+router.get("/subscribers", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const subscribers = await getAllSubscribers({ user: req.user._id });
 		res.render("subscribers/index", { user: req.user, subscribers, getRelativeTime, csrfToken: req.csrfToken });
 	} catch (error) {
@@ -202,9 +195,8 @@ router.get("/subscribers", async (req, res, next) => {
 	}
 });
 
-router.get("/photos", async (req, res, next) => {
+router.get("/photos", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const photos = await getAllPhotos({ user: req.user._id });
 		res.render("photos/index", {
 			user: req.user,
@@ -218,21 +210,24 @@ router.get("/photos", async (req, res, next) => {
 	}
 });
 
-router.get("/photos/:id", async (req, res, next) => {
+router.get("/photos/:id", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
 		const photo = await Photos.findOne({ _id: req.params.id, user: req.user._id }).lean();
 		if (!photo) return res.status(404).render("404", { user: req.user });
-		res.render("photos/single", { user: req.user, photo, userBaseUrl: getUserBaseUrl(req.user), csrfToken: req.csrfToken });
+		res.render("photos/single", {
+			user: req.user,
+			photo,
+			userBaseUrl: getUserBaseUrl(req.user),
+			csrfToken: req.csrfToken,
+		});
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/settings", async (req, res, next) => {
+router.get("/settings", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		const baseDomain = config.DOMAIN.split(":")[0];
 		res.render("account/settings", {
 			user: req.user,
@@ -246,18 +241,16 @@ router.get("/settings", async (req, res, next) => {
 	}
 });
 
-router.get("/customize", async (req, res, next) => {
+router.get("/customize", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		res.render("account/customize", { user: req.user, csrfToken: req.csrfToken, themes: THEMES });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/newsletter", async (req, res, next) => {
+router.get("/newsletter", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		if (!res.locals.isAdmin) return res.status(404).render("404", { user: req.user });
 		res.render("admin/newsletter", { user: req.user, csrfToken: req.csrfToken });
 	} catch (error) {
@@ -265,9 +258,8 @@ router.get("/newsletter", async (req, res, next) => {
 	}
 });
 
-router.get("/admin", async (req, res, next) => {
+router.get("/admin", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
 		if (!res.locals.isAdmin) return res.status(404).render("404", { user: req.user });
 		res.render("admin/index", { user: req.user, csrfToken: req.csrfToken });
 	} catch (error) {
@@ -275,10 +267,8 @@ router.get("/admin", async (req, res, next) => {
 	}
 });
 
-router.get("/export", async (req, res, next) => {
+router.get("/export", requireLogin, async (req, res, next) => {
 	try {
-		if (!req.user) return res.redirect("/login");
-
 		const owner = { user: req.user._id };
 		const [allPosts, bookmarks, microblogs, photos, guestbookEntries, subscribers] = await Promise.all([
 			Posts.find(owner).lean().exec(),

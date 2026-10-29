@@ -9,7 +9,7 @@ const apiRoutes = require("./server/routes/api");
 const viewRoutes = require("./server/routes/view");
 const profileRoutes = require("./server/routes/profile");
 const mw = require("./server/middlewares");
-const { getPostDate } = require("./server/utils");
+const { getPostDate, toScriptJson } = require("./server/utils");
 const { serveFavicon } = require("./server/controllers");
 
 const app = express();
@@ -17,10 +17,14 @@ const app = express();
 app.set("view engine", "ejs");
 // An array lets EJS resolve includes such as "partials/header" from the views root, not just from the including file.
 app.set("views", [path.join(__dirname, "views")]);
-app.set("trust proxy", true);
+app.set("trust proxy", config.TRUST_PROXY);
+app.disable("x-powered-by");
 app.locals.appVersion = pkg.version;
 app.locals.analytics = config.ANALYTICS_URL;
 app.locals.getPostDate = getPostDate;
+app.locals.toScriptJson = toScriptJson;
+
+app.use(mw.securityHeaders);
 
 // Serve vue.js & axios to the browser
 app.use(express.static(path.join(__dirname, "node_modules/axios/dist/")));

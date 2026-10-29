@@ -1,0 +1,98 @@
+/* Rainbow - a solid background with text that shifts colour line by line, and rainbow-filled titles. */
+:root {
+	--background: #fffcf5;
+	--text: #2e2a45;
+	--grey: #e6e0f0;
+	--blue: #2e2a45;
+	--link: var(--text);
+	--red: #d63b3b;
+	--green: #2f9e5b;
+	--l: 42%;
+	--stops: hsl(0 80% var(--l)), hsl(40 85% var(--l)), hsl(80 75% var(--l)), hsl(120 70% var(--l)),
+		hsl(160 75% var(--l)), hsl(200 80% var(--l)), hsl(240 75% var(--l)), hsl(280 70% var(--l)), hsl(320 75% var(--l)),
+		hsl(360 80% var(--l));
+	--line-gradient: linear-gradient(to bottom, var(--stops));
+	--title-gradient: linear-gradient(90deg, var(--stops));
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #17151f;
+		--text: #ece9f8;
+		--grey: #36324a;
+		--red: #ff7a7a;
+		--green: #6fd699;
+		--l: 68%;
+	}
+}
+/* Text colour comes from a tall gradient that repeats down the page, so each line is a slightly different hue.
+   Only browsers that can clip a background to text get it; everything else keeps the normal text colour. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+	.wrap {
+		background-image: var(--line-gradient);
+		background-size: 100% 480px;
+		background-repeat: repeat-y;
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+	/* Titles are filled left to right instead, so they stand out from the lines below. */
+	.page-title,
+	h2,
+	h3 {
+		display: block;
+		width: fit-content;
+		max-width: 100%;
+		background-image: var(--title-gradient);
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+	a,
+	a:focus,
+	a:active {
+		color: inherit;
+	}
+	/* Anything with its own background or colour keeps a solid, readable colour. */
+	code,
+	pre,
+	small,
+	.help,
+	footer {
+		color: var(--muted);
+	}
+	code,
+	pre {
+		color: var(--text);
+	}
+}
+a,
+a:focus,
+a:active {
+	text-decoration-line: underline;
+	text-decoration-thickness: 2px;
+	text-decoration-color: color-mix(in srgb, var(--text) 35%, transparent);
+	text-underline-offset: 0.2em;
+}
+a:hover {
+	text-decoration-color: var(--text);
+}
+.page-title {
+	font-size: 2.6rem;
+	font-weight: 800;
+	letter-spacing: -0.04em;
+}
+h2 {
+	font-size: 1.9rem;
+	font-weight: 800;
+	letter-spacing: -0.03em;
+}
+h3 {
+	font-size: 1.4rem;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+blockquote {
+	border-left: 4px solid var(--text);
+}

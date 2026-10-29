@@ -52,7 +52,7 @@
         </div>
         <div class="field">
           <label for="style">CSS styles</label>
-          <textarea id="style" placeholder="eg: body{background:red;}" v-model="myAccount.customStyle" rows="2" style="font-family: monospace;"></textarea>
+          <textarea id="style" placeholder="Eg: body{background:red;}" v-model="myAccount.customStyle" rows="2" style="font-family: monospace;"></textarea>
           <div class="help">Custom CSS overrides the selected theme.</div>
         </div>
       </details>
@@ -61,7 +61,7 @@
         <summary>Custom script</summary>
         <div class="field">
           <label for="scriptUrl">Custom Script URL</label>
-          <input type="text" id="scriptUrl" placeholder="enter a script URL" v-model="myAccount.customScriptUrl" />
+          <input type="text" id="scriptUrl" placeholder="Enter a script URL" v-model="myAccount.customScriptUrl" />
           <div class="help">Eg: https://example.com/script.js</div>
           <div class="help">Loaded on every page of your blog, deferred until the page has been parsed. Only use scripts you trust, since they run with full access to your visitors' pages.</div>
         </div>
@@ -80,10 +80,10 @@
   <script type="text/javascript">
     window.onload = () => {
       App.myAccount = {
-        menu: <%- JSON.stringify(user.menu) %>,
-        theme: "<%= user.theme || '' %>",
-        customStyle: "<%- JSON.stringify(user.customStyle || '').slice(1, -1) %>",
-        customScriptUrl: "<%=user.customScriptUrl%>",
+        menu: <%- toScriptJson(user.menu) %>,
+        theme: <%- toScriptJson(user.theme || "") %>,
+        customStyle: <%- toScriptJson(user.customStyle || "") %>,
+        customScriptUrl: <%- toScriptJson(user.customScriptUrl || "") %>,
       };
     }
   </script>

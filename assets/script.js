@@ -4,10 +4,15 @@ const defaultState = function () {
 	const params = new URLSearchParams(window.location.search);
 	return {
 		toast: [{ type: "", message: "" }],
-		newAccount: { username: "", email: "", password: "" },
+		newAccount: { username: "", email: "", password: "", website: "", turnstileToken: "" },
 		authCreds: { username: "", password: "" },
 		resetPassword: "",
-		post: { title: params.has("title") ? params.get("title") : "", text: params.has("text") ? params.get("text") : "", slug: "", publishedDate: "" },
+		post: {
+			title: params.has("title") ? params.get("title") : "",
+			text: params.has("text") ? params.get("text") : "",
+			slug: "",
+			publishedDate: "",
+		},
 		blogs: [],
 		blogSearch: "",
 		blogsLoaded: false,
@@ -44,7 +49,14 @@ const App = Vue.createApp({
 			if (!this.newAccount.username || !this.newAccount.email || !this.newAccount.password) {
 				return this.setToast("All fields are mandatory");
 			}
-			axios.post("/api/signup", this.newAccount).then(this.authenticate);
+			axios
+				.post("/api/signup", this.newAccount)
+				.then(this.authenticate)
+				.catch(() => {
+					// A Turnstile token works once, so ask for a new one after a failed attempt.
+					this.newAccount.turnstileToken = "";
+					window.turnstile?.reset();
+				});
 		},
 		signIn() {
 			if (!this.authCreds.username || !this.authCreds.password) {
@@ -70,7 +82,7 @@ const App = Vue.createApp({
 		},
 		authenticate(response) {
 			this.setToast(response.data.message, "success");
-			redirect(this.urlState ?? "/", true);
+			redirect("/", true);
 		},
 		verifyEmail() {
 			if (this.isLoading) return;
@@ -130,7 +142,13 @@ const App = Vue.createApp({
 			const text = this.post.text.trim();
 			this.isLoading = true;
 			axios
-				.post("/api/posts", { title, text, slug: this.post.slug.trim(), publishedDate: this.post.publishedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+				.post("/api/posts", {
+					title,
+					text,
+					slug: this.post.slug.trim(),
+					publishedDate: this.post.publishedDate,
+					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				})
 				.then((response) => {
 					window.localStorage.removeItem("newPost");
 					this.setToast(response.data.message, "success");
@@ -152,6 +170,18 @@ const App = Vue.createApp({
 				})
 				.finally(() => (this.isLoading = false));
 		},
+		notifySubscribers(id) {
+			if (this.isLoading) return;
+			if (!confirm("Email this post to your subscribers? This can only be done once.")) return;
+			this.isLoading = true;
+			axios
+				.post(`/api/posts/${id}/notify`)
+				.then((response) => {
+					this.setToast(response.data.message, "success");
+					redirect("/posts");
+				})
+				.finally(() => (this.isLoading = false));
+		},
 		deletePost(id) {
 			if (confirm("Are you sure you want to delete this post? There is no undo")) {
 				axios.delete(`/api/posts/${id}`).then((response) => {
@@ -169,7 +199,7 @@ const App = Vue.createApp({
 			const slug = this.post.slug.trim();
 			this.isLoading = true;
 			axios
-				.post("/api/pages", { title, text, slug })
+				.post("/api/pages", { title, text, slug, hideTitle: this.post.hideTitle })
 				.then((response) => {
 					window.localStorage.removeItem("newPage");
 					this.setToast(response.data.message, "success");
@@ -186,7 +216,7 @@ const App = Vue.createApp({
 			const slug = this.post.slug.trim();
 			this.isLoading = true;
 			axios
-				.put("/api/pages/" + id, { title, text, slug })
+				.put("/api/pages/" + id, { title, text, slug, hideTitle: this.post.hideTitle })
 				.then((response) => {
 					this.setToast(response.data.message, "success");
 				})
@@ -318,12 +348,10 @@ const App = Vue.createApp({
 			}
 		},
 		loadBlogs() {
-			axios
-				.get("/api/admin/blogs", { params: { q: this.blogSearch.trim() } })
-				.then((response) => {
-					this.blogs = response.data.blogs;
-					this.blogsLoaded = true;
-				});
+			axios.get("/api/admin/blogs", { params: { q: this.blogSearch.trim() } }).then((response) => {
+				this.blogs = response.data.blogs;
+				this.blogsLoaded = true;
+			});
 		},
 		adminDeleteBlog(blog) {
 			const reason = prompt(
@@ -386,9 +414,8 @@ const App = Vue.createApp({
 		(response) => response,
 		(error) => {
 			console.log(error);
-			App.setToast(error.response.data.message || "Something went wrong. Please try again");
+			App.setToast(error.response?.data?.message || "Something went wrong. Please try again");
 			throw error;
 		}
 	);
-
 })();

@@ -9,22 +9,30 @@
       <form @submit.prevent="signUp">
         <div class="field">
           <label for="username">Username</label>
-          <input type="text" id="username" placeholder="enter a username" v-model="newAccount.username" />
-          <div class="help">Your blog url: https://username.veenew.com</div>
+          <input type="text" id="username" placeholder="Enter a username" v-model="newAccount.username" />
+          <div class="help">Your site url: https://username.veenew.com</div>
         </div>
         <div class="field">
           <label for="email">E-mail address</label>
-          <input type="email" id="email" placeholder="enter your email" v-model="newAccount.email" />
+          <input type="email" id="email" placeholder="Enter your email" v-model="newAccount.email" />
         </div>
         <div class="field">
           <label for="password">Password</label>
-          <input type="password" id="password" placeholder="enter a password" v-model="newAccount.password" @keyup.enter="signUp" />
+          <input type="password" id="password" placeholder="Enter a password" v-model="newAccount.password" @keyup.enter="signUp" />
         </div>
+
+        <div style="position: absolute; left: -9999px" aria-hidden="true">
+          <input type="text" tabindex="-1" autocomplete="off" v-model="newAccount.website" />
+        </div>
+        <% if (turnstileSiteKey) { %>
+        <div v-pre class="cf-turnstile" data-sitekey="<%= turnstileSiteKey %>" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired"></div>
+        <div class="spacer"></div>
+        <% } %>
 
         <small>By proceeding, you confirm your acceptance of our <a href="/terms" target="_blank"><strong>terms</strong></a>.</small>
         <div class="spacer"></div>
 
-        <button type="submit">Sign up</button>
+        <button type="submit">Publish my site</button>
       </form>
       <div class="spacer"></div>
       <small>Already got an account? <a href="/login"><strong>Log in</strong></a></small>
@@ -32,6 +40,13 @@
     <%- include('partials/footer'); -%>
   </div>
 
+<% if (turnstileSiteKey) { %>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script>
+    window.onTurnstileSuccess = (token) => (App.newAccount.turnstileToken = token);
+    window.onTurnstileExpired = () => (App.newAccount.turnstileToken = "");
+  </script>
+  <% } %>
 </body>
 
 </html>

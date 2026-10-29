@@ -9,7 +9,7 @@
 
     <section id="postbox">
       <form @submit.prevent="saveMicroblog(<%- isEdit ? `'${microblog._id}'` : "" %>)">
-        <textarea v-model="microblog.text" placeholder="what's on your mind? use #hashtags to tag" maxlength="500" required></textarea>
+        <textarea v-model="microblog.text" placeholder="What's on your mind? use #hashtags to tag" maxlength="500" required></textarea>
         <div class="spacer"></div>
         <div class="flex">
           <div class="flex-1">
@@ -28,7 +28,7 @@
   <% if (isEdit) { %>
   <script type="text/javascript">
     window.onload = () => {
-      App.microblog = <%- JSON.stringify({ text: microblog.text || "" }).replace(/</g, "\\u003c") %>;
+      App.microblog = <%- toScriptJson({ text: microblog.text || "" }) %>;
     };
   </script>
   <% } %>

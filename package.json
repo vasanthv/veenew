@@ -61,16 +61,6 @@
 		"singleQuote": false,
 		"trailingComma": "es5",
 		"tabWidth": 2,
-		"useTabs": true,
-		"overrides": [
-			{
-				"files": [
-					"*.ejs"
-				],
-				"options": {
-					"parser": "html"
-				}
-			}
-		]
+		"useTabs": true
 	}
 }

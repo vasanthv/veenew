@@ -4,7 +4,7 @@
     <ul>
       <% profile.menu.forEach((item, index) => { %>
       <% const isExternal = /^https?:\/\//i.test(item.link); %>
-      <li><a href="<%= item.link %>" <%= isExternal ? 'target="_blank" rel="noopener noreferrer"' : "" %>><%= item.name %></a></li>
+      <li><a href="<%= item.link %>" <%= isExternal ? 'target="_blank" rel="nofollow ugc noopener noreferrer"' : "" %>><%= item.name %></a></li>
       <% }); %>
     </ul>
     <% } %>

@@ -14,7 +14,7 @@
 
     <section>
       <form @submit.prevent="loadBlogs">
-        <input type="text" v-model="blogSearch" placeholder="search blogs by username" maxlength="18" />
+        <input type="text" v-model="blogSearch" placeholder="Search blogs by username" maxlength="18" />
       </form>
       <div class="spacer"></div>
       <p><small>{{ blogSearch.trim() ? "Matching blogs" : "Latest 100 blogs" }}</small></p>

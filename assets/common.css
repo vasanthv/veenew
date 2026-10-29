@@ -180,6 +180,7 @@ input[type="url"],
 input[type="email"],
 input[type="password"],
 input[type="search"],
+input[type="date"],
 select,
 textarea {
 	display: block;
@@ -307,6 +308,8 @@ td {
 }
 article {
 	padding: 1.25rem 0px;
+}
+article.maxh {
 	border-bottom: 1px solid var(--grey);
 }
 article .content {
@@ -366,12 +369,40 @@ hr {
 .entry-title {
 	margin-top: 1.5rem;
 }
+.post-meta {
+	margin: 1.5rem 0px 0px;
+	font-size: 0.92rem;
+	color: var(--muted);
+}
+.post-meta a {
+	color: var(--muted);
+}
+.post-meta + .entry-title {
+	margin-top: 0.25rem;
+}
 .page-title {
 	font-size: 2.35rem;
 	font-weight: 700;
 	letter-spacing: -0.035em;
 	line-height: 1.1;
 	margin: 1rem 0px 0px;
+}
+.guestbook-form {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 1rem;
+}
+.guestbook-form-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+	width: 100%;
+}
+@media (max-width: 34rem) {
+	.guestbook-form-row {
+		grid-template-columns: 1fr;
+	}
 }
 .field {
 	margin: 1rem 0px;
@@ -451,23 +482,34 @@ li:has(> .post-date) {
 		transition: none !important;
 	}
 }
-details.guide {
+details.muted-collapsible {
 	border-top: none;
 	padding: 0px;
 }
-details.guide summary {
-	display: inline-block;
+details.muted-collapsible summary {
+	display: inline-flex;
+	gap: 0.75rem;
 	font-size: 1rem;
 	font-weight: 400;
 	letter-spacing: normal;
 	color: var(--muted);
-	text-decoration: underline dashed;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 0.22em;
 }
-details.guide summary:hover {
-	text-decoration-color: currentColor;
+details.muted-collapsible summary:hover {
+	color: var(--text);
 }
-details.guide summary::after {
+details.muted-collapsible summary::before {
+	content: "";
+	width: 0.5rem;
+	height: 0.5rem;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(-45deg);
+	transition: transform 0.2s ease;
+	flex-shrink: 0;
+}
+details.muted-collapsible[open] summary::before {
+	transform: rotate(45deg);
+}
+details.muted-collapsible summary::after {
 	content: none;
 }
