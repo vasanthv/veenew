@@ -161,7 +161,7 @@ const getValidMenus = (rawMenu) => {
  */
 const getValidPost = (text) => {
 	if (!text) httpError(400, "Empty post");
-	if (text.length > 10000) httpError(400, "Post is too long. Max. 10000 chars");
+	if (text.length > 12000) httpError(400, "Post is too long. Max. 12000 chars");
 	const sanitizedString = sanitizeString(text);
 	if (!sanitizedString) httpError(400, "Empty post");
 	return sanitizedString;
