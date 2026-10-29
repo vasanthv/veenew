@@ -155,12 +155,6 @@ const isSlugTaken = async (userId, slug, excludeId = null) => {
 	return Boolean(await Posts.exists(query));
 };
 
-const ensureUniquePageSlug = async (userId, slug, excludeId = null) => {
-	if (slug && (await isSlugTaken(userId, slug, excludeId))) {
-		return httpError(400, "Slug is already used by another post or page");
-	}
-};
-
 /**
  * Resolves the slug for a post. An explicit slug must be unused by the author's other posts and pages;
  * a title-derived one gets a numeric suffix until it is unique.
@@ -524,6 +518,5 @@ module.exports = {
 	getRemainingContent,
 	createStarterContent,
 	blogHasForm,
-	ensureUniquePageSlug,
 	getUniquePostSlug,
 };

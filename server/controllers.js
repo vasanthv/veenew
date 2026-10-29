@@ -306,9 +306,7 @@ const createPost = async (req, res, next) => {
 		}
 
 		if (type === "page") {
-			const slug = utils.getValidSlug(req.body.slug);
-			await utils.ensureUniquePageSlug(req.user._id, slug);
-			postData.slug = slug;
+			postData.slug = await utils.getUniquePostSlug(req.user._id, title, req.body.slug);
 			postData.hideTitle = req.body.hideTitle === true;
 		}
 
@@ -341,9 +339,10 @@ const updatePost = async (req, res, next) => {
 		updateFields["html"] = utils.markdownToHtml(text);
 		updateFields["hashtags"] = type === "post" ? utils.getHashtagsFromText(text) : [];
 		if (type === "page") {
-			const slug = utils.getValidSlug(req.body.slug);
-			await utils.ensureUniquePageSlug(req.user._id, slug, post._id);
-			updateFields["slug"] = slug;
+			// The home page keeps its empty slug; any other page gets one made from its title when left blank.
+			updateFields["slug"] = utils.isHomePage(post)
+				? ""
+				: await utils.getUniquePostSlug(req.user._id, updateFields["title"], req.body.slug, post._id);
 			updateFields["hideTitle"] = req.body.hideTitle === true;
 		}
 

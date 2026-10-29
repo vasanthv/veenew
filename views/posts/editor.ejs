@@ -18,7 +18,7 @@
         <details class="muted-collapsible">
           <summary>Optional fields</summary>
           <% if (isPage) { %>
-          <input type="text" v-model="post.slug" placeholder="Slug (example: about-us)" />
+          <input type="text" v-model="post.slug" placeholder="Slug (optional, created from the title)" />
           <label><input type="checkbox" v-model="post.hideTitle" /> Hide title on the page</label>
           <% } else { %>
           <input type="text" v-model="post.slug" placeholder="Slug (optional, created from the title)" />
