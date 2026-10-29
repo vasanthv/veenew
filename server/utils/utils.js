@@ -697,7 +697,7 @@ const formatPostDate = (dateString) =>
 const THEMES = [
 	{ key: "", label: "Default" },
 	{ key: "sepia", label: "Sepia" },
-	{ key: "dark", label: "Dark" },
+	{ key: "nocturne", label: "Nocturne" },
 	{ key: "scribble", label: "Scribble" },
 	{ key: "peach", label: "Peach" },
 	{ key: "hack", label: "Hack" },

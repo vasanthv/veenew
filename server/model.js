@@ -36,7 +36,7 @@ const userSchema = new Schema({
 		default: [{ name: "Home", link: "/" }],
 	},
 	domain: { type: String, index: true, unique: true, sparse: true, lowercase: true },
-	theme: { type: String, enum: ["", "sepia", "dark", "scribble", "peach", "hack", "rainbow"], default: "" },
+	theme: { type: String, enum: ["", "sepia", "nocturne", "scribble", "peach", "hack", "rainbow"], default: "" },
 	customStyle: String,
 	customScriptUrl: String,
 	devices: [{ token: { type: String, index: true }, userAgent: String }],
