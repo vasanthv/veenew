@@ -11,7 +11,7 @@ const {
 	getUserBaseUrl,
 	getPostDate,
 	getRelativeTime,
-	THEMES,
+	getAvailableThemes,
 } = require("../utils");
 const config = require("../../config");
 
@@ -243,7 +243,11 @@ router.get("/settings", requireLogin, async (req, res, next) => {
 
 router.get("/customize", requireLogin, async (req, res, next) => {
 	try {
-		res.render("account/customize", { user: req.user, csrfToken: req.csrfToken, themes: THEMES });
+		res.render("account/customize", {
+			user: req.user,
+			csrfToken: req.csrfToken,
+			themes: getAvailableThemes(req.user.theme),
+		});
 	} catch (error) {
 		next(error);
 	}

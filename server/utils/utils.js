@@ -706,6 +706,7 @@ const formatShortPostDate = (dateString) =>
 /**
  * Available blog themes. Each key maps to /themes/<key>.css served from assets.
  * The empty key is the default (no theme stylesheet, base styles only).
+ * A theme with a season is only offered during those days (month is 1-12, dates are UTC).
  */
 const THEMES = [
 	{ key: "", label: "Default" },
@@ -715,9 +716,24 @@ const THEMES = [
 	{ key: "peach", label: "Peach" },
 	{ key: "hack", label: "Hack" },
 	{ key: "rainbow", label: "Rainbow" },
+	{ key: "halloween", label: "Halloween", season: { month: 10, fromDay: 24, toDay: 31 } },
 ];
 
 const THEME_KEYS = THEMES.map((theme) => theme.key);
+
+/**
+ * Lists the themes to offer in the theme picker. A seasonal theme is left out of season,
+ * unless it is the current theme, so the picker can still show what the user has selected.
+ * @param {string} currentTheme - The user's selected theme key
+ * @param {Date} now - The date to check seasons against
+ * @returns {Array<{key: string, label: string}>} Themes to offer
+ */
+const getAvailableThemes = (currentTheme, now = new Date()) =>
+	THEMES.filter(({ key, season }) => {
+		if (!season || key === currentTheme) return true;
+		const day = now.getUTCDate();
+		return now.getUTCMonth() + 1 === season.month && day >= season.fromDay && day <= season.toDay;
+	});
 
 /**
  * Validates a theme key against the whitelist.
@@ -811,7 +827,7 @@ module.exports = {
 	isPublished,
 	getRelativeTime,
 	getValidTimezone,
-	THEMES,
+	getAvailableThemes,
 	getValidTheme,
 	getThemeStyleTag,
 	getCustomStyleTag,

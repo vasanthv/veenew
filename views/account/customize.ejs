@@ -44,9 +44,17 @@
         <div class="field">
           <label for="theme">Theme</label>
           <select id="theme" v-model="myAccount.theme">
-            <% themes.forEach(function(theme){ %>
+            <% themes.filter((theme) => !theme.season).forEach(function(theme){ %>
             <option value="<%= theme.key %>"><%= theme.label %></option>
             <% }); %>
+            <% const seasonalThemes = themes.filter((theme) => theme.season); %>
+            <% if (seasonalThemes.length > 0) { %>
+            <optgroup label="Seasonal">
+              <% seasonalThemes.forEach(function(theme){ %>
+              <option value="<%= theme.key %>"><%= theme.label %></option>
+              <% }); %>
+            </optgroup>
+            <% } %>
           </select>
           <div class="help">Pick a base theme for your blog. Custom CSS below overrides it.</div>
         </div>
