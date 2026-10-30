@@ -691,6 +691,19 @@ const formatPostDate = (dateString) =>
 	}).format(new Date(`${dateString}T00:00:00Z`));
 
 /**
+ * Formats a YYYY-MM-DD calendar date with a 3-letter month: "Aug 12, 2012".
+ * @param {string} dateString - Calendar date as YYYY-MM-DD
+ * @returns {string} Formatted date string
+ */
+const formatShortPostDate = (dateString) =>
+	new Intl.DateTimeFormat("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+		timeZone: "UTC",
+	}).format(new Date(`${dateString}T00:00:00Z`));
+
+/**
  * Available blog themes. Each key maps to /themes/<key>.css served from assets.
  * The empty key is the default (no theme stylesheet, base styles only).
  */
@@ -791,6 +804,7 @@ module.exports = {
 	getValidDomain,
 
 	formatPostDate,
+	formatShortPostDate,
 	toDateString,
 	getValidPublishedDate,
 	getPostDate,

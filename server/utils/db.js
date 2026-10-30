@@ -11,6 +11,7 @@ const {
 	escapeHtml,
 	toDateString,
 	formatPostDate,
+	formatShortPostDate,
 } = require("./utils");
 const config = require("../../config");
 const constants = require("../constants");
@@ -238,7 +239,7 @@ const renderPostList = (posts) => {
 	const items = posts.map((post) => {
 		const label = post.title || (post.text || "").replace(/\s+/g, " ").trim().slice(0, 80) || "Untitled";
 		const date = getPostDate(post);
-		return `<li><time class="post-date" datetime="${date}">${date}</time><a href="/${getPostPath(post)}">${escapeHtml(label)}</a></li>`;
+		return `<li><time class="post-date" datetime="${date}">${formatShortPostDate(date)}</time><a href="/${getPostPath(post)}">${escapeHtml(label)}</a></li>`;
 	});
 	return `<ul class="plain-list">${items.join("")}</ul>`;
 };

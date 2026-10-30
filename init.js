@@ -9,7 +9,7 @@ const apiRoutes = require("./server/routes/api");
 const viewRoutes = require("./server/routes/view");
 const profileRoutes = require("./server/routes/profile");
 const mw = require("./server/middlewares");
-const { getPostDate, toScriptJson } = require("./server/utils");
+const { getPostDate, formatShortPostDate, toScriptJson } = require("./server/utils");
 const { serveFavicon } = require("./server/controllers");
 
 const app = express();
@@ -22,6 +22,7 @@ app.disable("x-powered-by");
 app.locals.appVersion = pkg.version;
 app.locals.analytics = config.ANALYTICS_URL;
 app.locals.getPostDate = getPostDate;
+app.locals.formatShortPostDate = formatShortPostDate;
 app.locals.toScriptJson = toScriptJson;
 
 app.use(mw.securityHeaders);

@@ -12,7 +12,7 @@
   <ul class="plain-list">
     <% for (var i = 0; i < posts.length; i++) { %>
     <% var label = posts[i].title || (posts[i].text || "").replace(/\s+/g, " ").trim().slice(0, 80) || "Untitled"; %>
-    <li id="post-<%= posts[i]._id %>"><time class="post-date" datetime="<%= getPostDate(posts[i]) %>"><%= getPostDate(posts[i]) %></time><a href="<%= typeof userBaseUrl !== "undefined" ? userBaseUrl : "" %>post/<%= posts[i].slug || posts[i]._id %>"><%= label %></a><% if(typeof showEdit !== "undefined") { %> <small>&middot; <a href="/edit/<%= posts[i]._id %>">Edit</a></small><% if(posts[i].subscribersNotified === false) { %> <small>&middot; Subscribers have not been emailed</small><% } %><% } %></li>
+    <li id="post-<%= posts[i]._id %>"><time class="post-date" datetime="<%= getPostDate(posts[i]) %>"><%= formatShortPostDate(getPostDate(posts[i])) %></time><a href="<%= typeof userBaseUrl !== "undefined" ? userBaseUrl : "" %>post/<%= posts[i].slug || posts[i]._id %>"><%= label %></a><% if(typeof showEdit !== "undefined") { %> <small>&middot; <a href="/edit/<%= posts[i]._id %>">Edit</a></small><% if(posts[i].subscribersNotified === false) { %> <small>&middot; Subscribers have not been emailed</small><% } %><% } %></li>
     <% } %>
   </ul>
   <% } %>
