@@ -691,14 +691,14 @@ const formatPostDate = (dateString) =>
 	}).format(new Date(`${dateString}T00:00:00Z`));
 
 /**
- * Formats a YYYY-MM-DD calendar date with a 3-letter month: "Aug 12, 2012".
+ * Formats a YYYY-MM-DD calendar date with a 3-letter month and 2-digit day: "Aug 02, 2012".
  * @param {string} dateString - Calendar date as YYYY-MM-DD
  * @returns {string} Formatted date string
  */
 const formatShortPostDate = (dateString) =>
 	new Intl.DateTimeFormat("en-US", {
 		month: "short",
-		day: "numeric",
+		day: "2-digit",
 		year: "numeric",
 		timeZone: "UTC",
 	}).format(new Date(`${dateString}T00:00:00Z`));
