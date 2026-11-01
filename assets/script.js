@@ -18,8 +18,6 @@ const defaultState = function () {
 		blogsLoaded: false,
 		newsletter: { subject: "", message: "", testEmail: true },
 		myAccount: { username: "", email: "", password: "", name: "", description: "", menu: [], domain: "" },
-		bookmark: { title: "", url: "", notes: "", isPrivate: false },
-		microblog: { text: "" },
 		photoFile: null,
 		deleteConfirm: false,
 		isLoading: false,
@@ -227,51 +225,6 @@ const App = Vue.createApp({
 				axios.delete(`/api/pages/${id}`).then((response) => {
 					this.setToast(response.data.message, "success");
 					redirect("/");
-				});
-			}
-		},
-		saveBookmark(id) {
-			if (this.isLoading) return;
-			if (!this.bookmark.url.trim()) return this.setToast("Link cannot be empty");
-			const payload = {
-				url: this.bookmark.url.trim(),
-				title: this.bookmark.title.trim(),
-				notes: this.bookmark.notes.trim(),
-				isPrivate: this.bookmark.isPrivate,
-			};
-			this.isLoading = true;
-			(id ? axios.put("/api/bookmarks/" + id, payload) : axios.post("/api/bookmarks", payload))
-				.then((response) => {
-					this.setToast(response.data.message, "success");
-					redirect("/bookmarks");
-				})
-				.finally(() => (this.isLoading = false));
-		},
-		deleteBookmark(id) {
-			if (confirm("Are you sure you want to delete this bookmark? There is no undo")) {
-				axios.delete(`/api/bookmarks/${id}`).then((response) => {
-					this.setToast(response.data.message, "success");
-					redirect("/bookmarks");
-				});
-			}
-		},
-		saveMicroblog(id) {
-			if (this.isLoading) return;
-			if (!this.microblog.text.trim()) return this.setToast("Microblog cannot be empty");
-			const payload = { text: this.microblog.text.trim() };
-			this.isLoading = true;
-			(id ? axios.put("/api/microblogs/" + id, payload) : axios.post("/api/microblogs", payload))
-				.then((response) => {
-					this.setToast(response.data.message, "success");
-					redirect("/microblogs");
-				})
-				.finally(() => (this.isLoading = false));
-		},
-		deleteMicroblog(id) {
-			if (confirm("Are you sure you want to delete this microblog? There is no undo")) {
-				axios.delete(`/api/microblogs/${id}`).then((response) => {
-					this.setToast(response.data.message, "success");
-					redirect("/microblogs");
 				});
 			}
 		},

@@ -1,8 +1,4 @@
 const crypto = require("crypto");
-const dns = require("dns");
-const http = require("http");
-const https = require("https");
-const net = require("net");
 const axios = require("axios");
 const bcrypt = require("bcryptjs");
 const { URL } = require("url");
@@ -264,11 +260,8 @@ const getHashtagsFromText = (text) => {
 	return [...new Set(matches.map((tag) => tag.slice(1).toLowerCase()))];
 };
 
-const BOOKMARK_TITLE_MAX = 160;
-const BOOKMARK_NOTES_MAX = 640;
-
 /**
- * Validates plain text for a bookmark field. Markdown is left as typed (it is never rendered)
+ * Validates plain text for a text field. Markdown is left as typed (it is never rendered)
  * and anything that looks like an HTML tag is stripped.
  * @param {string} value - Raw input
  * @param {number} maxLength - Maximum length allowed
@@ -281,23 +274,6 @@ const getValidPlainText = (value, maxLength, fieldName) => {
 	const text = value.replace(/<\/?[a-z!][^>]*>/gi, "").trim();
 	if (text.length > maxLength) return httpError(400, `${fieldName} must be at most ${maxLength} characters`);
 	return text;
-};
-
-const getValidBookmarkTitle = (title) => getValidPlainText(title, BOOKMARK_TITLE_MAX, "Title");
-const getValidBookmarkNotes = (notes) => getValidPlainText(notes, BOOKMARK_NOTES_MAX, "Notes");
-
-const MICROBLOG_TEXT_MAX = 500;
-
-/**
- * Validates the text of a microblog and extracts its hashtags.
- * @param {Object} body - Request body
- * @returns {{text: string, hashtags: string[]}} Validated plain text and its unique hashtags
- * @throws {Error} If the text is empty, not text or longer than the limit
- */
-const getValidMicroblogFields = (body) => {
-	const text = getValidPlainText(body.text, MICROBLOG_TEXT_MAX, "Microblog");
-	if (!text) return httpError(400, "Microblog cannot be empty");
-	return { text, hashtags: getHashtagsFromText(text) };
 };
 
 const GUESTBOOK_NAME_MAX = 80;
@@ -429,100 +405,6 @@ const assertFaviconIsPng = (buffer) => {
 		buffer.subarray(0, 8).equals(signature) &&
 		buffer.subarray(12, 16).toString("latin1") === "IHDR";
 	if (!isPng) return httpError(400, "Favicon must be a PNG image");
-};
-
-/**
- * Validates the fields of a bookmark request body. Without a title, the page's own title is used,
- * or the host name when it has none.
- * @param {Object} body - Request body
- * @returns {Promise<Object>} Validated url, title, notes, hashtags and isPrivate
- */
-const getValidBookmarkFields = async (body) => {
-	const notes = getValidBookmarkNotes(body.notes);
-	const url = getValidURL(typeof body.url === "string" ? body.url.trim() : "");
-	const title = getValidBookmarkTitle(body.title) || (await fetchPageTitle(url)) || new URL(url).hostname;
-	return {
-		url,
-		title,
-		notes,
-		hashtags: getHashtagsFromText(notes),
-		isPrivate: body.isPrivate === true || body.isPrivate === "true",
-	};
-};
-
-const NON_PUBLIC_IPS = new net.BlockList();
-[
-	["0.0.0.0", 8],
-	["10.0.0.0", 8],
-	["100.64.0.0", 10],
-	["127.0.0.0", 8],
-	["169.254.0.0", 16],
-	["172.16.0.0", 12],
-	["192.0.0.0", 24],
-	["192.168.0.0", 16],
-	["198.18.0.0", 15],
-	["224.0.0.0", 3],
-].forEach(([network, prefix]) => NON_PUBLIC_IPS.addSubnet(network, prefix, "ipv4"));
-[
-	["::", 128],
-	["::1", 128],
-	["fc00::", 7],
-	["fe80::", 10],
-].forEach(([network, prefix]) => NON_PUBLIC_IPS.addSubnet(network, prefix, "ipv6"));
-
-/**
- * Whether an IP address is loopback, private, link-local or otherwise not publicly routable.
- * IPv4-mapped IPv6 addresses (::ffff:a.b.c.d) are checked as the IPv4 address they carry.
- * @param {string} address - IPv4 or IPv6 address
- * @returns {boolean}
- */
-const isPrivateIp = (address) => NON_PUBLIC_IPS.check(address, net.isIPv4(address) ? "ipv4" : "ipv6");
-
-// Node skips DNS lookups for IP literals, so those are checked here instead.
-const assertPublicHost = (hostname) => {
-	const host = hostname.replace(/^\[|\]$/g, "");
-	if (net.isIP(host) && isPrivateIp(host)) throw new Error("Address is not allowed");
-};
-
-// DNS lookup that refuses private addresses, so page fetches cannot reach internal services
-// (this also covers redirects, since every connection resolves through it).
-const publicOnlyLookup = (hostname, options, callback) => {
-	dns.lookup(hostname, { ...options, all: true }, (error, addresses) => {
-		if (error) return callback(error);
-		const allowed = addresses.filter(({ address }) => !isPrivateIp(address));
-		if (allowed.length === 0) return callback(new Error("Address is not allowed"));
-		if (options?.all) return callback(null, allowed);
-		callback(null, allowed[0].address, allowed[0].family);
-	});
-};
-
-/**
- * Fetches the title of a web page. Never throws; returns an empty string when the page
- * cannot be fetched or has no title.
- * @param {string} url - http/https URL of the page
- * @returns {Promise<string>} Plain text title, at most 160 characters
- */
-const fetchPageTitle = async (url) => {
-	try {
-		assertPublicHost(new URL(url).hostname);
-		const response = await axios.get(url, {
-			timeout: 5000,
-			maxRedirects: 3,
-			beforeRedirect: (options) => assertPublicHost(options.hostname),
-			maxContentLength: 1024 * 1024,
-			maxBodyLength: 1024 * 1024,
-			responseType: "text",
-			headers: { Accept: "text/html", "User-Agent": "Mozilla/5.0 (compatible; VeenewBot/1.0)" },
-			httpAgent: new http.Agent({ lookup: publicOnlyLookup }),
-			httpsAgent: new https.Agent({ lookup: publicOnlyLookup }),
-		});
-		if (!String(response.headers["content-type"] || "").includes("html")) return "";
-		const { document } = new JSDOM(String(response.data)).window;
-		const title = document.querySelector("title")?.textContent || "";
-		return title.replace(/\s+/g, " ").trim().slice(0, BOOKMARK_TITLE_MAX);
-	} catch {
-		return "";
-	}
 };
 
 /**
@@ -803,15 +685,12 @@ module.exports = {
 	getValidPassword,
 	verifyPassword,
 	getHashtagsFromText,
-	getValidBookmarkFields,
-	getValidMicroblogFields,
 	getValidGuestbookFields,
 	getValidSubscriberEmail,
 	escapeHtml,
 	toScriptJson,
 	getClientIp,
 	verifyTurnstile,
-	fetchPageTitle,
 	getValidPhotoType,
 	assertFaviconIsPng,
 	getFaviconKey,

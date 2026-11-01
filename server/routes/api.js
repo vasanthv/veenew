@@ -49,14 +49,6 @@ router.post("/pages", isEmailVerified, rateLimit({ max: 5 }), apiHandler.createP
 router.put("/pages/:id", isEmailVerified, apiHandler.updatePage);
 router.delete("/pages/:id", apiHandler.deletePage);
 
-router.post("/bookmarks", isEmailVerified, rateLimit({ max: 60 }), apiHandler.createBookmark);
-router.put("/bookmarks/:id", isEmailVerified, rateLimit({ max: 60 }), apiHandler.updateBookmark);
-router.delete("/bookmarks/:id", apiHandler.deleteBookmark);
-
-router.post("/microblogs", isEmailVerified, rateLimit({ max: 60 }), apiHandler.createMicroblog);
-router.put("/microblogs/:id", isEmailVerified, rateLimit({ max: 60 }), apiHandler.updateMicroblog);
-router.delete("/microblogs/:id", apiHandler.deleteMicroblog);
-
 router.put("/guestbook/:id", rateLimit({ max: 60 }), apiHandler.updateGuestbookEntry);
 router.delete("/guestbook/:id", apiHandler.deleteGuestbookEntry);
 

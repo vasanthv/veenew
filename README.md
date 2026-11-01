@@ -1,6 +1,6 @@
 # Veenew
 
-A simple blogging platform at its core, but flexible enough for regular blogs, microblogs, bookmarks, essays, journals, personal websites, and everything in between. No follows, no likes, just your thoughts.
+A simple blogging platform at its core, but flexible enough for regular blogs, essays, journals, personal websites, and everything in between. No follows, no likes, just your thoughts.
 
 ## Tech stack
 

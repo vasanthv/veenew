@@ -63,17 +63,6 @@ const postSchema = new Schema({
 	updatedOn: Date,
 });
 
-const bookmarkSchema = new Schema({
-	user: { type: Schema.Types.ObjectId, ref: "Users", index: true },
-	isPrivate: { type: Boolean, default: false, index: true },
-	title: String,
-	url: { type: String, required: true },
-	notes: String,
-	hashtags: [{ type: String, index: true }],
-	createdOn: { type: Date, default: Date.now },
-	updatedOn: Date,
-});
-
 const photoSchema = new Schema({
 	user: { type: Schema.Types.ObjectId, ref: "Users", index: true },
 	// Private: the S3 location is never sent to the browser, photos are served through /photos/:id.
@@ -82,14 +71,6 @@ const photoSchema = new Schema({
 	contentType: { type: String, required: true },
 	size: { type: Number, required: true },
 	createdOn: { type: Date, default: Date.now },
-});
-
-const microblogSchema = new Schema({
-	user: { type: Schema.Types.ObjectId, ref: "Users", index: true },
-	text: String,
-	hashtags: [{ type: String, index: true }],
-	createdOn: { type: Date, default: Date.now },
-	updatedOn: Date,
 });
 
 const guestbookEntrySchema = new Schema({
@@ -149,15 +130,12 @@ module.exports = (() => {
 
 		const Users = mongoose.model("Users", userSchema);
 		const Posts = mongoose.model("Posts", postSchema);
-		const Bookmarks = mongoose.model("Bookmarks", bookmarkSchema);
-
 		const Photos = mongoose.model("Photos", photoSchema);
-		const Microblogs = mongoose.model("Microblogs", microblogSchema);
 		const GuestbookEntries = mongoose.model("GuestbookEntries", guestbookEntrySchema);
 
 		const Subscribers = mongoose.model("Subscribers", subscriberSchema);
 
-		return { Posts, Users, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribers };
+		return { Posts, Users, Photos, GuestbookEntries, Subscribers };
 	};
 	return {
 		getInstance: () => {

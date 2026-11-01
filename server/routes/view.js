@@ -1,10 +1,8 @@
 const router = require("express").Router();
 const { isValidObjectId } = require("mongoose");
-const { Users, Posts, Bookmarks, Photos, Microblogs } = require("../model").getInstance();
+const { Users, Posts, Photos } = require("../model").getInstance();
 const {
 	getAllPosts,
-	getAllBookmarks,
-	getAllMicroblogs,
 	getAllGuestbookEntries,
 	getAllSubscribers,
 	getAllPhotos,
@@ -121,62 +119,6 @@ router.get("/pages/edit/:id", requireLogin, async (req, res, next) => {
 	}
 });
 
-router.get("/bookmarks", requireLogin, async (req, res, next) => {
-	try {
-		const bookmarks = await getAllBookmarks({ user: req.user._id });
-		res.render("bookmarks/index", { user: req.user, bookmarks, csrfToken: req.csrfToken });
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/bookmarks/new", requireLogin, (req, res, next) => {
-	try {
-		res.render("bookmarks/editor", { user: req.user, csrfToken: req.csrfToken });
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/bookmarks/edit/:id", requireLogin, async (req, res, next) => {
-	try {
-		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
-		const bookmark = await Bookmarks.findOne({ _id: req.params.id, user: req.user._id }).lean();
-		if (!bookmark) return res.status(404).render("404", { user: req.user });
-		res.render("bookmarks/editor", { user: req.user, bookmark, csrfToken: req.csrfToken });
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/microblogs", requireLogin, async (req, res, next) => {
-	try {
-		const microblogs = await getAllMicroblogs({ user: req.user._id });
-		res.render("microblogs/index", { user: req.user, microblogs, getRelativeTime, csrfToken: req.csrfToken });
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/microblogs/new", requireLogin, (req, res, next) => {
-	try {
-		res.render("microblogs/editor", { user: req.user, csrfToken: req.csrfToken });
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/microblogs/edit/:id", requireLogin, async (req, res, next) => {
-	try {
-		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
-		const microblog = await Microblogs.findOne({ _id: req.params.id, user: req.user._id }).lean();
-		if (!microblog) return res.status(404).render("404", { user: req.user });
-		res.render("microblogs/editor", { user: req.user, microblog, csrfToken: req.csrfToken });
-	} catch (error) {
-		next(error);
-	}
-});
-
 router.get("/guestbook", requireLogin, async (req, res, next) => {
 	try {
 		const entries = await getAllGuestbookEntries({ user: req.user._id, isConfirmed: true });
@@ -274,10 +216,8 @@ router.get("/admin", requireLogin, async (req, res, next) => {
 router.get("/export", requireLogin, async (req, res, next) => {
 	try {
 		const owner = { user: req.user._id };
-		const [allPosts, bookmarks, microblogs, photos, guestbookEntries, subscribers] = await Promise.all([
+		const [allPosts, photos, guestbookEntries, subscribers] = await Promise.all([
 			Posts.find(owner).lean().exec(),
-			getAllBookmarks(owner),
-			getAllMicroblogs(owner),
 			getAllPhotos(owner),
 			getAllGuestbookEntries(owner),
 			getAllSubscribers(owner),
@@ -303,19 +243,6 @@ router.get("/export", requireLogin, async (req, res, next) => {
 			createdOn: req.user.createdOn,
 			posts: allPosts.filter((post) => post.type !== "page").map(toItem),
 			pages: allPosts.filter((post) => post.type === "page").map(toItem),
-			bookmarks: bookmarks.map((bookmark) => ({
-				title: bookmark.title,
-				url: bookmark.url,
-				notes: bookmark.notes,
-				tags: bookmark.hashtags,
-				isPrivate: bookmark.isPrivate,
-				date: bookmark.createdOn,
-			})),
-			microblogs: microblogs.map((microblog) => ({
-				text: microblog.text,
-				tags: microblog.hashtags,
-				date: microblog.createdOn,
-			})),
 			// The image files can't be put in a JSON file, so each photo is listed with the link to download it.
 			photos: photos.map((photo) => ({
 				url: `${baseUrl}photos/${photo._id}`,

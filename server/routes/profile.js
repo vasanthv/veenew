@@ -3,7 +3,7 @@ const express = require("express");
 const { isValidObjectId } = require("mongoose");
 const router = express.Router();
 
-const { Posts, Photos, Microblogs } = require("../model").getInstance();
+const { Posts, Photos } = require("../model").getInstance();
 const { getObjectStream } = require("../utils/s3");
 const { rateLimit, requireSameOrigin } = require("../middlewares");
 const {
@@ -26,7 +26,6 @@ const {
 	getPostDate,
 	isPublished,
 	getPostPath,
-	getRelativeTime,
 	getThemeStyleTag,
 	getCustomStyleTag,
 } = require("../utils");
@@ -116,20 +115,6 @@ router.get("/posts/tag/:tag", async (req, res, next) => {
 			url: config.URL,
 			...pagination,
 		});
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.get("/microblog/:id", async (req, res, next) => {
-	try {
-		if (!isValidObjectId(req.params.id)) return res.status(404).render("404");
-		const microblog = await Microblogs.findOne({ _id: req.params.id, user: req.profileUser._id })
-			.populate("user", "username name")
-			.lean();
-		if (!microblog) return res.status(404).render("404");
-
-		res.render("microblogs/single", { microblog, title: "Microblog", getRelativeTime });
 	} catch (error) {
 		next(error);
 	}

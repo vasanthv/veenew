@@ -6,7 +6,7 @@ const utils = require("./utils");
 const s3 = require("./utils/s3");
 const config = require("../config");
 const constants = require("./constants");
-const { Users, Posts, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribers } = require("./model").getInstance();
+const { Users, Posts, Photos, GuestbookEntries, Subscribers } = require("./model").getInstance();
 
 const signUp = async (req, res, next) => {
 	try {
@@ -403,72 +403,6 @@ const deletePage = async (req, res, next) => {
 		if (utils.isHomePage(page)) return utils.httpError(400, "The home page cannot be deleted");
 		await Posts.deleteOne({ _id: page._id });
 		res.json({ message: "Page deleted" });
-	} catch (error) {
-		next(error);
-	}
-};
-
-const createBookmark = async (req, res, next) => {
-	try {
-		const fields = await utils.getValidBookmarkFields(req.body);
-		const bookmark = await new Bookmarks({ ...fields, user: req.user._id, createdOn: new Date() }).save();
-		res.json({ message: "Bookmark added", bookmark });
-	} catch (error) {
-		next(error);
-	}
-};
-
-const updateBookmark = async (req, res, next) => {
-	try {
-		const bookmark = await Bookmarks.findOne({ _id: req.params.id, user: req.user._id }).exec();
-		if (!bookmark) return utils.httpError(404, "Bookmark not found");
-
-		const fields = await utils.getValidBookmarkFields(req.body);
-		await Bookmarks.updateOne({ _id: bookmark._id }, { ...fields, updatedOn: new Date() });
-		res.json({ message: "Bookmark updated" });
-	} catch (error) {
-		next(error);
-	}
-};
-
-const deleteBookmark = async (req, res, next) => {
-	try {
-		const bookmark = await Bookmarks.findOneAndDelete({ _id: req.params.id, user: req.user._id }).exec();
-		if (!bookmark) return utils.httpError(404, "Bookmark not found");
-		res.json({ message: "Bookmark deleted" });
-	} catch (error) {
-		next(error);
-	}
-};
-
-const createMicroblog = async (req, res, next) => {
-	try {
-		const fields = utils.getValidMicroblogFields(req.body);
-		const microblog = await new Microblogs({ ...fields, user: req.user._id, createdOn: new Date() }).save();
-		res.json({ message: "Microblog added", microblog });
-	} catch (error) {
-		next(error);
-	}
-};
-
-const updateMicroblog = async (req, res, next) => {
-	try {
-		const microblog = await Microblogs.findOne({ _id: req.params.id, user: req.user._id }).exec();
-		if (!microblog) return utils.httpError(404, "Microblog not found");
-
-		const fields = utils.getValidMicroblogFields(req.body);
-		await Microblogs.updateOne({ _id: microblog._id }, { ...fields, updatedOn: new Date() });
-		res.json({ message: "Microblog updated" });
-	} catch (error) {
-		next(error);
-	}
-};
-
-const deleteMicroblog = async (req, res, next) => {
-	try {
-		const microblog = await Microblogs.findOneAndDelete({ _id: req.params.id, user: req.user._id }).exec();
-		if (!microblog) return utils.httpError(404, "Microblog not found");
-		res.json({ message: "Microblog deleted" });
 	} catch (error) {
 		next(error);
 	}
@@ -936,8 +870,6 @@ const adminDeleteBlog = async (req, res, next) => {
 
 		await Promise.all([
 			Posts.deleteMany(owner),
-			Bookmarks.deleteMany(owner),
-			Microblogs.deleteMany(owner),
 			Photos.deleteMany(owner),
 			GuestbookEntries.deleteMany(owner),
 			Subscribers.deleteMany(owner),
@@ -985,12 +917,6 @@ module.exports = {
 	createPage,
 	updatePage,
 	deletePage,
-	createBookmark,
-	updateBookmark,
-	deleteBookmark,
-	createMicroblog,
-	updateMicroblog,
-	deleteMicroblog,
 	createGuestbookEntry,
 	previewGuestbookEntry,
 	confirmGuestbookEntry,

@@ -2,7 +2,6 @@ const {
 	httpError,
 	getPostDate,
 	isPublished,
-	getRelativeTime,
 	getPostPath,
 	markdownToHtml,
 	getValidSlug,
@@ -15,8 +14,7 @@ const {
 } = require("./utils");
 const config = require("../../config");
 const constants = require("../constants");
-const { Users, Posts, Bookmarks, Photos, Microblogs, GuestbookEntries, Subscribers } =
-	require("../model").getInstance();
+const { Users, Posts, Photos, GuestbookEntries, Subscribers } = require("../model").getInstance();
 
 /**
  * Builds a case-insensitive regex that matches the whole value literally.
@@ -227,7 +225,7 @@ const blogHasForm = async (userId, tag) => {
 
 const LATEST_POSTS_COUNT = 5;
 const DYNAMIC_CONTENT_TAG =
-	/\{\{\s*(posts\.all|posts\.latest|posts\.tag\.[a-zA-Z0-9]+|tags\.all|bookmarks\.all|bookmarks\.tag\.[a-zA-Z0-9]+|photos\.grid|microblogs\.all|microblogs\.tag\.[a-zA-Z0-9]+|guestbook\.form|guestbook\.entries\.approved|subscription\.form)\s*\}\}/;
+	/\{\{\s*(posts\.all|posts\.latest|posts\.tag\.[a-zA-Z0-9]+|tags\.all|photos\.grid|guestbook\.form|guestbook\.entries\.approved|subscription\.form)\s*\}\}/;
 
 /**
  * Renders a list of post links as HTML.
@@ -274,22 +272,6 @@ const renderTagList = (tags) => {
 };
 
 /**
- * Renders a list of bookmarks as HTML. Titles and notes are plain text, so they are escaped.
- * @param {Object[]} bookmarks - Bookmarks with title, url, notes and hashtags
- * @returns {string} HTML list, or an empty-state message when there are no bookmarks
- */
-const renderBookmarkList = (bookmarks) => {
-	if (bookmarks.length === 0) return '<div class="empty">No bookmarks to show.</div>';
-	const items = bookmarks.map((bookmark) => {
-		const label = bookmark.title || bookmark.url;
-		const link = `<a href="${escapeHtml(bookmark.url)}" target="_blank" rel="nofollow ugc noopener noreferrer">${escapeHtml(label)}</a>`;
-		const notes = bookmark.notes ? `<br /><small>${escapeHtml(bookmark.notes)}</small>` : "";
-		return `<li>${link}${notes}</li>`;
-	});
-	return `<ul class="plain-list">${items.join("")}</ul>`;
-};
-
-/**
  * Renders photos as a grid of square thumbnails. Each one opens the raw image in a new tab.
  * @param {Object[]} photos - Photos with _id
  * @returns {string} HTML grid, or an empty-state message when there are no photos
@@ -301,21 +283,6 @@ const renderPhotoGrid = (photos) => {
 			`<a href="/photos/${photo._id}" target="_blank" rel="noopener noreferrer"><img src="/photos/${photo._id}" alt="" loading="lazy" /></a>`
 	);
 	return `<div class="photo-grid">${items.join("")}</div>`;
-};
-
-/**
- * Renders microblogs as a list, newest first. Text is plain, so it is escaped and line breaks are kept.
- * @param {Object[]} microblogs - Microblogs with text and createdOn
- * @returns {string} HTML list, or an empty-state message when there are no microblogs
- */
-const renderMicroblogList = (microblogs) => {
-	if (microblogs.length === 0) return '<div class="empty">No microblogs to show.</div>';
-	const items = microblogs.map((microblog) => {
-		const date = new Date(microblog.createdOn);
-		const time = `<small><a href="/microblog/${microblog._id}"><time datetime="${date.toISOString()}" title="${date.toISOString().slice(0, 10)}">${getRelativeTime(date)}</time></a></small>`;
-		return `<li>${escapeHtml(microblog.text).replace(/\n/g, "<br />")}<br />${time}</li>`;
-	});
-	return `<ul class="plain-list">${items.join("")}</ul>`;
 };
 
 /**
@@ -364,11 +331,11 @@ const renderGuestbookEntries = (entries) => {
 
 /**
  * Replaces dynamic content tags in page HTML with live content: {{posts.all}} lists every
- * post, {{posts.latest}} the most recent five, {{tags.all}} every tag and {{bookmarks.all}} the public bookmarks
- * and {{photos.grid}} a grid of the photos and {{microblogs.all}} every microblog,
+ * post, {{posts.latest}} the most recent five, {{tags.all}} every tag
+ * and {{photos.grid}} a grid of the photos,
  * {{guestbook.form}} a form to sign the guestbook, {{guestbook.entries.approved}} the approved guestbook entries
  * and {{subscription.form}} a form to subscribe to new posts by email.
- * {{posts.tag.name}}, {{bookmarks.tag.name}} and {{microblogs.tag.name}} list only the items tagged #name.
+ * {{posts.tag.name}} lists only the posts tagged #name.
  * A tag is only replaced when it stands alone as a paragraph, so it can still be shown inside
  * a code span or block.
  * @param {string} html - Rendered page HTML
@@ -389,28 +356,20 @@ const renderDynamicContent = async (html, userId) => {
 				)
 			),
 		"tags.all": async () => renderTagList(await getGroupedTags(userId)),
-		"bookmarks.all": async () => renderBookmarkList(await getAllBookmarks({ user: userId, isPrivate: false })),
 		"photos.grid": async () => renderPhotoGrid(await getAllPhotos({ user: userId })),
-		"microblogs.all": async () => renderMicroblogList(await getAllMicroblogs({ user: userId })),
 		"guestbook.form": async () => renderGuestbookForm(),
 		"subscription.form": async () => renderSubscriptionForm(),
 		"guestbook.entries.approved": async () =>
 			renderGuestbookEntries(await getAllGuestbookEntries({ user: userId, isConfirmed: true, isApproved: true })),
 	};
 
-	const tagged = {
-		posts: async (hashtags) =>
-			renderPostList(
-				(await getAllPosts({ user: userId, type: "post", hashtags }, undefined, { publishedOnly: true })).posts
-			),
-		bookmarks: async (hashtags) =>
-			renderBookmarkList(await getAllBookmarks({ user: userId, isPrivate: false, hashtags })),
-		microblogs: async (hashtags) => renderMicroblogList(await getAllMicroblogs({ user: userId, hashtags })),
-	};
-
-	const render = (name) => {
-		const [, kind, tag] = name.match(/^(posts|bookmarks|microblogs)\.tag\.(.+)$/) || [];
-		return kind ? tagged[kind](tag.toLowerCase()) : renderers[name]();
+	const render = async (name) => {
+		const [, tag] = name.match(/^posts\.tag\.(.+)$/) || [];
+		if (!tag) return renderers[name]();
+		const hashtags = tag.toLowerCase();
+		return renderPostList(
+			(await getAllPosts({ user: userId, type: "post", hashtags }, undefined, { publishedOnly: true })).posts
+		);
 	};
 
 	const standalone = new RegExp(`^\\s*${DYNAMIC_CONTENT_TAG.source}\\s*$`);
@@ -422,20 +381,6 @@ const renderDynamicContent = async (html, userId) => {
 	const rendered = Object.fromEntries(await Promise.all(names.map(async (name) => [name, await render(name)])));
 	return html.replace(tags, (_, name) => rendered[name]);
 };
-
-/**
- * Retrieves every bookmark matching a query, newest first, without pagination.
- * @param {Object} query - Mongo query to execute on Bookmarks collection
- * @returns {Promise<Object[]>} The bookmarks
- */
-const getAllBookmarks = (query) => Bookmarks.find(query).sort("-createdOn").lean().exec();
-
-/**
- * Retrieves every microblog matching a query, newest first, without pagination.
- * @param {Object} query - Mongo query to execute on Microblogs collection
- * @returns {Promise<Object[]>} The microblogs
- */
-const getAllMicroblogs = (query) => Microblogs.find(query).sort("-createdOn").lean().exec();
 
 /**
  * Retrieves every guestbook entry matching a query, newest first, without pagination.
@@ -474,8 +419,6 @@ const getRemainingContent = async (user) => {
 	const counts = await Promise.all([
 		Posts.countDocuments({ ...owner, type: { $ne: "page" } }),
 		Posts.countDocuments({ ...owner, type: "page", slug: { $ne: "" } }),
-		Bookmarks.countDocuments(owner),
-		Microblogs.countDocuments(owner),
 		Photos.countDocuments(owner),
 		GuestbookEntries.countDocuments(owner),
 		Subscribers.countDocuments(owner),
@@ -483,8 +426,6 @@ const getRemainingContent = async (user) => {
 	const labels = [
 		["post", "posts"],
 		["page", "pages"],
-		["bookmark", "bookmarks"],
-		["microblog", "microblogs"],
 		["photo", "photos"],
 		["guestbook entry", "guestbook entries"],
 		["subscriber", "subscribers"],
@@ -510,9 +451,7 @@ module.exports = {
 	getUserByUsername,
 	getAllPosts,
 	renderDynamicContent,
-	getAllBookmarks,
 	getAllPhotos,
-	getAllMicroblogs,
 	getAllGuestbookEntries,
 	getAllSubscribers,
 	getConfirmedSubscribers,
