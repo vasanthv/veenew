@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Notes"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Notes"}); -%>
+
+    <section class="flex">
+      <div class="flex-1"></div>
+      <a href="/notes/new">+ New note</a>
+    </section>
+    <blockquote>
+      <em>Notes are private, only you can see them, and they’ll never appear on your blog. Use this space as a personal journal or to write and save draft posts before publishing them.</em>
+    </blockquote>
+
+    <section>
+      <% if (notes.length <= 0) { %>
+      <div class="empty">No notes to show.</div>
+      <% } else { %>
+      <ul class="plain-list">
+        <% for (var i = 0; i < notes.length; i++) { %>
+        <li id="note-<%= notes[i]._id %>">
+          <a href="/notes/edit/<%= notes[i]._id %>"><%= notes[i].title %></a>
+          <small>&middot; <time datetime="<%= new Date(notes[i].updatedOn || notes[i].createdOn).toISOString() %>"><%= getRelativeTime(notes[i].updatedOn || notes[i].createdOn) %></time></small>
+        </li>
+        <% } %>
+      </ul>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

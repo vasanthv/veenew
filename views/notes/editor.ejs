@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<% const isEdit = typeof note !== "undefined"; %>
+<%- include('partials/html-head', {title: `${isEdit ? "Edit" : "New"} note`}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: `${isEdit ? "Edit" : "New"} note`}); -%>
+
+    <section id="postbox">
+      <form @submit.prevent="saveNote(<%- isEdit ? `'${note._id}'` : "" %>)">
+        <input type="text" v-model="note.title" placeholder="Title" maxlength="160" required />
+        <div class="spacer"></div>
+        <textarea v-model="note.text" placeholder="Body: start writing.."></textarea>
+        <div class="spacer"></div>
+        <div class="flex">
+          <div class="flex-1">
+            <% if (isEdit) { %>
+            <a href="javascript:void(0)" v-on:click="deleteNote('<%= note._id %>')" class="red">Delete note</a>
+            <% } %>
+          </div>
+          <button type="submit" :disabled="isLoading"><%- isEdit ? "Update" : "Create" %></button>
+        </div>
+      </form>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+  <% if (isEdit) { %>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.note = <%- toScriptJson({ title: note.title, text: note.text || "" }) %>;
+    };
+  </script>
+  <% } %>
+</body>
+
+</html>

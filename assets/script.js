@@ -18,6 +18,7 @@ const defaultState = function () {
 		blogsLoaded: false,
 		newsletter: { subject: "", message: "", testEmail: true },
 		myAccount: { username: "", email: "", password: "", name: "", description: "", menu: [], domain: "" },
+		note: { title: "", text: "" },
 		replies: {},
 		replyingTo: null,
 		replyText: "",
@@ -228,6 +229,27 @@ const App = Vue.createApp({
 				axios.delete(`/api/pages/${id}`).then((response) => {
 					this.setToast(response.data.message, "success");
 					redirect("/");
+				});
+			}
+		},
+		saveNote(id) {
+			if (this.isLoading) return;
+			if (!this.note.title.trim()) return this.setToast("Title cannot be empty");
+			if (!this.note.text.trim()) return this.setToast("Text cannot be empty");
+			const payload = { title: this.note.title.trim(), text: this.note.text };
+			this.isLoading = true;
+			(id ? axios.put("/api/notes/" + id, payload) : axios.post("/api/notes", payload))
+				.then((response) => {
+					this.setToast(response.data.message, "success");
+					if (!id) redirect("/notes");
+				})
+				.finally(() => (this.isLoading = false));
+		},
+		deleteNote(id) {
+			if (confirm("Are you sure you want to delete this note? There is no undo")) {
+				axios.delete(`/api/notes/${id}`).then((response) => {
+					this.setToast(response.data.message, "success");
+					redirect("/notes");
 				});
 			}
 		},

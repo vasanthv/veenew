@@ -43,6 +43,40 @@ router.get("/posts", requireLogin, async (req, res, next) => {
 	}
 });
 
+router.get("/notes", requireLogin, async (req, res, next) => {
+	try {
+		const notes = await Posts.find({ user: req.user._id, type: "note" })
+			.select("title createdOn updatedOn")
+			.sort("-createdOn")
+			.lean()
+			.exec();
+		res.render("notes/index", { user: req.user, notes, getRelativeTime });
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.get("/notes/new", requireLogin, (req, res, next) => {
+	try {
+		res.render("notes/editor", { user: req.user, csrfToken: req.csrfToken });
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.get("/notes/edit/:id", requireLogin, async (req, res, next) => {
+	try {
+		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
+		const note = await Posts.findOne({ _id: req.params.id, user: req.user._id, type: "note" })
+			.select("title text")
+			.lean();
+		if (!note) return res.status(404).render("404", { user: req.user });
+		res.render("notes/editor", { user: req.user, note, csrfToken: req.csrfToken });
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.get("/verify/:code", async (req, res, next) => {
 	try {
 		const user = await Users.exists({ emailVerificationCode: String(req.params.code) });
@@ -254,8 +288,16 @@ router.get("/export", requireLogin, async (req, res, next) => {
 			email: req.user.email,
 			description: req.user.description,
 			createdOn: req.user.createdOn,
-			posts: allPosts.filter((post) => post.type !== "page").map(toItem),
+			posts: allPosts.filter((post) => post.type === "post").map(toItem),
 			pages: allPosts.filter((post) => post.type === "page").map(toItem),
+			notes: allPosts
+				.filter((post) => post.type === "note")
+				.map((note) => ({
+					title: note.title,
+					text: note.text,
+					date: note.createdOn,
+					updatedOn: note.updatedOn,
+				})),
 			// The image files can't be put in a JSON file, so each photo is listed with the link to download it.
 			photos: photos.map((photo) => ({
 				url: `${baseUrl}photos/${photo._id}`,

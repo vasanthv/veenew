@@ -1,3 +1,4 @@
+const { isValidObjectId } = require("mongoose");
 const {
 	httpError,
 	getPostDate,
@@ -7,6 +8,7 @@ const {
 	getValidSlug,
 	slugify,
 	getHashtagsFromText,
+	hasCommentsTag,
 	escapeHtml,
 	toDateString,
 	formatPostDate,
@@ -401,6 +403,28 @@ const renderDynamicContent = async (html, userId, postId) => {
 };
 
 /**
+ * Finds the post or page a visitor is commenting on. It must belong to the blog being viewed, be published
+ * and contain the {{comments}} tag, since a submission to any other post could only come from someone
+ * bypassing the form. Private notes never accept comments.
+ * @param {Object} profileUser - Owner of the blog being viewed
+ * @param {*} postId - Post id from the request body
+ * @returns {Promise<Object>} The post, with _id and title
+ * @throws {Error} 404 when the post does not accept comments
+ */
+const getCommentablePost = async (profileUser, postId) => {
+	const post = isValidObjectId(postId)
+		? await Posts.findOne({ _id: String(postId), user: profileUser._id, type: { $in: ["post", "page"] } })
+				.select("title text publishedDate createdOn timezone")
+				.lean()
+				.exec()
+		: null;
+	if (!post || !isPublished(post) || !hasCommentsTag(post.text)) {
+		return httpError(404, "Comments are not enabled here");
+	}
+	return post;
+};
+
+/**
  * Retrieves every comment matching a query, without pagination. The confirmation code is never selected.
  * @param {Object} query - Mongo query to execute on Comments collection
  * @param {string} [sort] - Mongo sort, newest first by default
@@ -435,8 +459,9 @@ const getConfirmedSubscribers = (userId) =>
 const getRemainingContent = async (user) => {
 	const owner = { user: user._id };
 	const counts = await Promise.all([
-		Posts.countDocuments({ ...owner, type: { $ne: "page" } }),
+		Posts.countDocuments({ ...owner, type: "post" }),
 		Posts.countDocuments({ ...owner, type: "page", slug: { $ne: "" } }),
+		Posts.countDocuments({ ...owner, type: "note" }),
 		Photos.countDocuments(owner),
 		Comments.countDocuments(owner),
 		Subscribers.countDocuments(owner),
@@ -444,6 +469,7 @@ const getRemainingContent = async (user) => {
 	const labels = [
 		["post", "posts"],
 		["page", "pages"],
+		["note", "notes"],
 		["photo", "photos"],
 		["comment", "comments"],
 		["subscriber", "subscribers"],
@@ -471,6 +497,7 @@ module.exports = {
 	renderDynamicContent,
 	getAllPhotos,
 	getAllComments,
+	getCommentablePost,
 	getAllSubscribers,
 	getConfirmedSubscribers,
 	getRemainingContent,

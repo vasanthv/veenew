@@ -49,6 +49,10 @@ router.post("/pages", isEmailVerified, rateLimit({ max: 5 }), apiHandler.createP
 router.put("/pages/:id", isEmailVerified, apiHandler.updatePage);
 router.delete("/pages/:id", apiHandler.deletePage);
 
+router.post("/notes", rateLimit({ max: 60 }), apiHandler.createNote);
+router.put("/notes/:id", rateLimit({ max: 60 }), apiHandler.updateNote);
+router.delete("/notes/:id", apiHandler.deleteNote);
+
 router.put("/comments/:id", rateLimit({ max: 60 }), apiHandler.updateComment);
 router.delete("/comments/:id", apiHandler.deleteComment);
 

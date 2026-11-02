@@ -164,6 +164,19 @@ const getValidPost = (text) => {
 };
 
 /**
+ * Validates the body of a note. Notes are private and shown to their author only inside the editor,
+ * so the text is kept exactly as typed, with no sanitizing or conversion.
+ * @param {*} text - The note body to validate
+ * @returns {string} The note body
+ * @throws {Error} If the text is empty, not text or longer than a post
+ */
+const getValidNoteText = (text) => {
+	if (typeof text !== "string" || !text.trim()) return httpError(400, "Empty note");
+	if (text.length > 12000) return httpError(400, "Note is too long. Max. 12000 chars");
+	return text;
+};
+
+/**
  * Validates a page or post slug.
  * @param {string} slug - Slug to validate
  * @returns {string} Normalized slug
@@ -692,6 +705,7 @@ module.exports = {
 	getValidString,
 	getValidMenus,
 	getValidPost,
+	getValidNoteText,
 	getValidSlug,
 	slugify,
 	isHomePage,

@@ -327,7 +327,11 @@ const createPost = async (req, res, next) => {
 
 const updatePost = async (req, res, next) => {
 	try {
-		const post = await Posts.findOne({ _id: req.params.id, user: req.user._id }).exec();
+		const post = await Posts.findOne({
+			_id: req.params.id,
+			user: req.user._id,
+			type: { $in: ["post", "page"] },
+		}).exec();
 		if (!post) return utils.httpError(404, "Post not found");
 
 		const updateFields = {};
@@ -369,12 +373,58 @@ const updatePost = async (req, res, next) => {
 
 const deletePost = async (req, res, next) => {
 	try {
-		const post = await Posts.findOne({ _id: req.params.id, user: req.user._id }).exec();
+		const post = await Posts.findOne({
+			_id: req.params.id,
+			user: req.user._id,
+			type: { $in: ["post", "page"] },
+		}).exec();
 		if (!post) return utils.httpError(404, "Post not found");
 		if (utils.isHomePage(post)) return utils.httpError(400, "The home page cannot be deleted");
 		await Promise.all([Posts.deleteOne({ _id: post._id }), Comments.deleteMany({ post: post._id })]);
 
 		res.json({ message: "Post deleted" });
+	} catch (error) {
+		next(error);
+	}
+};
+
+/**
+ * Notes are private: only the author can create, read, change or delete them, and they are never rendered
+ * on the blog. The text is saved as typed, as markdown, with no HTML made from it.
+ */
+const createNote = async (req, res, next) => {
+	try {
+		const title = utils.getValidString(req.body.title, 1, 160, "Title");
+		const text = utils.getValidNoteText(req.body.text);
+		const note = await new Posts({ user: req.user._id, type: "note", title, text, createdOn: new Date() }).save();
+		res.json({ message: "Note created", note: { _id: note._id } });
+	} catch (error) {
+		next(error);
+	}
+};
+
+const updateNote = async (req, res, next) => {
+	try {
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Note not found");
+		const title = utils.getValidString(req.body.title, 1, 160, "Title");
+		const text = utils.getValidNoteText(req.body.text);
+		const note = await Posts.findOneAndUpdate(
+			{ _id: req.params.id, user: req.user._id, type: "note" },
+			{ $set: { title, text, updatedOn: new Date() } }
+		).exec();
+		if (!note) return utils.httpError(404, "Note not found");
+		res.json({ message: "Note updated" });
+	} catch (error) {
+		next(error);
+	}
+};
+
+const deleteNote = async (req, res, next) => {
+	try {
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Note not found");
+		const note = await Posts.findOneAndDelete({ _id: req.params.id, user: req.user._id, type: "note" }).exec();
+		if (!note) return utils.httpError(404, "Note not found");
+		res.json({ message: "Note deleted" });
 	} catch (error) {
 		next(error);
 	}
@@ -409,28 +459,6 @@ const deletePage = async (req, res, next) => {
 };
 
 /**
- * Finds the post or page a visitor is commenting on. It must belong to the blog being viewed, be published
- * and contain the {{comments}} tag, since a submission to any other post could only come from someone
- * bypassing the form.
- * @param {Object} profileUser - Owner of the blog being viewed
- * @param {*} postId - Post id from the request body
- * @returns {Promise<Object>} The post, with _id and title
- * @throws {Error} 404 when the post does not accept comments
- */
-const getCommentablePost = async (profileUser, postId) => {
-	const post = mongoose.isValidObjectId(postId)
-		? await Posts.findOne({ _id: String(postId), user: profileUser._id })
-				.select("title text publishedDate createdOn timezone")
-				.lean()
-				.exec()
-		: null;
-	if (!post || !utils.isPublished(post) || !utils.hasCommentsTag(post.text)) {
-		return utils.httpError(404, "Comments are not enabled here");
-	}
-	return post;
-};
-
-/**
  * Takes a visitor's comment on a post or page of the blog being viewed. The comment is saved unconfirmed
  * and the visitor is emailed a link to confirm it; the author only hears about it after that.
  */
@@ -440,7 +468,7 @@ const createComment = async (req, res, next) => {
 		// Bots fill in the hidden field. Pretend it worked so they don't adapt.
 		if (req.body.website) return res.redirect(303, "/comments/submitted");
 
-		const post = await getCommentablePost(profileUser, req.body.post);
+		const post = await utils.getCommentablePost(profileUser, req.body.post);
 		const fields = utils.getValidCommentFields(req.body);
 
 		const recent = await Comments.exists({
@@ -978,6 +1006,9 @@ module.exports = {
 	createPage,
 	updatePage,
 	deletePage,
+	createNote,
+	updateNote,
+	deleteNote,
 	createComment,
 	previewComment,
 	confirmComment,

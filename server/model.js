@@ -47,9 +47,11 @@ const userSchema = new Schema({
 	deletionDate: { type: Date, expires: 0 },
 });
 
+// Posts and pages are published on the blog. Notes share the schema but are private to the author: they have no slug,
+// are never rendered to HTML and are never read by the routes that serve a blog.
 const postSchema = new Schema({
 	user: { type: Schema.Types.ObjectId, ref: "Users", index: true },
-	type: { type: String, enum: ["post", "page"], default: "post", index: true },
+	type: { type: String, enum: ["post", "page", "note"], default: "post", index: true },
 	title: { type: String, required: true },
 	slug: { type: String, index: true },
 	hideTitle: { type: Boolean, default: false },
