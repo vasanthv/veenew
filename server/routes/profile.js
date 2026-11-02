@@ -7,9 +7,9 @@ const { Posts, Photos } = require("../model").getInstance();
 const { getObjectStream } = require("../utils/s3");
 const { rateLimit, requireSameOrigin } = require("../middlewares");
 const {
-	createGuestbookEntry,
-	previewGuestbookEntry,
-	confirmGuestbookEntry,
+	createComment,
+	previewComment,
+	confirmComment,
 	createSubscriber,
 	previewSubscription,
 	confirmSubscription,
@@ -31,8 +31,11 @@ const {
 } = require("../utils");
 const config = require("../../config");
 
+// The {{comments}} tag only means something on the blog itself, so feeds leave it out.
+const stripCommentsTag = (content) => content.replace(/(<p>\s*)?\{\{\s*comments\s*\}\}(\s*<\/p>)?/g, "");
+
 const renderPage = async (res, page, userId) => {
-	const html = await renderDynamicContent(page.html, userId);
+	const html = await renderDynamicContent(page.html, userId, page._id);
 	return res.render("pages/show", {
 		page: { ...page, html },
 		title: page.title,
@@ -97,6 +100,8 @@ router.get("/post/:slug", async (req, res, next) => {
 		const publishedDate = getPostDate(post);
 		const postDate = formatPostDate(publishedDate);
 
+		post.html = await renderDynamicContent(post.html, req.profileUser._id, post._id);
+
 		res.render("posts/single", { post, title: post.title, postDate, publishedDate });
 	} catch (error) {
 		next(error);
@@ -127,21 +132,21 @@ const showErrorsOnPage = (title) => (handler) => async (req, res, next) => {
 		res.status(error.httpErrorCode).render("profile/form-message", { title, message: error.message });
 	});
 };
-const guestbookErrors = showErrorsOnPage("Guestbook");
+const commentErrors = showErrorsOnPage("Comment");
 const subscribeErrors = showErrorsOnPage("Subscribe");
 const unsubscribeErrors = showErrorsOnPage("Unsubscribe");
 
-router.post("/guestbook", rateLimit({ max: 5 }), guestbookErrors(createGuestbookEntry));
+router.post("/comments", rateLimit({ max: 5 }), commentErrors(createComment));
 
-router.get("/guestbook/submitted", (req, res) =>
+router.get("/comments/submitted", (req, res) =>
 	res.render("profile/form-message", {
-		title: "Guestbook",
-		message: "Thanks! We emailed you a link. Open it to confirm your entry, and it will be sent to the author.",
+		title: "Comment",
+		message: "Thanks! We emailed you a link. Open it to confirm your comment, and it will be sent to the author.",
 	})
 );
 
-router.get("/guestbook/confirm/:code", guestbookErrors(previewGuestbookEntry));
-router.post("/guestbook/confirm/:code", guestbookErrors(confirmGuestbookEntry));
+router.get("/comments/confirm/:code", commentErrors(previewComment));
+router.post("/comments/confirm/:code", commentErrors(confirmComment));
 
 router.post("/subscribe", rateLimit({ max: 5 }), subscribeErrors(createSubscriber));
 
@@ -188,8 +193,8 @@ router.get(["/feed.xml", "/feed.json"], async (req, res, next) => {
 				title: post.title,
 				id: `${baseUrl}${getPostPath(post)}`,
 				link: `${baseUrl}${getPostPath(post)}`,
-				description: post.text,
-				content: post.html,
+				description: stripCommentsTag(post.text),
+				content: stripCommentsTag(post.html),
 				date: new Date(`${getPostDate(post)}T00:00:00Z`),
 			});
 		});

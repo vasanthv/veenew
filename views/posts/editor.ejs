@@ -57,6 +57,10 @@
               <tr><td><code>---</code></td><td>Horizontal line</td></tr>
             </tbody>
           </table>
+          <% if (!isPage) { %>
+          <h3>Comments</h3>
+          <p>Type <code>{{comments}}</code> on its own line to let visitors comment on this post.</p>
+          <% } %>
           <% if (isPage) { %>
           <h3>Dynamic content</h3>
           <p>Type any of these on its own line to show dynamic content on this page. Replace <code>name</code> with a tag, without the #.</p>
@@ -67,8 +71,7 @@
               <tr><td><code>{{posts.tag.name}}</code></td><td>Posts tagged #name</td></tr>
               <tr><td><code>{{tags.all}}</code></td><td>All tags</td></tr>
               <tr><td><code>{{photos.grid}}</code></td><td>Photo grid</td></tr>
-              <tr><td><code>{{guestbook.form}}</code></td><td>Form to sign the guestbook</td></tr>
-              <tr><td><code>{{guestbook.entries.approved}}</code></td><td>Approved guestbook entries</td></tr>
+              <tr><td><code>{{comments}}</code></td><td>Approved comments and a comment form</td></tr>
               <tr><td><code>{{subscription.form}}</code></td><td>Form to subscribe to new posts by email</td></tr>
             </tbody>
           </table>

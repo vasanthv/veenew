@@ -204,12 +204,12 @@ const slugify = (title) =>
 		.replace(/-+$/, "") || "post";
 
 /**
- * Returns the path of a post relative to its blog. Posts created before slugs existed
+ * Returns the path of a post or page relative to its blog. Posts created before slugs existed
  * fall back to their id.
- * @param {Object} post - Post with slug and _id
- * @returns {string} Path such as "post/hello-world"
+ * @param {Object} post - Post with type, slug and _id
+ * @returns {string} Path such as "post/hello-world", or "about" for a page ("" for the home page)
  */
-const getPostPath = (post) => `post/${post.slug || post._id}`;
+const getPostPath = (post) => (post.type === "page" ? post.slug : `post/${post.slug || post._id}`);
 
 /**
  * Hashes a password reset token for storage. Tokens are 256-bit random values,
@@ -276,25 +276,40 @@ const getValidPlainText = (value, maxLength, fieldName) => {
 	return text;
 };
 
-const GUESTBOOK_NAME_MAX = 80;
-const GUESTBOOK_EMAIL_MAX = 254;
-const GUESTBOOK_TEXT_MAX = 1000;
+const COMMENT_NAME_MAX = 80;
+const COMMENT_EMAIL_MAX = 254;
+const COMMENT_TEXT_MAX = 1000;
 
 /**
- * Validates a guestbook submission from a visitor.
+ * Validates a comment submission from a visitor.
  * @param {Object} body - Request body
  * @returns {{name: string, email: string, text: string}} Validated plain text name and comment, and a lowercased email
  * @throws {Error} If a field is empty, not text, too long or the email is invalid
  */
-const getValidGuestbookFields = (body) => {
-	const name = getValidPlainText(body.name, GUESTBOOK_NAME_MAX, "Name");
+const getValidCommentFields = (body) => {
+	const name = getValidPlainText(body.name, COMMENT_NAME_MAX, "Name");
 	if (!name) return httpError(400, "Name is required");
-	const text = getValidPlainText(body.text, GUESTBOOK_TEXT_MAX, "Comment");
+	const text = getValidPlainText(body.text, COMMENT_TEXT_MAX, "Comment");
 	if (!text) return httpError(400, "Comment is required");
 	const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-	if (email.length > GUESTBOOK_EMAIL_MAX) return httpError(400, "Invalid email");
+	if (email.length > COMMENT_EMAIL_MAX) return httpError(400, "Invalid email");
 	return { name, email: getValidEmail(email), text };
 };
+
+/**
+ * Validates the blog owner's reply to a comment.
+ * @param {*} value - Raw reply from the request body
+ * @returns {string} Trimmed plain text, empty to remove the reply
+ * @throws {Error} If the reply is not text or longer than a comment
+ */
+const getValidCommentReply = (value) => getValidPlainText(value, COMMENT_TEXT_MAX, "Reply");
+
+/**
+ * Whether a post or page's text has the {{comments}} tag that turns on comments for it.
+ * @param {string} text - Markdown source of the post or page
+ * @returns {boolean}
+ */
+const hasCommentsTag = (text) => /\{\{\s*comments\s*\}\}/.test(text ?? "");
 
 /**
  * Validates an email submitted through a subscription form.
@@ -304,7 +319,7 @@ const getValidGuestbookFields = (body) => {
  */
 const getValidSubscriberEmail = (body) => {
 	const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-	if (email.length > GUESTBOOK_EMAIL_MAX) return httpError(400, "Invalid email");
+	if (email.length > COMMENT_EMAIL_MAX) return httpError(400, "Invalid email");
 	return getValidEmail(email);
 };
 
@@ -685,7 +700,9 @@ module.exports = {
 	getValidPassword,
 	verifyPassword,
 	getHashtagsFromText,
-	getValidGuestbookFields,
+	getValidCommentFields,
+	hasCommentsTag,
+	getValidCommentReply,
 	getValidSubscriberEmail,
 	escapeHtml,
 	toScriptJson,

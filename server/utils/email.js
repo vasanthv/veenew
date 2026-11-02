@@ -76,37 +76,57 @@ const resetPasswordEmail = (username, email, token) => {
 };
 
 /**
- * Asks a guestbook visitor to confirm their email before the entry is sent to the blog's author.
- * @param {string} blogName - Name of the blog being signed.
+ * Asks a commenter to confirm their email before the comment is sent to the blog's author.
+ * @param {string} blogName - Name of the blog being commented on.
  * @param {string} name - Name the visitor entered.
  * @param {string} email - Visitor's email address.
- * @param {string} confirmLink - Single-use link that confirms the entry.
+ * @param {string} confirmLink - Single-use link that confirms the comment.
  * @returns {void}
  */
-const guestbookConfirmationEmail = (blogName, name, email, confirmLink) => {
+const commentConfirmationEmail = (blogName, name, email, confirmLink) => {
 	sendInBackground({
 		to: email,
-		subject: `Confirm your guestbook entry on ${blogName}`,
-		html: `Hello ${escapeHtml(name)}<br/><br/>Please click on the link below to confirm your guestbook entry on ${escapeHtml(blogName)}. Your entry is only sent to the author once you confirm.<br/><a href="${confirmLink}" target='_blank'>${confirmLink}</a><br/><br/>If you didn't write in this guestbook, you can ignore this email.<br/><br/>Thanks<br/>`,
-		text: `Hello ${name}\n\nPlease open the link below to confirm your guestbook entry on ${blogName}. Your entry is only sent to the author once you confirm.\n${confirmLink}\n\nIf you didn't write in this guestbook, you can ignore this email.\n\nThanks\n`,
+		subject: `Confirm your comment on ${blogName}`,
+		html: `Hello ${escapeHtml(name)}<br/><br/>Please click on the link below to confirm your comment on ${escapeHtml(blogName)}. Your comment is only sent to the author once you confirm.<br/><a href="${confirmLink}" target='_blank'>${confirmLink}</a><br/><br/>If you didn't write this comment, you can ignore this email.<br/><br/>Thanks<br/>`,
+		text: `Hello ${name}\n\nPlease open the link below to confirm your comment on ${blogName}. Your comment is only sent to the author once you confirm.\n${confirmLink}\n\nIf you didn't write this comment, you can ignore this email.\n\nThanks\n`,
 	});
 };
 
 /**
- * Tells a blog's author that someone confirmed a new guestbook entry.
+ * Tells a blog's author that someone confirmed a new comment.
  * @param {string} username - Author's username.
  * @param {string} email - Author's email address.
  * @param {string} name - Name the visitor entered.
  * @param {string} text - The visitor's comment.
+ * @param {string} postTitle - Title of the post or page that was commented on.
  * @returns {void}
  */
-const guestbookEntryEmail = (username, email, name, text) => {
-	const guestbookLink = `${config.URL}guestbook`;
+const commentEmail = (username, email, name, text, postTitle) => {
+	const commentsLink = `${config.URL}comments`;
 	sendInBackground({
 		to: email,
-		subject: `New guestbook entry from ${name}`,
-		html: `Hello @${username}<br/><br/><strong>${escapeHtml(name)}</strong> signed your guestbook:<br/><blockquote style="white-space: pre-wrap;">${escapeHtml(text)}</blockquote>Approve or delete it from your guestbook.<br/><a href="${guestbookLink}" target='_blank'>${guestbookLink}</a><br/><br/>Thanks<br/>`,
-		text: `Hello @${username}\n\n${name} signed your guestbook:\n\n${text}\n\nApprove or delete it from your guestbook.\n${guestbookLink}\n\nThanks\n`,
+		subject: `New comment from ${name}`,
+		html: `Hello @${username}<br/><br/><strong>${escapeHtml(name)}</strong> commented on "${escapeHtml(postTitle)}":<br/><blockquote style="white-space: pre-wrap;">${escapeHtml(text)}</blockquote>Approve or delete it from your comments.<br/><a href="${commentsLink}" target='_blank'>${commentsLink}</a><br/><br/>Thanks<br/>`,
+		text: `Hello @${username}\n\n${name} commented on "${postTitle}":\n\n${text}\n\nApprove or delete it from your comments.\n${commentsLink}\n\nThanks\n`,
+	});
+};
+
+/**
+ * Tells a commenter that the blog's author replied to their comment.
+ * @param {string} blogName - Name of the blog.
+ * @param {string} name - Name the commenter entered.
+ * @param {string} email - Commenter's email address.
+ * @param {string} reply - The author's reply.
+ * @param {string} postTitle - Title of the post or page that was commented on.
+ * @param {string} postLink - Link to that post or page.
+ * @returns {void}
+ */
+const commentReplyEmail = (blogName, name, email, reply, postTitle, postLink) => {
+	sendInBackground({
+		to: email,
+		subject: `${blogName} replied to your comment`,
+		html: `Hello ${escapeHtml(name)}<br/><br/>${escapeHtml(blogName)} replied to your comment on "${escapeHtml(postTitle)}":<br/><blockquote style="white-space: pre-wrap;">${escapeHtml(reply)}</blockquote><a href="${postLink}" target='_blank'>${postLink}</a><br/><br/>Thanks<br/>`,
+		text: `Hello ${name}\n\n${blogName} replied to your comment on "${postTitle}":\n\n${reply}\n\n${postLink}\n\nThanks\n`,
 	});
 };
 
@@ -248,8 +268,9 @@ module.exports = {
 	accountDeletionEmail,
 	blogDeletedByAdminEmail,
 	resetPasswordEmail,
-	guestbookConfirmationEmail,
-	guestbookEntryEmail,
+	commentConfirmationEmail,
+	commentEmail,
+	commentReplyEmail,
 	subscriptionConfirmationEmail,
 	notifySubscribers,
 	sendNewsletterEmails,

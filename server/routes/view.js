@@ -1,13 +1,14 @@
 const router = require("express").Router();
 const { isValidObjectId } = require("mongoose");
-const { Users, Posts, Photos } = require("../model").getInstance();
+const { Users, Posts, Photos, Comments } = require("../model").getInstance();
 const {
 	getAllPosts,
-	getAllGuestbookEntries,
 	getAllSubscribers,
 	getAllPhotos,
 	getUserBaseUrl,
+	getAllComments,
 	getPostDate,
+	getPostPath,
 	getRelativeTime,
 	getAvailableThemes,
 } = require("../utils");
@@ -119,10 +120,22 @@ router.get("/pages/edit/:id", requireLogin, async (req, res, next) => {
 	}
 });
 
-router.get("/guestbook", requireLogin, async (req, res, next) => {
+router.get("/comments", requireLogin, async (req, res, next) => {
 	try {
-		const entries = await getAllGuestbookEntries({ user: req.user._id, isConfirmed: true });
-		res.render("guestbook/index", { user: req.user, entries, getRelativeTime, csrfToken: req.csrfToken });
+		const comments = await Comments.find({ user: req.user._id, isConfirmed: true })
+			.select("-confirmationCode")
+			.sort("-createdOn")
+			.populate("post", "title slug type")
+			.lean()
+			.exec();
+		res.render("comments/index", {
+			user: req.user,
+			comments,
+			baseUrl: getUserBaseUrl(req.user),
+			getPostPath,
+			getRelativeTime,
+			csrfToken: req.csrfToken,
+		});
 	} catch (error) {
 		next(error);
 	}
@@ -216,10 +229,10 @@ router.get("/admin", requireLogin, async (req, res, next) => {
 router.get("/export", requireLogin, async (req, res, next) => {
 	try {
 		const owner = { user: req.user._id };
-		const [allPosts, photos, guestbookEntries, subscribers] = await Promise.all([
+		const [allPosts, photos, comments, subscribers] = await Promise.all([
 			Posts.find(owner).lean().exec(),
 			getAllPhotos(owner),
-			getAllGuestbookEntries(owner),
+			getAllComments(owner),
 			getAllSubscribers(owner),
 		]);
 		const baseUrl = getUserBaseUrl(req.user);
@@ -250,13 +263,15 @@ router.get("/export", requireLogin, async (req, res, next) => {
 				size: photo.size,
 				date: photo.createdOn,
 			})),
-			guestbookEntries: guestbookEntries.map((entry) => ({
-				name: entry.name,
-				email: entry.email,
-				text: entry.text,
-				isConfirmed: entry.isConfirmed,
-				isApproved: entry.isApproved,
-				date: entry.createdOn,
+			comments: comments.map((comment) => ({
+				post: comment.post,
+				name: comment.name,
+				email: comment.email,
+				text: comment.text,
+				reply: comment.reply,
+				isConfirmed: comment.isConfirmed,
+				isApproved: comment.isApproved,
+				date: comment.createdOn,
 			})),
 			subscribers: subscribers.map((subscriber) => ({
 				email: subscriber.email,

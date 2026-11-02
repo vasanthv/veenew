@@ -6,7 +6,7 @@ const utils = require("./utils");
 const s3 = require("./utils/s3");
 const config = require("../config");
 const constants = require("./constants");
-const { Users, Posts, Photos, GuestbookEntries, Subscribers } = require("./model").getInstance();
+const { Users, Posts, Photos, Comments, Subscribers } = require("./model").getInstance();
 
 const signUp = async (req, res, next) => {
 	try {
@@ -372,7 +372,7 @@ const deletePost = async (req, res, next) => {
 		const post = await Posts.findOne({ _id: req.params.id, user: req.user._id }).exec();
 		if (!post) return utils.httpError(404, "Post not found");
 		if (utils.isHomePage(post)) return utils.httpError(400, "The home page cannot be deleted");
-		await Posts.deleteOne({ _id: post._id });
+		await Promise.all([Posts.deleteOne({ _id: post._id }), Comments.deleteMany({ post: post._id })]);
 
 		res.json({ message: "Post deleted" });
 	} catch (error) {
@@ -401,7 +401,7 @@ const deletePage = async (req, res, next) => {
 		const page = await Posts.findOne({ _id: req.params.id, user: req.user._id, type: "page" }).exec();
 		if (!page) return utils.httpError(404, "Page not found");
 		if (utils.isHomePage(page)) return utils.httpError(400, "The home page cannot be deleted");
-		await Posts.deleteOne({ _id: page._id });
+		await Promise.all([Posts.deleteOne({ _id: page._id }), Comments.deleteMany({ post: page._id })]);
 		res.json({ message: "Page deleted" });
 	} catch (error) {
 		next(error);
@@ -409,57 +409,78 @@ const deletePage = async (req, res, next) => {
 };
 
 /**
- * Takes a visitor's guestbook entry for the blog being viewed. The entry is saved unconfirmed
+ * Finds the post or page a visitor is commenting on. It must belong to the blog being viewed, be published
+ * and contain the {{comments}} tag, since a submission to any other post could only come from someone
+ * bypassing the form.
+ * @param {Object} profileUser - Owner of the blog being viewed
+ * @param {*} postId - Post id from the request body
+ * @returns {Promise<Object>} The post, with _id and title
+ * @throws {Error} 404 when the post does not accept comments
+ */
+const getCommentablePost = async (profileUser, postId) => {
+	const post = mongoose.isValidObjectId(postId)
+		? await Posts.findOne({ _id: String(postId), user: profileUser._id })
+				.select("title text publishedDate createdOn timezone")
+				.lean()
+				.exec()
+		: null;
+	if (!post || !utils.isPublished(post) || !utils.hasCommentsTag(post.text)) {
+		return utils.httpError(404, "Comments are not enabled here");
+	}
+	return post;
+};
+
+/**
+ * Takes a visitor's comment on a post or page of the blog being viewed. The comment is saved unconfirmed
  * and the visitor is emailed a link to confirm it; the author only hears about it after that.
  */
-const createGuestbookEntry = async (req, res, next) => {
+const createComment = async (req, res, next) => {
 	try {
 		const profileUser = req.profileUser;
-		if (!(await utils.blogHasForm(profileUser._id, "guestbook.form"))) {
-			return utils.httpError(404, "This blog does not have a guestbook");
-		}
 		// Bots fill in the hidden field. Pretend it worked so they don't adapt.
-		if (req.body.website) return res.redirect(303, "/guestbook/submitted");
+		if (req.body.website) return res.redirect(303, "/comments/submitted");
 
-		const fields = utils.getValidGuestbookFields(req.body);
+		const post = await getCommentablePost(profileUser, req.body.post);
+		const fields = utils.getValidCommentFields(req.body);
 
-		const recent = await GuestbookEntries.exists({
+		const recent = await Comments.exists({
 			user: profileUser._id,
 			email: fields.email,
-			createdOn: { $gt: new Date(Date.now() - constants.GUESTBOOK_COOLDOWN_MS) },
+			createdOn: { $gt: new Date(Date.now() - constants.COMMENT_COOLDOWN_MS) },
 		});
-		if (recent) return utils.httpError(429, "Please wait a few minutes before signing again");
+		if (recent) return utils.httpError(429, "Please wait a few minutes before commenting again");
 
 		const confirmationCode = crypto.randomBytes(32).toString("hex");
-		await new GuestbookEntries({
+		await new Comments({
 			...fields,
 			user: profileUser._id,
+			post: post._id,
 			confirmationCode,
 			createdOn: new Date(),
-			expiresOn: new Date(Date.now() + constants.GUESTBOOK_CONFIRM_TTL_MS),
+			expiresOn: new Date(Date.now() + constants.COMMENT_CONFIRM_TTL_MS),
 		}).save();
 
 		const blogName = profileUser.name ?? profileUser.username;
-		utils.guestbookConfirmationEmail(
+		utils.commentConfirmationEmail(
 			blogName,
 			fields.name,
 			fields.email,
-			`${utils.getUserBaseUrl(profileUser)}guestbook/confirm/${confirmationCode}`
+			`${utils.getUserBaseUrl(profileUser)}comments/confirm/${confirmationCode}`
 		);
 
-		res.redirect(303, "/guestbook/submitted");
+		res.redirect(303, "/comments/submitted");
 	} catch (error) {
 		next(error);
 	}
 };
 
 /**
- * Shows the entry behind an emailed confirmation link, with a button to confirm it. Opening the link
- * changes nothing, so email scanners that prefetch links cannot confirm an entry; only the button does.
+ * Shows the comment behind an emailed confirmation link, with a button to confirm it. Opening the link
+ * changes nothing, so email scanners that prefetch links cannot confirm a comment; only the button does.
  */
-const previewGuestbookEntry = async (req, res, next) => {
+const previewComment = async (req, res, next) => {
 	try {
-		const entry = await GuestbookEntries.findOne({
+		const comment = await Comments.findOne({
 			user: req.profileUser._id,
 			confirmationCode: String(req.params.code),
 			isConfirmed: false,
@@ -467,58 +488,98 @@ const previewGuestbookEntry = async (req, res, next) => {
 			.select("name text")
 			.lean()
 			.exec();
-		if (!entry) return utils.httpError(400, "This confirmation link is invalid or has expired");
+		if (!comment) return utils.httpError(400, "This confirmation link is invalid or has expired");
 
-		res.render("guestbook/confirm", { title: "Guestbook", entry });
+		res.render("comments/confirm", { title: "Comment", comment });
 	} catch (error) {
 		next(error);
 	}
 };
 
 /**
- * Confirms a guestbook entry when the visitor presses the button on the confirmation page,
+ * Confirms a comment when the visitor presses the button on the confirmation page,
  * then tells the blog's author about it. The code is single-use: confirming again finds nothing.
  */
-const confirmGuestbookEntry = async (req, res, next) => {
+const confirmComment = async (req, res, next) => {
 	try {
-		const entry = await GuestbookEntries.findOneAndUpdate(
+		const comment = await Comments.findOneAndUpdate(
 			{ user: req.profileUser._id, confirmationCode: String(req.params.code), isConfirmed: false },
 			{ $set: { isConfirmed: true }, $unset: { confirmationCode: "", expiresOn: "" } }
 		).exec();
-		if (!entry) return utils.httpError(400, "This confirmation link is invalid or has expired");
+		if (!comment) return utils.httpError(400, "This confirmation link is invalid or has expired");
 
 		res.render("profile/form-message", {
-			title: "Guestbook",
-			message: "Thanks, your entry is confirmed. It has been sent to the author and will show once they approve it.",
+			title: "Comment",
+			message: "Thanks, your comment is confirmed. It has been sent to the author and will show once they approve it.",
 		});
 
-		utils.guestbookEntryEmail(req.profileUser.username, req.profileUser.email, entry.name, entry.text);
+		const post = await Posts.findById(comment.post).select("title").lean().exec();
+		utils.commentEmail(req.profileUser.username, req.profileUser.email, comment.name, comment.text, post?.title ?? "");
 	} catch (error) {
 		next(error);
 	}
 };
 
-const updateGuestbookEntry = async (req, res, next) => {
+/**
+ * Lets the blog owner approve or unapprove a comment, and write, change or remove their reply to it.
+ * Send isApproved, reply or both; an empty reply removes it.
+ */
+const updateComment = async (req, res, next) => {
 	try {
-		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Guestbook entry not found");
-		if (typeof req.body.isApproved !== "boolean") return utils.httpError(400, "isApproved must be true or false");
-		const entry = await GuestbookEntries.findOneAndUpdate(
+		const { isApproved, reply: rawReply } = req.body;
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Comment not found");
+		if (isApproved !== undefined && typeof isApproved !== "boolean") {
+			return utils.httpError(400, "isApproved must be true or false");
+		}
+		if (isApproved === undefined && rawReply === undefined) return utils.httpError(400, "Nothing to update");
+
+		const set = {};
+		const unset = {};
+		if (isApproved !== undefined) set.isApproved = isApproved;
+		const reply = rawReply === undefined ? undefined : utils.getValidCommentReply(rawReply);
+		if (reply) Object.assign(set, { reply, repliedOn: new Date() });
+		else if (reply === "") Object.assign(unset, { reply: "", repliedOn: "" });
+
+		// Without an operator Mongo rejects the update, so only send the ones that have fields.
+		const changes = {};
+		if (Object.keys(set).length) changes.$set = set;
+		if (Object.keys(unset).length) changes.$unset = unset;
+
+		// The comment found is the version before the update.
+		const comment = await Comments.findOneAndUpdate(
 			{ _id: req.params.id, user: req.user._id, isConfirmed: true },
-			{ $set: { isApproved: req.body.isApproved } }
+			changes
 		).exec();
-		if (!entry) return utils.httpError(404, "Guestbook entry not found");
-		res.json({ message: req.body.isApproved ? "Guestbook entry approved" : "Guestbook entry unapproved" });
+		if (!comment) return utils.httpError(404, "Comment not found");
+
+		// The commenter is only emailed about a reply that is new or changed.
+		if (reply && reply !== comment.reply) {
+			const post = await Posts.findById(comment.post).select("title slug type").lean().exec();
+			if (post) {
+				utils.commentReplyEmail(
+					req.user.name ?? req.user.username,
+					comment.name,
+					comment.email,
+					reply,
+					post.title,
+					`${utils.getUserBaseUrl(req.user)}${utils.getPostPath(post)}`
+				);
+			}
+		}
+
+		if (reply !== undefined) return res.json({ message: reply ? "Reply saved" : "Reply removed" });
+		res.json({ message: isApproved ? "Comment approved" : "Comment unapproved" });
 	} catch (error) {
 		next(error);
 	}
 };
 
-const deleteGuestbookEntry = async (req, res, next) => {
+const deleteComment = async (req, res, next) => {
 	try {
-		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Guestbook entry not found");
-		const entry = await GuestbookEntries.findOneAndDelete({ _id: req.params.id, user: req.user._id }).exec();
-		if (!entry) return utils.httpError(404, "Guestbook entry not found");
-		res.json({ message: "Guestbook entry deleted" });
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Comment not found");
+		const entry = await Comments.findOneAndDelete({ _id: req.params.id, user: req.user._id }).exec();
+		if (!entry) return utils.httpError(404, "Comment not found");
+		res.json({ message: "Comment deleted" });
 	} catch (error) {
 		next(error);
 	}
@@ -871,7 +932,7 @@ const adminDeleteBlog = async (req, res, next) => {
 		await Promise.all([
 			Posts.deleteMany(owner),
 			Photos.deleteMany(owner),
-			GuestbookEntries.deleteMany(owner),
+			Comments.deleteMany(owner),
 			Subscribers.deleteMany(owner),
 		]);
 		await Users.deleteOne({ _id: user._id });
@@ -917,11 +978,11 @@ module.exports = {
 	createPage,
 	updatePage,
 	deletePage,
-	createGuestbookEntry,
-	previewGuestbookEntry,
-	confirmGuestbookEntry,
-	updateGuestbookEntry,
-	deleteGuestbookEntry,
+	createComment,
+	previewComment,
+	confirmComment,
+	updateComment,
+	deleteComment,
 	createSubscriber,
 	previewSubscription,
 	confirmSubscription,

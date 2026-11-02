@@ -14,7 +14,7 @@ const {
 } = require("./utils");
 const config = require("../../config");
 const constants = require("../constants");
-const { Users, Posts, Photos, GuestbookEntries, Subscribers } = require("../model").getInstance();
+const { Users, Posts, Photos, Comments, Subscribers } = require("../model").getInstance();
 
 /**
  * Builds a case-insensitive regex that matches the whole value literally.
@@ -174,8 +174,8 @@ const getUniquePostSlug = async (userId, title, requestedSlug, excludeId = null)
 };
 
 /**
- * Gives a new blog something to start with: a home page listing the posts, a "Hello, world!" post,
- * an about page with a subscription form and a guestbook page, all linked from the top navigation.
+ * Gives a new blog something to start with: a home page with an intro, the list of posts and an email
+ * subscription form, and a "Hello, world!" post with a comment box at the bottom.
  * The author can edit or delete all of it like any other post or page.
  * @param {string} userId - Owner of the content
  * @returns {Promise<void>}
@@ -194,8 +194,6 @@ const createStarterContent = async (userId) => {
 
 	await Posts.insertMany([
 		page("Home", "", constants.STARTER_HOME_PAGE_TEXT),
-		page("About me", "about", constants.STARTER_ABOUT_PAGE_TEXT),
-		page("Guestbook", "guestbook", constants.STARTER_GUESTBOOK_PAGE_TEXT),
 		{
 			user: userId,
 			type: "post",
@@ -215,7 +213,7 @@ const createStarterContent = async (userId) => {
  * Whether a blog shows a given form on one of its pages. Used to refuse submissions to
  * blogs that don't have the form, since those could only come from someone bypassing it.
  * @param {string} userId - Blog owner
- * @param {"guestbook.form"|"subscription.form"} tag - Dynamic content tag that renders the form
+ * @param {"subscription.form"} tag - Dynamic content tag that renders the form
  * @returns {Promise<boolean>} True when a page of the blog contains the tag
  */
 const blogHasForm = async (userId, tag) => {
@@ -225,7 +223,7 @@ const blogHasForm = async (userId, tag) => {
 
 const LATEST_POSTS_COUNT = 5;
 const DYNAMIC_CONTENT_TAG =
-	/\{\{\s*(posts\.all|posts\.latest|posts\.tag\.[a-zA-Z0-9]+|tags\.all|photos\.grid|guestbook\.form|guestbook\.entries\.approved|subscription\.form)\s*\}\}/;
+	/\{\{\s*(posts\.all|posts\.latest|posts\.tag\.[a-zA-Z0-9]+|tags\.all|photos\.grid|comments|subscription\.form)\s*\}\}/;
 
 /**
  * Renders a list of post links as HTML.
@@ -286,20 +284,22 @@ const renderPhotoGrid = (photos) => {
 };
 
 /**
- * Renders the form visitors use to sign the guestbook. It posts to the blog itself, so it works
+ * Renders the form visitors use to comment on a post or page. It posts to the blog itself, so it works
  * without JavaScript. The hidden "website" field is a honeypot: people leave it empty, bots fill it in.
+ * @param {string} postId - Post or page the comment belongs to
  * @returns {string} HTML form
  */
-const renderGuestbookForm = () =>
-	`<form class="guestbook-form" method="post" action="/guestbook">
+const renderCommentForm = (postId) =>
+	`<form class="comment-form" method="post" action="/comments">
+<input type="hidden" name="post" value="${escapeHtml(String(postId))}" />
 <textarea name="text" placeholder="Write your comment" aria-label="Comment" maxlength="1000" required style="min-height: 6rem"></textarea>
-<div class="guestbook-form-row">
+<div class="comment-form-row">
 <input type="text" name="name" placeholder="Your name" aria-label="Name" maxlength="80" required />
 <input type="email" name="email" placeholder="Your email" aria-label="Email" maxlength="254" required />
 </div>
-<small class="help">We will email you a link to confirm your entry before it is sent to the author.</small>
+<small class="help">We will email you a link to confirm your comment before it is sent to the author.</small>
 <div style="position: absolute; left: -9999px" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off" /></div>
-<button type="submit">Sign the guestbook</button>
+<button type="submit">Post comment</button>
 </form>`;
 
 /**
@@ -315,34 +315,54 @@ const renderSubscriptionForm = () =>
 </form>`;
 
 /**
- * Renders approved guestbook entries, newest first. Only the name, comment and date are shown, never the email.
- * @param {Object[]} entries - Guestbook entries with name, text and createdOn
- * @returns {string} HTML list, or an empty-state message when there are no entries
+ * Renders the blog owner's reply under a comment, if there is one.
+ * @param {Object} comment - Comment with an optional reply
+ * @returns {string} HTML, empty when there is no reply
  */
-const renderGuestbookEntries = (entries) => {
-	if (entries.length === 0) return '<div class="empty">No guestbook entries to show.</div>';
-	const items = entries.map((entry) => {
-		const date = new Date(entry.createdOn);
-		const time = `<time datetime="${date.toISOString()}">${formatPostDate(toDateString(date))}</time>`;
-		return `<article class="guestbook-entry"><div><strong>${escapeHtml(entry.name)}</strong> &middot; <small>${time}</small></div><div style="white-space: pre-wrap;">${escapeHtml(entry.text)}</div></article>`;
-	});
-	return items.join("");
+const renderCommentReply = (comment) =>
+	comment.reply
+		? `<div class="comment-reply"><div><strong>Author</strong></div><div style="white-space: pre-wrap;">${escapeHtml(comment.reply)}</div></div>`
+		: "";
+
+/**
+ * Renders approved comments, oldest first. Only the name, comment and date are shown, never the email.
+ * @param {Object[]} comments - Comments with name, text and createdOn
+ * @returns {string} HTML list, empty when there are no comments
+ */
+const renderCommentList = (comments) =>
+	comments
+		.map((comment) => {
+			const date = new Date(comment.createdOn);
+			const time = `<time datetime="${date.toISOString()}">${formatPostDate(toDateString(date))}</time>`;
+			return `<article class="comment"><div><strong>${escapeHtml(comment.name)}</strong> &middot; <small>${time}</small></div><div style="white-space: pre-wrap;">${escapeHtml(comment.text)}</div>${renderCommentReply(comment)}</article>`;
+		})
+		.join("");
+
+/**
+ * Renders the comments of a post or page followed by the form to add one.
+ * @param {string} postId - Post or page the comments belong to
+ * @returns {Promise<string>} HTML section
+ */
+const renderComments = async (postId) => {
+	const comments = await getAllComments({ post: postId, isConfirmed: true, isApproved: true }, "createdOn");
+	return `<section class="comments"><h3>Comments</h3>${renderCommentList(comments)}${renderCommentForm(postId)}</section>`;
 };
 
 /**
  * Replaces dynamic content tags in page HTML with live content: {{posts.all}} lists every
  * post, {{posts.latest}} the most recent five, {{tags.all}} every tag
  * and {{photos.grid}} a grid of the photos,
- * {{guestbook.form}} a form to sign the guestbook, {{guestbook.entries.approved}} the approved guestbook entries
+ * {{comments}} the approved comments of the post or page with a form to add one,
  * and {{subscription.form}} a form to subscribe to new posts by email.
  * {{posts.tag.name}} lists only the posts tagged #name.
  * A tag is only replaced when it stands alone as a paragraph, so it can still be shown inside
  * a code span or block.
  * @param {string} html - Rendered page HTML
  * @param {string} userId - Author whose content is listed
+ * @param {string} postId - The post or page being rendered, which {{comments}} belongs to
  * @returns {Promise<string>} HTML with the tags replaced
  */
-const renderDynamicContent = async (html, userId) => {
+const renderDynamicContent = async (html, userId, postId) => {
 	if (!html || !DYNAMIC_CONTENT_TAG.test(html)) return html;
 
 	const renderers = {
@@ -357,10 +377,8 @@ const renderDynamicContent = async (html, userId) => {
 			),
 		"tags.all": async () => renderTagList(await getGroupedTags(userId)),
 		"photos.grid": async () => renderPhotoGrid(await getAllPhotos({ user: userId })),
-		"guestbook.form": async () => renderGuestbookForm(),
+		comments: async () => renderComments(postId),
 		"subscription.form": async () => renderSubscriptionForm(),
-		"guestbook.entries.approved": async () =>
-			renderGuestbookEntries(await getAllGuestbookEntries({ user: userId, isConfirmed: true, isApproved: true })),
 	};
 
 	const render = async (name) => {
@@ -383,13 +401,13 @@ const renderDynamicContent = async (html, userId) => {
 };
 
 /**
- * Retrieves every guestbook entry matching a query, newest first, without pagination.
- * The confirmation code is never selected.
- * @param {Object} query - Mongo query to execute on GuestbookEntries collection
- * @returns {Promise<Object[]>} The guestbook entries
+ * Retrieves every comment matching a query, without pagination. The confirmation code is never selected.
+ * @param {Object} query - Mongo query to execute on Comments collection
+ * @param {string} [sort] - Mongo sort, newest first by default
+ * @returns {Promise<Object[]>} The comments
  */
-const getAllGuestbookEntries = (query) =>
-	GuestbookEntries.find(query).select("-confirmationCode").sort("-createdOn").lean().exec();
+const getAllComments = (query, sort = "-createdOn") =>
+	Comments.find(query).select("-confirmationCode").sort(sort).lean().exec();
 
 /**
  * Retrieves every subscriber matching a query, newest first, without pagination.
@@ -420,14 +438,14 @@ const getRemainingContent = async (user) => {
 		Posts.countDocuments({ ...owner, type: { $ne: "page" } }),
 		Posts.countDocuments({ ...owner, type: "page", slug: { $ne: "" } }),
 		Photos.countDocuments(owner),
-		GuestbookEntries.countDocuments(owner),
+		Comments.countDocuments(owner),
 		Subscribers.countDocuments(owner),
 	]);
 	const labels = [
 		["post", "posts"],
 		["page", "pages"],
 		["photo", "photos"],
-		["guestbook entry", "guestbook entries"],
+		["comment", "comments"],
 		["subscriber", "subscribers"],
 	];
 	const remaining = counts.flatMap((count, i) => (count > 0 ? [`${count} ${labels[i][count === 1 ? 0 : 1]}`] : []));
@@ -452,7 +470,7 @@ module.exports = {
 	getAllPosts,
 	renderDynamicContent,
 	getAllPhotos,
-	getAllGuestbookEntries,
+	getAllComments,
 	getAllSubscribers,
 	getConfirmedSubscribers,
 	getRemainingContent,

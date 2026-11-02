@@ -18,6 +18,9 @@ const defaultState = function () {
 		blogsLoaded: false,
 		newsletter: { subject: "", message: "", testEmail: true },
 		myAccount: { username: "", email: "", password: "", name: "", description: "", menu: [], domain: "" },
+		replies: {},
+		replyingTo: null,
+		replyText: "",
 		photoFile: null,
 		deleteConfirm: false,
 		isLoading: false,
@@ -228,17 +231,32 @@ const App = Vue.createApp({
 				});
 			}
 		},
-		setGuestbookApproval(id, isApproved) {
-			axios.put(`/api/guestbook/${id}`, { isApproved }).then((response) => {
+		setCommentApproval(id, isApproved) {
+			axios.put(`/api/comments/${id}`, { isApproved }).then((response) => {
 				this.setToast(response.data.message, "success");
-				redirect("/guestbook");
+				redirect("/comments");
 			});
 		},
-		deleteGuestbookEntry(id) {
-			if (confirm("Are you sure you want to delete this guestbook entry? There is no undo")) {
-				axios.delete(`/api/guestbook/${id}`).then((response) => {
+		startReply(id) {
+			this.replyingTo = id;
+			this.replyText = this.replies[id] || "";
+		},
+		saveReply(id) {
+			if (this.isLoading) return;
+			this.isLoading = true;
+			axios
+				.put(`/api/comments/${id}`, { reply: this.replyText.trim() })
+				.then((response) => {
 					this.setToast(response.data.message, "success");
-					redirect("/guestbook");
+					redirect("/comments");
+				})
+				.finally(() => (this.isLoading = false));
+		},
+		deleteComment(id) {
+			if (confirm("Are you sure you want to delete this comment? There is no undo")) {
+				axios.delete(`/api/comments/${id}`).then((response) => {
+					this.setToast(response.data.message, "success");
+					redirect("/comments");
 				});
 			}
 		},

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Comments"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Comments"}); -%>
+
+    <blockquote>
+      <em>Let visitors comment on a post or page by adding <code v-pre>{{comments}}</code> to it. Their email is confirmed before the comment reaches you. <strong>Veenew does not moderate your comments.</strong> Comments stay hidden until you approve them, and you can unapprove or delete any comment at any time.</em>
+    </blockquote>
+
+    <section>
+      <% if (comments.length <= 0) { %>
+      <div class="empty">No comments yet.</div>
+      <% } else { %>
+      <% for (var i = 0; i < comments.length; i++) { %>
+      <article class="maxh">
+        <div><strong><%= comments[i].name %></strong> &middot; <small><%= comments[i].email %></small></div>
+        <div style="white-space: pre-wrap;"><%= comments[i].text %></div>
+        <% if (comments[i].reply) { %>
+        <div class="comment-reply"><small>Your reply</small><div style="white-space: pre-wrap;"><%= comments[i].reply %></div></div>
+        <% } %>
+        <% if (comments[i].post) { %>
+        <div><small>on <a href="<%= baseUrl + getPostPath(comments[i].post) %>" target="_blank"><%= comments[i].post.title %></a></small></div>
+        <% } %>
+        <div><small>
+          <time datetime="<%= new Date(comments[i].createdOn).toISOString() %>" title="<%= new Date(comments[i].createdOn).toISOString().slice(0, 10) %>"><%= getRelativeTime(comments[i].createdOn) %></time>
+          &middot; <%= comments[i].isApproved ? "approved" : "pending" %>
+          &middot;
+          <% if (comments[i].isApproved) { %>
+          <a href="javascript:void(0)" v-on:click="setCommentApproval('<%= comments[i]._id %>', false)">Unapprove</a>
+          <% } else { %>
+          <a href="javascript:void(0)" v-on:click="setCommentApproval('<%= comments[i]._id %>', true)">Approve</a>
+          <% } %>
+          &middot; <a href="javascript:void(0)" v-on:click="startReply('<%= comments[i]._id %>')"><%= comments[i].reply ? "Edit reply" : "Reply" %></a>
+          &middot; <a href="javascript:void(0)" v-on:click="deleteComment('<%= comments[i]._id %>')" class="red">Delete</a>
+        </small></div>
+        <form v-if="replyingTo === '<%= comments[i]._id %>'" @submit.prevent="saveReply('<%= comments[i]._id %>')" class="reply-form" v-cloak>
+          <textarea v-model="replyText" placeholder="Write a reply. It shows under the comment. Leave empty to remove it." maxlength="1000"></textarea>
+          <div class="reply-form-actions">
+            <button type="submit" :disabled="isLoading">Save reply</button>
+            <a href="javascript:void(0)" v-on:click="replyingTo = null">Cancel</a>
+          </div>
+        </form>
+      </article>
+      <% } %>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+  <script type="text/javascript">
+    window.onload = () => {
+      App.replies = <%- toScriptJson(Object.fromEntries(comments.filter((comment) => comment.reply).map((comment) => [comment._id, comment.reply]))) %>;
+    };
+  </script>
+</body>
+
+</html>

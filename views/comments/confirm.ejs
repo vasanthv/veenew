@@ -7,13 +7,13 @@
     <%- include('profile/header', {title: profile.name ?? profile.username}); -%>
 
     <section>
-      <p>Confirm your guestbook entry. It will be sent to the author once you do.</p>
+      <p>Confirm your comment. It will be sent to the author once you do.</p>
       <blockquote>
-        <strong><%= entry.name %></strong>
-        <div style="white-space: pre-wrap;"><%= entry.text %></div>
+        <strong><%= comment.name %></strong>
+        <div style="white-space: pre-wrap;"><%= comment.text %></div>
       </blockquote>
       <form method="post" action="">
-        <button type="submit">Confirm my entry</button>
+        <button type="submit">Confirm my comment</button>
       </form>
     </section>
     <%- include('profile/footer'); -%>

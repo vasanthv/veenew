@@ -73,17 +73,21 @@ const photoSchema = new Schema({
 	createdOn: { type: Date, default: Date.now },
 });
 
-const guestbookEntrySchema = new Schema({
+const commentSchema = new Schema({
 	user: { type: Schema.Types.ObjectId, ref: "Users", index: true },
+	post: { type: Schema.Types.ObjectId, ref: "Posts", index: true },
 	name: String,
 	email: String,
 	text: String,
-	// The visitor proved they own the email. Only confirmed entries reach the author.
+	// The visitor proved they own the email. Only confirmed comments reach the author.
 	isConfirmed: { type: Boolean, default: false },
 	isApproved: { type: Boolean, default: false },
+	// The blog owner's reply, shown under the comment.
+	reply: String,
+	repliedOn: Date,
 	confirmationCode: { type: String, index: true },
 	createdOn: { type: Date, default: Date.now },
-	// Unconfirmed entries are removed automatically once this date passes.
+	// Unconfirmed comments are removed automatically once this date passes.
 	expiresOn: { type: Date, expires: 0 },
 });
 
@@ -131,11 +135,11 @@ module.exports = (() => {
 		const Users = mongoose.model("Users", userSchema);
 		const Posts = mongoose.model("Posts", postSchema);
 		const Photos = mongoose.model("Photos", photoSchema);
-		const GuestbookEntries = mongoose.model("GuestbookEntries", guestbookEntrySchema);
+		const Comments = mongoose.model("Comments", commentSchema);
 
 		const Subscribers = mongoose.model("Subscribers", subscriberSchema);
 
-		return { Posts, Users, Photos, GuestbookEntries, Subscribers };
+		return { Posts, Users, Photos, Comments, Subscribers };
 	};
 	return {
 		getInstance: () => {

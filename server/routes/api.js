@@ -49,8 +49,8 @@ router.post("/pages", isEmailVerified, rateLimit({ max: 5 }), apiHandler.createP
 router.put("/pages/:id", isEmailVerified, apiHandler.updatePage);
 router.delete("/pages/:id", apiHandler.deletePage);
 
-router.put("/guestbook/:id", rateLimit({ max: 60 }), apiHandler.updateGuestbookEntry);
-router.delete("/guestbook/:id", apiHandler.deleteGuestbookEntry);
+router.put("/comments/:id", rateLimit({ max: 60 }), apiHandler.updateComment);
+router.delete("/comments/:id", apiHandler.deleteComment);
 
 router.delete("/subscribers/:id", apiHandler.deleteSubscriber);
 
