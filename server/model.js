@@ -65,9 +65,9 @@ const postSchema = new Schema({
 	updatedOn: Date,
 });
 
-const photoSchema = new Schema({
+const imageSchema = new Schema({
 	user: { type: Schema.Types.ObjectId, ref: "Users", index: true },
-	// Private: the S3 location is never sent to the browser, photos are served through /photos/:id.
+	// Private: the S3 location is never sent to the browser, images are served through /images/:id.
 	s3Key: { type: String, required: true, select: false },
 	s3Url: { type: String, required: true, select: false },
 	contentType: { type: String, required: true },
@@ -136,12 +136,12 @@ module.exports = (() => {
 
 		const Users = mongoose.model("Users", userSchema);
 		const Posts = mongoose.model("Posts", postSchema);
-		const Photos = mongoose.model("Photos", photoSchema);
+		const Images = mongoose.model("Images", imageSchema);
 		const Comments = mongoose.model("Comments", commentSchema);
 
 		const Subscribers = mongoose.model("Subscribers", subscriberSchema);
 
-		return { Posts, Users, Photos, Comments, Subscribers };
+		return { Posts, Users, Images, Comments, Subscribers };
 	};
 	return {
 		getInstance: () => {

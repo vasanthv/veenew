@@ -21,7 +21,7 @@ const uploadSingle = (field, maxBytes, limitMessage) => {
 			next(error);
 		});
 };
-const uploadSinglePhoto = uploadSingle("photo", config.PHOTO_MAX_BYTES, "Photo must be 1MB or smaller");
+const uploadSingleImage = uploadSingle("image", config.IMAGE_MAX_BYTES, "Image must be 1MB or smaller");
 const uploadSingleFavicon = uploadSingle("favicon", config.FAVICON_MAX_BYTES, "Favicon must be 512KB or smaller");
 
 router.use(bodyParser.json());
@@ -58,8 +58,8 @@ router.delete("/comments/:id", apiHandler.deleteComment);
 
 router.delete("/subscribers/:id", apiHandler.deleteSubscriber);
 
-router.post("/photos", isEmailVerified, rateLimit({ max: 60 }), uploadSinglePhoto, apiHandler.uploadPhoto);
-router.delete("/photos/:id", apiHandler.deletePhoto);
+router.post("/images", isEmailVerified, rateLimit({ max: 60 }), uploadSingleImage, apiHandler.uploadImage);
+router.delete("/images/:id", apiHandler.deleteImage);
 
 router.post("/favicon", rateLimit({ max: 20 }), uploadSingleFavicon, apiHandler.uploadFavicon);
 router.delete("/favicon", apiHandler.deleteFavicon);

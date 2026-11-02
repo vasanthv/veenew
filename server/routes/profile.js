@@ -3,7 +3,7 @@ const express = require("express");
 const { isValidObjectId } = require("mongoose");
 const router = express.Router();
 
-const { Posts, Photos } = require("../model").getInstance();
+const { Posts, Images } = require("../model").getInstance();
 const { getObjectStream } = require("../utils/s3");
 const { rateLimit, requireSameOrigin } = require("../middlewares");
 const {
@@ -208,24 +208,25 @@ router.get(["/feed.xml", "/feed.json"], async (req, res, next) => {
 	}
 });
 
-// The raw photo. The S3 location stays on the server; the bytes are streamed from it.
-router.get("/photos/:id", async (req, res, next) => {
+// The raw image. The S3 location stays on the server; the bytes are streamed from it.
+// /photos/:id is the old path of images, which posts written before the rename still link to.
+router.get(["/images/:id", "/photos/:id"], async (req, res, next) => {
 	try {
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404");
-		const photo = await Photos.findOne({ _id: req.params.id, user: req.profileUser._id }).select("+s3Key").lean();
-		if (!photo) return res.status(404).render("404");
+		const image = await Images.findOne({ _id: req.params.id, user: req.profileUser._id }).select("+s3Key").lean();
+		if (!image) return res.status(404).render("404");
 
 		let stream;
 		try {
-			stream = await getObjectStream(photo.s3Key);
+			stream = await getObjectStream(image.s3Key);
 		} catch (error) {
 			if (error.name === "NoSuchKey") return res.status(404).render("404");
 			throw error;
 		}
 
 		res.set({
-			"Content-Type": photo.contentType,
-			"Content-Length": photo.size,
+			"Content-Type": image.contentType,
+			"Content-Length": image.size,
 			"Cache-Control": "public, max-age=3600",
 			"X-Content-Type-Options": "nosniff",
 		});

@@ -6,7 +6,7 @@ const utils = require("./utils");
 const s3 = require("./utils/s3");
 const config = require("../config");
 const constants = require("./constants");
-const { Users, Posts, Photos, Comments, Subscribers } = require("./model").getInstance();
+const { Users, Posts, Images, Comments, Subscribers } = require("./model").getInstance();
 
 const signUp = async (req, res, next) => {
 	try {
@@ -752,44 +752,44 @@ const deleteSubscriber = async (req, res, next) => {
 	}
 };
 
-const uploadPhoto = async (req, res, next) => {
+const uploadImage = async (req, res, next) => {
 	try {
-		if (!config.AWS_S3_BUCKET) return utils.httpError(500, "Photo uploads are not configured");
-		if (!req.file) return utils.httpError(400, "Choose a photo to upload");
-		if (req.file.size > config.PHOTO_MAX_BYTES) return utils.httpError(400, "Photo must be 1MB or smaller");
-		const { contentType, extension } = utils.getValidPhotoType(req.file.buffer);
+		if (!config.AWS_S3_BUCKET) return utils.httpError(500, "Image uploads are not configured");
+		if (!req.file) return utils.httpError(400, "Choose an image to upload");
+		if (req.file.size > config.IMAGE_MAX_BYTES) return utils.httpError(400, "Image must be 1MB or smaller");
+		const { contentType, extension } = utils.getValidImageType(req.file.buffer);
 
-		if ((await Photos.countDocuments({ user: req.user._id })) >= config.PHOTO_MAX_PER_USER) {
+		if ((await Images.countDocuments({ user: req.user._id })) >= config.IMAGE_MAX_PER_USER) {
 			return utils.httpError(
 				400,
-				`You can have at most ${config.PHOTO_MAX_PER_USER} photos. Delete one to upload another.`
+				`You can have at most ${config.IMAGE_MAX_PER_USER} images. Delete one to upload another.`
 			);
 		}
 
 		const _id = new mongoose.Types.ObjectId();
-		const s3Key = `photos/${req.user._id}/${_id}.${extension}`;
+		const s3Key = `images/${req.user._id}/${_id}.${extension}`;
 		const s3Url = await s3.putObject(s3Key, req.file.buffer, contentType);
 		try {
-			await new Photos({ _id, user: req.user._id, s3Key, s3Url, contentType, size: req.file.size }).save();
+			await new Images({ _id, user: req.user._id, s3Key, s3Url, contentType, size: req.file.size }).save();
 		} catch (error) {
 			await s3.deleteObject(s3Key).catch(() => {});
 			throw error;
 		}
-		res.json({ message: "Photo uploaded", photo: { _id } });
+		res.json({ message: "Image uploaded", image: { _id } });
 	} catch (error) {
 		next(error);
 	}
 };
 
-const deletePhoto = async (req, res, next) => {
+const deleteImage = async (req, res, next) => {
 	try {
-		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Photo not found");
-		const photo = await Photos.findOne({ _id: req.params.id, user: req.user._id }).select("+s3Key").exec();
-		if (!photo) return utils.httpError(404, "Photo not found");
-		// Delete from S3 first: if it fails the photo stays listed and can be deleted again.
-		await s3.deleteObject(photo.s3Key);
-		await Photos.deleteOne({ _id: photo._id });
-		res.json({ message: "Photo deleted" });
+		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Image not found");
+		const image = await Images.findOne({ _id: req.params.id, user: req.user._id }).select("+s3Key").exec();
+		if (!image) return utils.httpError(404, "Image not found");
+		// Delete from S3 first: if it fails the image stays listed and can be deleted again.
+		await s3.deleteObject(image.s3Key);
+		await Images.deleteOne({ _id: image._id });
+		res.json({ message: "Image deleted" });
 	} catch (error) {
 		next(error);
 	}
@@ -953,13 +953,13 @@ const adminDeleteBlog = async (req, res, next) => {
 
 		const owner = { user: user._id };
 		// Delete from S3 first: if it fails the blog stays and can be deleted again.
-		const photos = await Photos.find(owner).select("+s3Key").lean().exec();
-		for (const photo of photos) await s3.deleteObject(photo.s3Key);
+		const images = await Images.find(owner).select("+s3Key").lean().exec();
+		for (const image of images) await s3.deleteObject(image.s3Key);
 		if (user.favicon?.updatedOn) await s3.deleteObject(utils.getFaviconKey(user._id));
 
 		await Promise.all([
 			Posts.deleteMany(owner),
-			Photos.deleteMany(owner),
+			Images.deleteMany(owner),
 			Comments.deleteMany(owner),
 			Subscribers.deleteMany(owner),
 		]);
@@ -1020,8 +1020,8 @@ module.exports = {
 	previewUnsubscribe,
 	unsubscribe,
 	deleteSubscriber,
-	uploadPhoto,
-	deletePhoto,
+	uploadImage,
+	deleteImage,
 	uploadFavicon,
 	deleteFavicon,
 	serveFavicon,

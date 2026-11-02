@@ -389,7 +389,7 @@ const toScriptJson = (value) =>
 		(char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`
 	);
 
-const PHOTO_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
+const IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
 
 /**
  * Detects the image type from the file's leading bytes. The client-supplied type is never trusted.
@@ -397,7 +397,7 @@ const PHOTO_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif
  * @returns {{contentType: string, extension: string}} Detected type
  * @throws {Error} If the file is not a JPEG, PNG, GIF or WebP image
  */
-const getValidPhotoType = (buffer) => {
+const getValidImageType = (buffer) => {
 	let contentType;
 	if (buffer.length > 12) {
 		if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) contentType = "image/jpeg";
@@ -410,8 +410,8 @@ const getValidPhotoType = (buffer) => {
 		)
 			contentType = "image/webp";
 	}
-	if (!contentType) return httpError(400, "Only JPEG, PNG, GIF and WebP photos are supported");
-	return { contentType, extension: PHOTO_TYPES[contentType] };
+	if (!contentType) return httpError(400, "Only JPEG, PNG, GIF and WebP images are supported");
+	return { contentType, extension: IMAGE_TYPES[contentType] };
 };
 
 /**
@@ -722,7 +722,7 @@ module.exports = {
 	toScriptJson,
 	getClientIp,
 	verifyTurnstile,
-	getValidPhotoType,
+	getValidImageType,
 	assertFaviconIsPng,
 	getFaviconKey,
 	markdownToHtml,

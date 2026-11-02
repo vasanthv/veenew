@@ -16,7 +16,7 @@ const {
 } = require("./utils");
 const config = require("../../config");
 const constants = require("../constants");
-const { Users, Posts, Photos, Comments, Subscribers } = require("../model").getInstance();
+const { Users, Posts, Images, Comments, Subscribers } = require("../model").getInstance();
 
 /**
  * Builds a case-insensitive regex that matches the whole value literally.
@@ -225,7 +225,7 @@ const blogHasForm = async (userId, tag) => {
 
 const LATEST_POSTS_COUNT = 5;
 const DYNAMIC_CONTENT_TAG =
-	/\{\{\s*(posts\.all|posts\.latest|posts\.tag\.[a-zA-Z0-9]+|tags\.all|photos\.grid|comments|subscription\.form)\s*\}\}/;
+	/\{\{\s*(posts\.all|posts\.latest|posts\.tag\.[a-zA-Z0-9]+|tags\.all|images\.grid|comments|subscription\.form)\s*\}\}/;
 
 /**
  * Renders a list of post links as HTML.
@@ -272,17 +272,17 @@ const renderTagList = (tags) => {
 };
 
 /**
- * Renders photos as a grid of square thumbnails. Each one opens the raw image in a new tab.
- * @param {Object[]} photos - Photos with _id
- * @returns {string} HTML grid, or an empty-state message when there are no photos
+ * Renders images as a grid of square thumbnails. Each one opens the raw image in a new tab.
+ * @param {Object[]} images - Images with _id
+ * @returns {string} HTML grid, or an empty-state message when there are no images
  */
-const renderPhotoGrid = (photos) => {
-	if (photos.length === 0) return '<div class="empty">No photos to show.</div>';
-	const items = photos.map(
-		(photo) =>
-			`<a href="/photos/${photo._id}" target="_blank" rel="noopener noreferrer"><img src="/photos/${photo._id}" alt="" loading="lazy" /></a>`
+const renderImageGrid = (images) => {
+	if (images.length === 0) return '<div class="empty">No images to show.</div>';
+	const items = images.map(
+		(image) =>
+			`<a href="/images/${image._id}" target="_blank" rel="noopener noreferrer"><img src="/images/${image._id}" alt="" loading="lazy" /></a>`
 	);
-	return `<div class="photo-grid">${items.join("")}</div>`;
+	return `<div class="image-grid">${items.join("")}</div>`;
 };
 
 /**
@@ -353,7 +353,7 @@ const renderComments = async (postId) => {
 /**
  * Replaces dynamic content tags in page HTML with live content: {{posts.all}} lists every
  * post, {{posts.latest}} the most recent five, {{tags.all}} every tag
- * and {{photos.grid}} a grid of the photos,
+ * and {{images.grid}} a grid of the images,
  * {{comments}} the approved comments of the post or page with a form to add one,
  * and {{subscription.form}} a form to subscribe to new posts by email.
  * {{posts.tag.name}} lists only the posts tagged #name.
@@ -378,7 +378,7 @@ const renderDynamicContent = async (html, userId, postId) => {
 				)
 			),
 		"tags.all": async () => renderTagList(await getGroupedTags(userId)),
-		"photos.grid": async () => renderPhotoGrid(await getAllPhotos({ user: userId })),
+		"images.grid": async () => renderImageGrid(await getAllImages({ user: userId })),
 		comments: async () => renderComments(postId),
 		"subscription.form": async () => renderSubscriptionForm(),
 	};
@@ -462,7 +462,7 @@ const getRemainingContent = async (user) => {
 		Posts.countDocuments({ ...owner, type: "post" }),
 		Posts.countDocuments({ ...owner, type: "page", slug: { $ne: "" } }),
 		Posts.countDocuments({ ...owner, type: "note" }),
-		Photos.countDocuments(owner),
+		Images.countDocuments(owner),
 		Comments.countDocuments(owner),
 		Subscribers.countDocuments(owner),
 	]);
@@ -470,7 +470,7 @@ const getRemainingContent = async (user) => {
 		["post", "posts"],
 		["page", "pages"],
 		["note", "notes"],
-		["photo", "photos"],
+		["image", "images"],
 		["comment", "comments"],
 		["subscriber", "subscribers"],
 	];
@@ -480,11 +480,11 @@ const getRemainingContent = async (user) => {
 };
 
 /**
- * Retrieves every photo matching a query, newest first. The S3 location is not selected.
- * @param {Object} query - Mongo query to execute on Photos collection
- * @returns {Promise<Object[]>} The photos
+ * Retrieves every image matching a query, newest first. The S3 location is not selected.
+ * @param {Object} query - Mongo query to execute on Images collection
+ * @returns {Promise<Object[]>} The images
  */
-const getAllPhotos = (query) => Photos.find(query).sort("-createdOn").lean().exec();
+const getAllImages = (query) => Images.find(query).sort("-createdOn").lean().exec();
 
 module.exports = {
 	exactMatch,
@@ -495,7 +495,7 @@ module.exports = {
 	getUserByUsername,
 	getAllPosts,
 	renderDynamicContent,
-	getAllPhotos,
+	getAllImages,
 	getAllComments,
 	getCommentablePost,
 	getAllSubscribers,

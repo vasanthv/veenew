@@ -26,8 +26,8 @@ module.exports = {
 	AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY_ID,
 	AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
 	AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
-	PHOTO_MAX_BYTES: 1024 * 1024, // 1MB
-	PHOTO_MAX_PER_USER: 100,
+	IMAGE_MAX_BYTES: 1024 * 1024, // 1MB
+	IMAGE_MAX_PER_USER: 100,
 	FAVICON_MAX_BYTES: 512 * 1024, // 512KB
 	NO_REPLY_EMAIL: process.env.NO_REPLY_EMAIL ?? "Veenew <noreply@email.veenew.com>",
 	// Comma-separated list of admin usernames (case-insensitive).

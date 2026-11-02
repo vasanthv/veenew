@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/html-head', {title: "Images"}); -%>
+
+<body>
+  <div id="app" class="wrap">
+    <%- include('partials/header', {title: "Images"}); -%>
+
+    <blockquote>
+      <em>Upload images here. Show them all in a grid on any page with <code v-pre>{{images.grid}}</code> or as a single image using markdown.</em>
+    </blockquote>
+
+    <section id="postbox">
+      <form @submit.prevent="uploadImage()">
+        <div class="flex">
+          <input type="file" class="flex-1" accept="image/jpeg,image/png,image/gif,image/webp" v-on:change="onImageChange" required />
+          <button type="submit" :disabled="isLoading || <%= images.length >= maxImages %>">Upload</button>
+        </div>
+        <div class="spacer"></div>
+        <em><%= images.length %> of <%= maxImages %> images. One image at a time, JPEG, PNG, GIF or WebP, up to 1MB.</em>
+      </form>
+    </section>
+
+    <section>
+      <% if (images.length <= 0) { %>
+      <div class="empty">No images to show.</div>
+      <% } else { %>
+      <div class="image-grid">
+        <% images.forEach(function (image) { %>
+        <a href="/images/<%= image._id %>"><img src="<%= userBaseUrl %>images/<%= image._id %>" alt="" loading="lazy" /></a>
+        <% }) %>
+      </div>
+      <% } %>
+    </section>
+    <%- include('partials/footer'); -%>
+  </div>
+</body>
+
+</html>

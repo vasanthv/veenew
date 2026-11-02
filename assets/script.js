@@ -22,7 +22,7 @@ const defaultState = function () {
 		replies: {},
 		replyingTo: null,
 		replyText: "",
-		photoFile: null,
+		imageFile: null,
 		deleteConfirm: false,
 		isLoading: false,
 	};
@@ -314,29 +314,29 @@ const App = Vue.createApp({
 				});
 			}
 		},
-		onPhotoChange(event) {
-			this.photoFile = event.target.files[0] || null;
+		onImageChange(event) {
+			this.imageFile = event.target.files[0] || null;
 		},
-		uploadPhoto() {
+		uploadImage() {
 			if (this.isLoading) return;
-			if (!this.photoFile) return this.setToast("Choose a photo to upload");
-			if (this.photoFile.size > 1024 * 1024) return this.setToast("Photo must be 1MB or smaller");
+			if (!this.imageFile) return this.setToast("Choose an image to upload");
+			if (this.imageFile.size > 1024 * 1024) return this.setToast("Image must be 1MB or smaller");
 			const form = new FormData();
-			form.append("photo", this.photoFile);
+			form.append("image", this.imageFile);
 			this.isLoading = true;
 			axios
-				.post("/api/photos", form)
+				.post("/api/images", form)
 				.then((response) => {
 					this.setToast(response.data.message, "success");
-					redirect("/photos");
+					redirect("/images");
 				})
 				.finally(() => (this.isLoading = false));
 		},
-		deletePhoto(id) {
-			if (confirm("Are you sure you want to delete this photo? There is no undo")) {
-				axios.delete(`/api/photos/${id}`).then((response) => {
+		deleteImage(id) {
+			if (confirm("Are you sure you want to delete this image? There is no undo")) {
+				axios.delete(`/api/images/${id}`).then((response) => {
 					this.setToast(response.data.message, "success");
-					redirect("/photos");
+					redirect("/images");
 				});
 			}
 		},

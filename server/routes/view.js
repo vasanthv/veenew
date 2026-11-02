@@ -1,10 +1,10 @@
 const router = require("express").Router();
 const { isValidObjectId } = require("mongoose");
-const { Users, Posts, Photos, Comments } = require("../model").getInstance();
+const { Users, Posts, Images, Comments } = require("../model").getInstance();
 const {
 	getAllPosts,
 	getAllSubscribers,
-	getAllPhotos,
+	getAllImages,
 	getUserBaseUrl,
 	getAllComments,
 	getPostDate,
@@ -184,14 +184,14 @@ router.get("/subscribers", requireLogin, async (req, res, next) => {
 	}
 });
 
-router.get("/photos", requireLogin, async (req, res, next) => {
+router.get("/images", requireLogin, async (req, res, next) => {
 	try {
-		const photos = await getAllPhotos({ user: req.user._id });
-		res.render("photos/index", {
+		const images = await getAllImages({ user: req.user._id });
+		res.render("images/index", {
 			user: req.user,
-			photos,
+			images,
 			userBaseUrl: getUserBaseUrl(req.user),
-			maxPhotos: config.PHOTO_MAX_PER_USER,
+			maxImages: config.IMAGE_MAX_PER_USER,
 			csrfToken: req.csrfToken,
 		});
 	} catch (error) {
@@ -199,14 +199,14 @@ router.get("/photos", requireLogin, async (req, res, next) => {
 	}
 });
 
-router.get("/photos/:id", requireLogin, async (req, res, next) => {
+router.get("/images/:id", requireLogin, async (req, res, next) => {
 	try {
 		if (!isValidObjectId(req.params.id)) return res.status(404).render("404", { user: req.user });
-		const photo = await Photos.findOne({ _id: req.params.id, user: req.user._id }).lean();
-		if (!photo) return res.status(404).render("404", { user: req.user });
-		res.render("photos/single", {
+		const image = await Images.findOne({ _id: req.params.id, user: req.user._id }).lean();
+		if (!image) return res.status(404).render("404", { user: req.user });
+		res.render("images/single", {
 			user: req.user,
-			photo,
+			image,
 			userBaseUrl: getUserBaseUrl(req.user),
 			csrfToken: req.csrfToken,
 		});
@@ -263,9 +263,9 @@ router.get("/admin", requireLogin, async (req, res, next) => {
 router.get("/export", requireLogin, async (req, res, next) => {
 	try {
 		const owner = { user: req.user._id };
-		const [allPosts, photos, comments, subscribers] = await Promise.all([
+		const [allPosts, images, comments, subscribers] = await Promise.all([
 			Posts.find(owner).lean().exec(),
-			getAllPhotos(owner),
+			getAllImages(owner),
 			getAllComments(owner),
 			getAllSubscribers(owner),
 		]);
@@ -298,12 +298,12 @@ router.get("/export", requireLogin, async (req, res, next) => {
 					date: note.createdOn,
 					updatedOn: note.updatedOn,
 				})),
-			// The image files can't be put in a JSON file, so each photo is listed with the link to download it.
-			photos: photos.map((photo) => ({
-				url: `${baseUrl}photos/${photo._id}`,
-				contentType: photo.contentType,
-				size: photo.size,
-				date: photo.createdOn,
+			// The image files can't be put in a JSON file, so each image is listed with the link to download it.
+			images: images.map((image) => ({
+				url: `${baseUrl}images/${image._id}`,
+				contentType: image.contentType,
+				size: image.size,
+				date: image.createdOn,
 			})),
 			comments: comments.map((comment) => ({
 				post: comment.post,
