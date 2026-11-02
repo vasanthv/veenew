@@ -45,6 +45,17 @@ renderer.text = function (text) {
 	return result;
 };
 
+/**
+ * Renders task list checkboxes without the disabled attribute, which browsers grey out,
+ * so readers can tick them. The state is not saved.
+ * @param {boolean|object} checked - Checked state or marked token.
+ * @returns {string} Checkbox input markup.
+ */
+renderer.checkbox = function (checked) {
+	const isChecked = typeof checked === "object" && checked !== null ? checked.checked : checked;
+	return `<input type="checkbox" class="task-checkbox"${isChecked ? " checked" : ""}> `;
+};
+
 marked.setOptions({ renderer });
 
 module.exports = marked;

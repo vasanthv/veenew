@@ -64,6 +64,7 @@
 
   <script defer src="/vue.global.prod.js"></script>
   <script defer src="/axios.min.js"></script>
+  <% if(typeof markdownEditor !== "undefined" && markdownEditor) { %><script defer src="/overtype.min.js"></script><% } %>
   <script defer src="/script.js?v=<%= appVersion %>"></script>
 
   <% if(analytics) { %><script defer src="<%= analytics %>"></script><% } %>

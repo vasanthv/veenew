@@ -1,4 +1,4 @@
-/* global axios, Vue */
+/* global axios, Vue, OverType, defaultToolbarButtons */
 
 const defaultState = function () {
 	const params = new URLSearchParams(window.location.search);
@@ -31,7 +31,7 @@ function redirect(path, replace = false) {
 	if (replace) window.location.replace(path);
 	else window.location.href = path;
 }
-const App = Vue.createApp({
+const app = Vue.createApp({
 	data() {
 		return defaultState();
 	},
@@ -394,7 +394,63 @@ const App = Vue.createApp({
 				.finally(() => (this.isLoading = false));
 		},
 	},
-}).mount("#app");
+});
+
+// Markdown editor (overtype.dev) bound to a value. Emits an "overtype-change" event carrying the new markdown.
+app.directive("overtype", {
+	mounted(el, binding) {
+		const [editor] = new OverType(el, {
+			value: binding.value || "",
+			placeholder: el.dataset.placeholder || "",
+			toolbar: true,
+			// The default toolbar without the view-mode (eye) toggle, which confuses non-technical users.
+			toolbarButtons: defaultToolbarButtons.filter((button, i, all) => {
+				if (button.name === "viewMode") return false;
+				return !(button.name === "separator" && all[i + 1]?.name === "viewMode");
+			}),
+			autoResize: true,
+			minHeight: "7rem",
+			fontSize: "1rem",
+			theme: {
+				name: "veenew",
+				colors: {
+					bgPrimary: "var(--ot-background)",
+					bgSecondary: "var(--ot-shade)",
+					text: "var(--ot-text)",
+					h1: "var(--ot-text)",
+					h2: "var(--ot-text)",
+					h3: "var(--ot-text)",
+					strong: "var(--ot-text)",
+					em: "var(--ot-text)",
+					link: "var(--ot-text)",
+					code: "var(--ot-text)",
+					codeBg: "var(--ot-shade)",
+					blockquote: "var(--ot-muted)",
+					hr: "var(--ot-muted)",
+					syntaxMarker: "var(--ot-muted)",
+					cursor: "var(--ot-text)",
+					// The browser's own selection color, translucent so the styled text underneath stays visible.
+					selection: "color-mix(in srgb, Highlight 40%, transparent)",
+					toolbarBg: "var(--ot-background)",
+					toolbarIcon: "var(--ot-text)",
+					toolbarHover: "var(--ot-shade)",
+					toolbarActive: "var(--ot-grey)",
+					border: "var(--ot-grey)",
+				},
+			},
+			onChange: (value) => el.dispatchEvent(new CustomEvent("overtype-change", { detail: value })),
+		});
+		el._overtype = editor;
+	},
+	updated(el, binding) {
+		if (el._overtype && binding.value !== el._overtype.getValue()) el._overtype.setValue(binding.value || "");
+	},
+	unmounted(el) {
+		el._overtype?.destroy();
+	},
+});
+
+const App = app.mount("#app");
 
 (() => {
 	const csrfToken = document.cookie

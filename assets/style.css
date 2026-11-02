@@ -21,6 +21,19 @@
 #postbox textarea {
 	min-height: 7rem;
 }
+.editor {
+	--ot-background: var(--background);
+	--ot-shade: var(--shade);
+	--ot-text: var(--text);
+	--ot-muted: var(--muted);
+	--ot-grey: var(--grey);
+	border: 1px solid var(--grey);
+	border-radius: 0.25rem;
+	overflow: hidden;
+}
+.editor:focus-within {
+	border-color: var(--text);
+}
 #loader {
 	position: relative;
 }

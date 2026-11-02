@@ -5,7 +5,7 @@
   const isPage = typeof contentType !== "undefined" && contentType === "page";
   const entityName = isPage ? "page" : "post";
 %>
-<%- include('partials/html-head', {title: `${typeof post !== "undefined" ? "Edit" : "New"} ${entityName}`}); -%>
+<%- include('partials/html-head', {title: `${typeof post !== "undefined" ? "Edit" : "New"} ${entityName}`, markdownEditor: true}); -%>
 
 <body>
   <div id="app" class="wrap">
@@ -26,7 +26,7 @@
           <% } %>
         </details>
         <div class="spacer"></div>
-        <textarea v-model="post.text" placeholder="Body: start writing.." <% if(typeof post === "undefined") { %>@keyup="onPostChange" <% } %>></textarea>
+        <div class="editor" v-overtype="post.text" data-placeholder="Body: start writing.." @overtype-change="post.text = $event.detail<% if(typeof post === "undefined") { %>; onPostChange()<% } %>"></div>
         <div class="spacer"></div>
         <div class="flex">
           <div class="flex-1">
@@ -48,7 +48,7 @@
             <tbody>
               <tr><td><code># Heading</code></td><td>Large heading (use <code>##</code> or <code>###</code> for smaller)</td></tr>
               <tr><td><code>**bold**</code></td><td><strong>bold</strong></td></tr>
-              <tr><td><code>*italic*</code></td><td><em>italic</em></td></tr>
+              <tr><td><code>_italic_</code></td><td><em>italic</em></td></tr>
               <tr><td><code>[text](https://example.com)</code></td><td>Link</td></tr>
               <tr><td><code>![alt text](https://example.com/image.jpg)</code></td><td>Image</td></tr>
               <tr><td><code>- item</code></td><td>Bulleted list (use <code>1.</code> for numbered)</td></tr>

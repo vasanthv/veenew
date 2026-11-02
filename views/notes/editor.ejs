@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <% const isEdit = typeof note !== "undefined"; %>
-<%- include('partials/html-head', {title: `${isEdit ? "Edit" : "New"} note`}); -%>
+<%- include('partials/html-head', {title: `${isEdit ? "Edit" : "New"} note`, markdownEditor: true}); -%>
 
 <body>
   <div id="app" class="wrap">
@@ -11,7 +11,7 @@
       <form @submit.prevent="saveNote(<%- isEdit ? `'${note._id}'` : "" %>)">
         <input type="text" v-model="note.title" placeholder="Title" maxlength="160" required />
         <div class="spacer"></div>
-        <textarea v-model="note.text" placeholder="Body: start writing.."></textarea>
+        <div class="editor" v-overtype="note.text" data-placeholder="Body: start writing.." @overtype-change="note.text = $event.detail"></div>
         <div class="spacer"></div>
         <div class="flex">
           <div class="flex-1">

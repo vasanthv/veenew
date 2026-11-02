@@ -27,9 +27,10 @@ app.locals.toScriptJson = toScriptJson;
 
 app.use(mw.securityHeaders);
 
-// Serve vue.js & axios to the browser
+// Serve vue.js, axios & overtype to the browser
 app.use(express.static(path.join(__dirname, "node_modules/axios/dist/")));
 app.use(express.static(path.join(__dirname, "node_modules/vue/dist/")));
+app.use(express.static(path.join(__dirname, "node_modules/overtype/dist/")));
 
 // A blog's uploaded favicon takes over /favicon.png on its own domain, ahead of the static default below.
 app.get("/favicon.png", serveFavicon);
