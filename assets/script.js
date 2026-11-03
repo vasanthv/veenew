@@ -383,7 +383,7 @@ const app = Vue.createApp({
 			}
 			this.isLoading = true;
 			axios
-				.post("/api/newsletter", {
+				.post("/api/admin/newsletter", {
 					subject: this.newsletter.subject.trim(),
 					message: this.newsletter.message.trim(),
 					testEmail: this.newsletter.testEmail,

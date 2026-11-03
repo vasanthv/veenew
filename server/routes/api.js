@@ -64,7 +64,7 @@ router.delete("/images/:id", apiHandler.deleteImage);
 router.post("/favicon", rateLimit({ max: 20 }), uploadSingleFavicon, apiHandler.uploadFavicon);
 router.delete("/favicon", apiHandler.deleteFavicon);
 
-router.post("/newsletter", isUserAdmin, rateLimit({ max: 10 }), apiHandler.sendNewsletter);
+router.post("/admin/newsletter", isUserAdmin, rateLimit({ max: 10 }), apiHandler.sendNewsletter);
 
 router.get("/admin/blogs", isUserAdmin, rateLimit({ max: 120 }), apiHandler.adminListBlogs);
 router.delete("/admin/blogs/:id", isUserAdmin, rateLimit({ max: 30 }), apiHandler.adminDeleteBlog);

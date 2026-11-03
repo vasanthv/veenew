@@ -242,7 +242,7 @@ router.get("/customize", requireLogin, async (req, res, next) => {
 	}
 });
 
-router.get("/newsletter", requireLogin, async (req, res, next) => {
+router.get("/admin/newsletter", requireLogin, async (req, res, next) => {
 	try {
 		if (!res.locals.isAdmin) return res.status(404).render("404", { user: req.user });
 		res.render("admin/newsletter", { user: req.user, csrfToken: req.csrfToken });
