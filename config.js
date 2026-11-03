@@ -49,6 +49,7 @@ module.exports = {
 		"analytics",
 		"cabin",
 		"cname",
+		"patreon",
 	],
 	// Analytics should be enabled only for the production env
 	ANALYTICS_URL: IS_PROD ? process.env.ANALYTICS_URL : null,
