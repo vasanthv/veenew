@@ -63,19 +63,9 @@
           <label for="domain">Domain</label>
           <input type="text" id="domain" placeholder="Eg: blog.example.com" v-model="myAccount.domain" />
         </div>
-        <p>
-          Add a <code>CNAME</code> record at your domain registrar or DNS provider, then save here:
-        </p>
-        <p>
-          Type: <code>CNAME</code><br />
-          Name: your domain (some providers want only the first part, like <code>blog</code>)<br />
-          Target: <code><%= cnameTarget %></code>
-        </p>
+        <p>In youy domain's DNS panel, add a <code>CNAME</code> record pointing to <code><%= cnameTarget %></code>.</p>
         <div class="help">
-          HTTPS is set up automatically the first time your domain is opened, which can take a few seconds. DNS changes can
-          take up to a few hours. If your DNS is on Cloudflare, set the record to "DNS only". A root domain such as
-          <code>example.com</code> can't have a CNAME at most providers, so use a subdomain like <code>www</code> or
-          <code>blog</code>.
+          HTTPS is set up automatically. It can take a few hours for the change to start working.
         </div>
       </details>
 

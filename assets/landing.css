@@ -154,8 +154,8 @@
 }
 .plans {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 1rem;
+	grid-template-columns: minmax(0, 28rem);
+	justify-content: center;
 	margin: 2rem 0px 1.5rem;
 }
 .plan {
@@ -163,10 +163,6 @@
 	border: 1px solid var(--grey);
 	border-radius: 1rem;
 	background: linear-gradient(160deg, rgba(128, 128, 128, 0.14), rgba(128, 128, 128, 0.03));
-}
-.plan-addon {
-	background: transparent;
-	border-style: dashed;
 }
 .plan p {
 	margin: 0px;
