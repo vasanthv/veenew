@@ -767,7 +767,7 @@ const deleteSubscriber = async (req, res, next) => {
 
 const uploadImage = async (req, res, next) => {
 	try {
-		if (!config.AWS_S3_BUCKET) return utils.httpError(500, "Image uploads are not configured");
+		if (!config.R2_BUCKET) return utils.httpError(500, "Image uploads are not configured");
 		if (!req.file) return utils.httpError(400, "Choose an image to upload");
 		if (req.file.size > config.IMAGE_MAX_BYTES) return utils.httpError(400, "Image must be 1MB or smaller");
 		const { contentType, extension } = utils.getValidImageType(req.file.buffer);
@@ -813,7 +813,7 @@ const deleteImage = async (req, res, next) => {
  */
 const uploadFavicon = async (req, res, next) => {
 	try {
-		if (!config.AWS_S3_BUCKET) return utils.httpError(500, "Uploads are not configured");
+		if (!config.R2_BUCKET) return utils.httpError(500, "Uploads are not configured");
 		if (!req.file) return utils.httpError(400, "Choose a PNG image to upload");
 		if (req.file.size > config.FAVICON_MAX_BYTES) return utils.httpError(400, "Favicon must be 512KB or smaller");
 		utils.assertFaviconIsPng(req.file.buffer);

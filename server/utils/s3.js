@@ -4,11 +4,13 @@ const config = require("../../config");
 
 let client;
 const getClient = () => {
+	// Cloudflare R2 speaks the S3 API, so the S3 client works with a custom endpoint and the "auto" region.
 	client ??= new S3Client({
-		region: config.AWS_REGION,
+		region: "auto",
+		endpoint: `https://${config.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
 		credentials: {
-			accessKeyId: config.AWS_ACCESS_KEY,
-			secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+			accessKeyId: config.R2_ACCESS_KEY_ID,
+			secretAccessKey: config.R2_SECRET_ACCESS_KEY,
 		},
 	});
 	return client;
@@ -19,13 +21,13 @@ const getClient = () => {
  * @param {string} key - Object key
  * @param {Buffer} body - File contents
  * @param {string} contentType - MIME type
- * @returns {Promise<string>} The s3:// location of the object
+ * @returns {Promise<string>} The s3:// location (bucket and key) of the object
  */
 const putObject = async (key, body, contentType) => {
 	await getClient().send(
-		new PutObjectCommand({ Bucket: config.AWS_S3_BUCKET, Key: key, Body: body, ContentType: contentType })
+		new PutObjectCommand({ Bucket: config.R2_BUCKET, Key: key, Body: body, ContentType: contentType })
 	);
-	return `s3://${config.AWS_S3_BUCKET}/${key}`;
+	return `s3://${config.R2_BUCKET}/${key}`;
 };
 
 /**
@@ -34,7 +36,7 @@ const putObject = async (key, body, contentType) => {
  * @returns {Promise<import("stream").Readable>} The object's byte stream
  */
 const getObjectStream = async (key) => {
-	const response = await getClient().send(new GetObjectCommand({ Bucket: config.AWS_S3_BUCKET, Key: key }));
+	const response = await getClient().send(new GetObjectCommand({ Bucket: config.R2_BUCKET, Key: key }));
 	return response.Body;
 };
 
@@ -44,7 +46,7 @@ const getObjectStream = async (key) => {
  * @returns {Promise<void>}
  */
 const deleteObject = async (key) => {
-	await getClient().send(new DeleteObjectCommand({ Bucket: config.AWS_S3_BUCKET, Key: key }));
+	await getClient().send(new DeleteObjectCommand({ Bucket: config.R2_BUCKET, Key: key }));
 };
 
 module.exports = { putObject, getObjectStream, deleteObject };

@@ -29,7 +29,11 @@ module.exports = {
 	AWS_REGION: process.env.AWS_REGION || "us-west-2",
 	AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY_ID,
 	AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-	AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
+	// Cloudflare R2 (S3-compatible) stores uploaded images and favicons.
+	R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
+	R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+	R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+	R2_BUCKET: process.env.R2_BUCKET,
 	IMAGE_MAX_BYTES: 1024 * 1024, // 1MB
 	IMAGE_MAX_PER_USER: 100,
 	FAVICON_MAX_BYTES: 512 * 1024, // 512KB
