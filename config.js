@@ -22,6 +22,10 @@ module.exports = {
 	SECRET: process.env.SECRET,
 	TURNSTILE_SITE_KEY: process.env.TURNSTILE_SITE_KEY,
 	TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
+	// Shared with the Caddy server that serves custom domains. Only requests carrying it may name a custom domain.
+	PROXY_SECRET: process.env.PROXY_SECRET,
+	// Where users point their domain's CNAME record.
+	CNAME_TARGET: `cname.${DOMAIN.split(":")[0]}`,
 	AWS_REGION: process.env.AWS_REGION || "us-west-2",
 	AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY_ID,
 	AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,

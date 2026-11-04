@@ -352,7 +352,31 @@ const escapeHtml = (value) =>
  * @param {import("express").Request} req - The request
  * @returns {string} IP address
  */
-const getClientIp = (req) => (config.CLIENT_IP_HEADER && req.get(config.CLIENT_IP_HEADER)) || req.ip;
+const getClientIp = (req) =>
+	(isFromProxy(req) && req.get("x-client-ip")) ||
+	(config.CLIENT_IP_HEADER && req.get(config.CLIENT_IP_HEADER)) ||
+	req.ip;
+
+/**
+ * Tells whether the request came through the Caddy server that serves custom domains, which proves itself
+ * with the shared PROXY_SECRET. Anyone can send the headers it adds, so they are only trusted with it.
+ */
+const isFromProxy = (req) => {
+	const secret = req.get("x-proxy-secret");
+	if (!config.PROXY_SECRET || !secret) return false;
+	const digest = (value) => crypto.createHash("sha256").update(value).digest();
+	return crypto.timingSafeEqual(digest(secret), digest(config.PROXY_SECRET));
+};
+
+/**
+ * The hostname the visitor asked for. Caddy forwards custom domains to the app's own hostname and names
+ * the visitor's domain in X-Custom-Host. Without PROXY_SECRET the host is left to Express.
+ */
+const getRequestHostname = (req) => {
+	if (!config.PROXY_SECRET) return req.hostname;
+	const customHost = isFromProxy(req) && req.get("x-custom-host");
+	return (customHost || req.get("host") || "").split(":")[0].trim().toLowerCase();
+};
 
 /**
  * Checks the Cloudflare Turnstile token sent with a form. Always passes when Turnstile is not configured.
@@ -728,6 +752,8 @@ module.exports = {
 	markdownToHtml,
 	getUserBaseUrl,
 	getValidDomain,
+	isFromProxy,
+	getRequestHostname,
 
 	formatPostDate,
 	formatShortPostDate,

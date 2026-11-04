@@ -77,6 +77,19 @@ const isNewDomain = async (domain, currentUserId) => {
 };
 
 /**
+ * Tells whether a user registered this exact custom domain. Matches the same hosts as getHostOwner:
+ * the domain itself, or its `www.` counterpart.
+ * @param {string} domain - The hostname to look up
+ * @returns {Promise<boolean>}
+ */
+const isCustomDomain = async (domain) => {
+	const host = String(domain || "").toLowerCase();
+	if (!host || host.length > 253) return false;
+	const bareHost = host.startsWith("www.") ? host.slice(4) : host;
+	return !!(await Users.exists({ domain: { $in: [host, bareHost] } }));
+};
+
+/**
  * Resolves which account (if any) owns a request hostname.
  *
  * This is the single source of truth for host routing.
@@ -491,6 +504,7 @@ module.exports = {
 	isNewUsername,
 	isNewEmail,
 	isNewDomain,
+	isCustomDomain,
 	getHostOwner,
 	getUserByUsername,
 	getAllPosts,

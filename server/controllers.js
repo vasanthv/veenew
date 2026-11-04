@@ -157,6 +157,19 @@ const resendEmailVerification = async (req, res, next) => {
 	}
 };
 
+/**
+ * Caddy asks this before it requests an HTTPS certificate for a domain that points at it (on-demand TLS).
+ * 200 allows the certificate, so only domains a user registered ever get one.
+ */
+const checkCustomDomain = async (req, res, next) => {
+	try {
+		const domain = typeof req.query.domain === "string" ? req.query.domain : "";
+		res.sendStatus((await utils.isCustomDomain(domain)) ? 200 : 404);
+	} catch (error) {
+		next(error);
+	}
+};
+
 const updateAccount = async (req, res, next) => {
 	try {
 		const username =
@@ -834,7 +847,7 @@ const deleteFavicon = async (req, res, next) => {
  */
 const serveFavicon = async (req, res, next) => {
 	try {
-		const owner = await utils.getHostOwner(req.hostname);
+		const owner = await utils.getHostOwner(utils.getRequestHostname(req));
 		if (owner.type !== "user" || !owner.user.favicon?.updatedOn) return next();
 
 		let stream;
@@ -997,6 +1010,7 @@ module.exports = {
 	completePasswordReset,
 	resendEmailVerification,
 	updateAccount,
+	checkCustomDomain,
 	logOut,
 	deleteAccount,
 	createPost,

@@ -51,7 +51,7 @@ const isUserAdmin = (req, res, next) => {
  */
 const attachUserDomainToRequest = async (req, res, next) => {
 	try {
-		const owner = await utils.getHostOwner(req.hostname);
+		const owner = await utils.getHostOwner(utils.getRequestHostname(req));
 
 		if (owner.type === "base") return next();
 		if (owner.type === "user") {
@@ -126,7 +126,7 @@ const requireSameOrigin = (req, res, next) => {
 	let isSameOrigin = req.get("sec-fetch-site") !== "cross-site";
 	if (source) {
 		try {
-			isSameOrigin = new URL(source).hostname === req.hostname;
+			isSameOrigin = new URL(source).hostname === utils.getRequestHostname(req);
 		} catch {
 			isSameOrigin = false;
 		}

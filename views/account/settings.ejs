@@ -64,10 +64,19 @@
           <input type="text" id="domain" placeholder="Eg: blog.example.com" v-model="myAccount.domain" />
         </div>
         <p>
-          A custom domain is a one-time fee of $36. Pay it at
-          <a href="https://paypal.me/imvasanthv/36USD" target="_blank" rel="noopener noreferrer">paypal.me/imvasanthv/36USD</a>,
-          then email <a href="mailto:vasanth@veenew.com">vasanth@veenew.com</a> and I'll send you the instructions to enable it.
+          Add a <code>CNAME</code> record at your domain registrar or DNS provider, then save here:
         </p>
+        <p>
+          Type: <code>CNAME</code><br />
+          Name: your domain (some providers want only the first part, like <code>blog</code>)<br />
+          Target: <code><%= cnameTarget %></code>
+        </p>
+        <div class="help">
+          HTTPS is set up automatically the first time your domain is opened, which can take a few seconds. DNS changes can
+          take up to a few hours. If your DNS is on Cloudflare, set the record to "DNS only". A root domain such as
+          <code>example.com</code> can't have a CNAME at most providers, so use a subdomain like <code>www</code> or
+          <code>blog</code>.
+        </div>
       </details>
 
       <div class="spacer"></div>

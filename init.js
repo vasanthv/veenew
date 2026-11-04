@@ -10,7 +10,7 @@ const viewRoutes = require("./server/routes/view");
 const profileRoutes = require("./server/routes/profile");
 const mw = require("./server/middlewares");
 const { getPostDate, formatShortPostDate, toScriptJson } = require("./server/utils");
-const { serveFavicon } = require("./server/controllers");
+const { serveFavicon, checkCustomDomain } = require("./server/controllers");
 
 const app = express();
 
@@ -38,6 +38,9 @@ app.get("/favicon.png", serveFavicon);
 // Serve frontend assets & images to the browser
 app.use(express.static(path.join(__dirname, "assets")));
 app.use(express.static(path.join(__dirname, "assets/icons")));
+
+// Caddy calls this on the app's own hostname, so it has to run before the host is resolved to a blog.
+app.get("/internal/domain-check", checkCustomDomain);
 
 app.use(mw.attachUserDomainToRequest);
 app.use((req, res, next) => {
