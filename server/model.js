@@ -43,6 +43,7 @@ const userSchema = new Schema({
 	},
 	customStyle: String,
 	customScriptUrl: String,
+	hideFooter: { type: Boolean, default: undefined },
 	devices: [{ token: { type: String, index: true }, userAgent: String }],
 	deletionDate: { type: Date, expires: 0 },
 });
