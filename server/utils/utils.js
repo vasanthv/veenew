@@ -150,29 +150,16 @@ const getValidMenus = (rawMenu) => {
 };
 
 /**
- * Sanitizes and validates a post message.
- * @param {string} text - The post message to validate
- * @returns {string} The sanitized post message
- * @throws {Error} If text is empty or exceeds 10000 characters
+ * Validates the markdown body of a post, page or note. The text is kept exactly as typed: it is sanitized
+ * when it is converted to HTML (see markdownToHtml), which is where it can do harm.
+ * @param {*} text - The body to validate
+ * @param {string} [label] - What the body belongs to, for error messages
+ * @returns {string} The body
+ * @throws {Error} If text is empty, not text or exceeds 10000 characters
  */
-const getValidPost = (text) => {
-	if (!text) httpError(400, "Empty post");
-	if (text.length > 12000) httpError(400, "Post is too long. Max. 12000 chars");
-	const sanitizedString = sanitizeString(text);
-	if (!sanitizedString) httpError(400, "Empty post");
-	return sanitizedString;
-};
-
-/**
- * Validates the body of a note. Notes are private and shown to their author only inside the editor,
- * so the text is kept exactly as typed, with no sanitizing or conversion.
- * @param {*} text - The note body to validate
- * @returns {string} The note body
- * @throws {Error} If the text is empty, not text or longer than a post
- */
-const getValidNoteText = (text) => {
-	if (typeof text !== "string" || !text.trim()) return httpError(400, "Empty note");
-	if (text.length > 12000) return httpError(400, "Note is too long. Max. 12000 chars");
+const getValidPost = (text, label = "Post") => {
+	if (typeof text !== "string" || !text.trim()) return httpError(400, `Empty ${label.toLowerCase()}`);
+	if (text.length > 10000) return httpError(400, `${label} is too long. Max. 10000 chars`);
 	return text;
 };
 
@@ -729,7 +716,6 @@ module.exports = {
 	getValidString,
 	getValidMenus,
 	getValidPost,
-	getValidNoteText,
 	getValidSlug,
 	slugify,
 	isHomePage,

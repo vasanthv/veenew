@@ -408,7 +408,7 @@ const deletePost = async (req, res, next) => {
 const createNote = async (req, res, next) => {
 	try {
 		const title = utils.getValidString(req.body.title, 1, 160, "Title");
-		const text = utils.getValidNoteText(req.body.text);
+		const text = utils.getValidPost(req.body.text, "Note");
 		const note = await new Posts({ user: req.user._id, type: "note", title, text, createdOn: new Date() }).save();
 		res.json({ message: "Note created", note: { _id: note._id } });
 	} catch (error) {
@@ -420,7 +420,7 @@ const updateNote = async (req, res, next) => {
 	try {
 		if (!mongoose.isValidObjectId(req.params.id)) return utils.httpError(404, "Note not found");
 		const title = utils.getValidString(req.body.title, 1, 160, "Title");
-		const text = utils.getValidNoteText(req.body.text);
+		const text = utils.getValidPost(req.body.text, "Note");
 		const note = await Posts.findOneAndUpdate(
 			{ _id: req.params.id, user: req.user._id, type: "note" },
 			{ $set: { title, text, updatedOn: new Date() } }
